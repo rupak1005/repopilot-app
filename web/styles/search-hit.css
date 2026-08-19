@@ -1,43 +1,31 @@
-/* Phase 7 — Search hits */
+/* Phase 7 — Search (Layer B utility panel) */
 
 .ui-search-page {
   max-width: 760px;
 }
 
 .ui-search-panel {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-hairline);
+  background: var(--color-surface-muted);
+  border: var(--border-heavy);
   border-radius: var(--radius-lg);
-  padding: 16px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-hard-md);
 }
 
 .ui-search-form {
   display: flex;
-  gap: 10px;
-  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.ui-search-form .ui-button {
+  flex-shrink: 0;
 }
 
 .ui-search-input {
   flex: 1;
-  padding: 10px 12px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-hairline);
-  background: var(--bg-elevated);
-  color: var(--text-primary);
-  font-family: var(--font-mono);
-  font-size: 13px;
-  transition: border-color 160ms var(--ease-out-expo), box-shadow 160ms var(--ease-out-expo);
-}
-
-.ui-search-input::placeholder {
-  color: var(--text-tertiary);
-}
-
-.ui-search-input:focus {
-  outline: none;
-  border-color: var(--accent-dim);
-  box-shadow: var(--focus-ring);
+  min-width: min(100%, 240px);
 }
 
 .ui-search-hits {
@@ -47,9 +35,9 @@
 }
 
 .ui-search-hit {
-  padding: 14px 0;
-  border-bottom: 1px solid var(--border-hairline);
-  transition: background 160ms var(--ease-out-expo);
+  padding: var(--space-3) 0;
+  border-bottom: var(--border-soft-width);
+  transition: background var(--duration-normal) var(--ease-out-expo);
 }
 
 .ui-search-hit:last-child {
@@ -58,28 +46,39 @@
 }
 
 .ui-search-hit:first-child {
-  padding-top: 4px;
+  padding-top: var(--space-1);
 }
 
 .ui-search-hit__head {
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
 }
 
 .ui-search-hit__snippet {
   margin: 0;
-  padding: 10px 12px;
+  padding: var(--space-3);
   border-radius: var(--radius-md);
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-hairline);
+  border: var(--border-medium);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-sm);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-micro);
   line-height: 1.55;
   white-space: pre-wrap;
-  color: var(--text-secondary);
+  color: var(--color-text-muted);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .ui-search-hit {
     transition: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .ui-search-form {
+    flex-direction: column;
+  }
+
+  .ui-search-form .ui-button {
+    width: 100%;
   }
 }

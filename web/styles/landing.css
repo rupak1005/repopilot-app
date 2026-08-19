@@ -1,0 +1,193 @@
+/* Landing — GitDiagram-style hero + repo paste (Layer A) */
+
+.landing-page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-background);
+}
+
+.landing-page__main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8) var(--space-6) var(--space-12);
+}
+
+.landing-shell {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+}
+
+.landing-shell .neo-sparkle {
+  top: -16px;
+  right: 12px;
+}
+
+.landing-shell .neo-sparkle--alt {
+  bottom: 32px;
+  left: -12px;
+  transform: rotate(-12deg);
+}
+
+.landing-card {
+  background: var(--color-surface-muted);
+  border: var(--border-heavy);
+  border-radius: var(--radius-xl);
+  padding: var(--space-10) var(--space-8);
+  box-shadow: var(--shadow-hard-lg);
+}
+
+.landing-eyebrow {
+  display: inline-block;
+  margin: 0 0 var(--space-4);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: var(--border-medium);
+  background: var(--color-surface);
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-subtle);
+}
+
+.landing-card h1 {
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-display);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+}
+
+.landing-lede {
+  margin: 0 0 var(--space-6);
+  font-size: var(--text-body);
+  line-height: 1.65;
+  color: var(--color-text-muted);
+  max-width: 52ch;
+}
+
+.landing-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.landing-form__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.landing-form__row .ui-input {
+  flex: 1 1 220px;
+  min-width: 0;
+  font-size: var(--text-body);
+  padding: var(--space-3) var(--space-4);
+}
+
+.landing-form__row .ui-button {
+  flex: 0 0 auto;
+  min-width: 120px;
+}
+
+.landing-examples {
+  margin-top: var(--space-5);
+}
+
+.landing-examples__label {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-ui);
+  color: var(--color-text-muted);
+}
+
+.landing-examples__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.landing-chip {
+  padding: var(--space-2) var(--space-4);
+  border-radius: 999px;
+  border: var(--border-medium);
+  background: var(--color-surface);
+  font-size: var(--text-ui);
+  font-weight: 700;
+  color: var(--color-text);
+  box-shadow: var(--shadow-hard-sm);
+  transition: transform var(--duration-fast) var(--ease-out-expo);
+}
+
+.landing-chip:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+}
+
+.landing-chip:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.landing-note,
+.landing-footer {
+  margin: var(--space-5) 0 0;
+  font-size: var(--text-ui);
+  line-height: 1.55;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.landing-link {
+  color: var(--color-link);
+  font-weight: 600;
+}
+
+.landing-link:hover {
+  color: var(--color-link-hover);
+}
+
+.landing-signed-in {
+  margin-top: var(--space-4);
+  text-align: center;
+}
+
+.landing-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-bottom: 0;
+}
+
+.landing-footer a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-link);
+  font-weight: 600;
+}
+
+.ui-demo-banner--public {
+  border-color: var(--color-info);
+  background: color-mix(in srgb, var(--color-info) 8%, var(--color-surface));
+}
+
+.ui-demo-banner--public a {
+  color: var(--color-link);
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .landing-card {
+    padding: var(--space-8) var(--space-5);
+  }
+
+  .landing-form__row .ui-button {
+    width: 100%;
+  }
+}

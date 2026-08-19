@@ -1,26 +1,26 @@
-/* Phase 6/7 — CitationChip */
+/* CitationChip — Layer B */
 
 .ui-citation-chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 8px;
+  padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-sm);
-  border: 1px solid var(--border-hairline);
-  background: var(--bg-elevated);
+  border: var(--border-medium);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-sm);
   font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--text-secondary);
+  font-size: var(--text-micro);
+  color: var(--color-text-muted);
   transition:
-    background 160ms var(--ease-out-expo),
-    border-color 160ms var(--ease-out-expo),
-    color 160ms var(--ease-out-expo);
+    background var(--duration-normal) var(--ease-out-expo),
+    color var(--duration-normal) var(--ease-out-expo),
+    transform var(--duration-fast) var(--ease-out-expo);
 }
 
 .ui-citation-chip:hover {
-  border-color: var(--border-strong);
-  background: var(--bg-surface-hover);
-  color: var(--text-primary);
+  color: var(--color-text);
+  transform: translate(-1px, -1px);
 }
 
 .ui-citation-chip__label {
@@ -31,9 +31,15 @@
 }
 
 .ui-citation-chip__score {
-  padding-left: 6px;
+  padding-left: var(--space-2);
   margin-left: 2px;
-  border-left: 1px solid var(--border-hairline);
-  color: var(--accent);
-  font-size: 11px;
+  border-left: var(--border-soft-width);
+  color: var(--color-link);
+  font-size: var(--text-micro);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-citation-chip:hover {
+    transform: none;
+  }
 }

@@ -10,10 +10,11 @@ export type NavItemProps = {
   label: string;
   icon: Icon;
   active?: boolean;
+  onClick?: () => void;
 };
 
 /** Phase 3 primitive — sidebar nav link with Motion spring press. */
-export function NavItem({ href, label, icon: IconComponent, active = false }: NavItemProps) {
+export function NavItem({ href, label, icon: IconComponent, active = false, onClick }: NavItemProps) {
   const tap = useTapMotion();
 
   return (
@@ -21,6 +22,7 @@ export function NavItem({ href, label, icon: IconComponent, active = false }: Na
       href={href}
       className={`ui-nav-item${active ? ' ui-nav-item--active' : ''}`}
       aria-current={active ? 'page' : undefined}
+      onClick={onClick}
       {...tap}
     >
       <span className="ui-nav-item__icon" aria-hidden>

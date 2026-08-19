@@ -1,50 +1,53 @@
-/* Phase 2 — RepoPicker primitive */
+/* Phase 2 / 15 — RepoPicker primitive (neo) */
 
 .ui-repo-picker {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  max-width: min(420px, 50vw);
-  padding: 6px 10px 6px 8px;
-  border: 1px solid var(--border-hairline);
+  gap: var(--space-2);
+  max-width: min(420px, 55vw);
+  min-width: 0;
+  flex: 1;
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-medium);
   border-radius: var(--radius-md);
-  background: var(--bg-surface);
-  color: var(--text-primary);
+  background: var(--color-surface);
+  color: var(--color-text);
   text-decoration: none;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  box-shadow: var(--shadow-hard-sm);
   transition:
-    background 160ms var(--ease-out-expo),
-    border-color 160ms var(--ease-out-expo),
-    box-shadow 160ms var(--ease-out-expo),
-    transform 120ms var(--ease-spring);
+    background var(--duration-normal) var(--ease-out-expo),
+    border-color var(--duration-normal) var(--ease-out-expo),
+    transform var(--duration-fast) var(--ease-out-expo),
+    box-shadow var(--duration-normal) var(--ease-out-expo);
 }
 
 .ui-repo-picker:hover {
-  background: var(--bg-surface-hover);
-  border-color: var(--border-strong);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 0 0 1px rgba(34, 211, 238, 0.08);
+  background: var(--color-surface-muted);
+  border-color: var(--color-border-strong);
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-hard-md);
 }
 
 .ui-repo-picker:active {
-  transform: scale(0.99);
+  transform: translate(1px, 1px) scale(0.99);
+  box-shadow: var(--shadow-hard-sm);
 }
 
 .ui-repo-picker:focus-visible {
   outline: none;
-  box-shadow: var(--focus-ring);
+  box-shadow: var(--shadow-hard-sm), var(--focus-ring);
 }
 
 .ui-repo-picker__glyph {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border-radius: var(--radius-sm);
-  background: rgba(34, 211, 238, 0.08);
-  color: var(--accent);
+  border: var(--border-medium);
+  background: color-mix(in srgb, var(--color-primary) 16%, var(--color-surface));
+  color: var(--color-primary);
   flex-shrink: 0;
 }
 
@@ -53,24 +56,24 @@
   align-items: baseline;
   min-width: 0;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--text-ui);
   line-height: 1.2;
   letter-spacing: -0.02em;
 }
 
 .ui-repo-picker__owner {
-  color: var(--text-secondary);
+  color: var(--color-text-muted);
   flex-shrink: 0;
 }
 
 .ui-repo-picker__sep {
-  color: var(--text-tertiary);
+  color: var(--color-text-subtle);
   margin: 0 1px;
   flex-shrink: 0;
 }
 
 .ui-repo-picker__name {
-  color: var(--text-primary);
+  color: var(--color-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -78,20 +81,21 @@
 
 .ui-repo-picker__caret {
   display: inline-flex;
-  color: var(--text-tertiary);
+  color: var(--color-text-subtle);
   flex-shrink: 0;
-  transition: color 160ms var(--ease-out-expo);
+  transition: color var(--duration-normal) var(--ease-out-expo);
 }
 
 .ui-repo-picker:hover .ui-repo-picker__caret {
-  color: var(--text-secondary);
+  color: var(--color-text-muted);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .ui-repo-picker {
-    transition: background 120ms ease, border-color 120ms ease;
+    transition: background var(--duration-fast) ease, border-color var(--duration-fast) ease;
   }
 
+  .ui-repo-picker:hover,
   .ui-repo-picker:active {
     transform: none;
   }

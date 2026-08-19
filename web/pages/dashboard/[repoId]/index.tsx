@@ -1,45 +1,51 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { DashboardLayout, formatLatency, hotspotScoreClass, useRepoData } from '../../../lib/dashboard';
-import { Icon } from '../../../components/Icon';
+import { GitPullRequest, Lightning, MagnifyingGlass } from '@phosphor-icons/react';
 import { BentoPanel } from '../../../components/ui/BentoPanel';
+import { EmptyState } from '../../../components/ui/EmptyState';
+import { ErrorBanner } from '../../../components/ui/ErrorBanner';
+import { HotspotList } from '../../../components/ui/HotspotList';
+import { IndexHint } from '../../../components/ui/IndexHint';
 import { KpiTile } from '../../../components/ui/KpiTile';
+import { OutcomeIcon } from '../../../components/ui/OutcomeIcon';
+import { Button } from '../../../components/ui/Button';
 import { StatusBadge, reviewStatusVariant } from '../../../components/ui/StatusBadge';
-
-function outcomeIconName(outcome: string | null): string {
-  switch (outcome) {
-    case 'PASS':
-      return 'check_circle';
-    case 'FAIL':
-      return 'cancel';
-    case 'WARN':
-      return 'warning';
-    default:
-      return 'pending';
-  }
-}
+import {
+  DashboardLayout,
+  formatLatency,
+  showIndexHint,
+  useRepoData
+} from '../../../lib/dashboard';
 
 export default function OverviewPage() {
   const router = useRouter();
   const repoId = typeof router.query.repoId === 'string' ? router.query.repoId : null;
   const { pulls, analytics, hotspots, error, loading } = useRepoData(repoId);
   const base = repoId ? `/dashboard/${repoId}` : '';
+  const needsIndex = showIndexHint(pulls, hotspots, analytics);
 
   return (
     <DashboardLayout activeNav="overview">
       <div className="canvas-inner">
-        {error ? <div className="error-banner">{error}</div> : null}
+        {error ? <ErrorBanner>{error}</ErrorBanner> : null}
+        {needsIndex ? <IndexHint /> : null}
         {loading ? <p className="empty-state">Loading repository data…</p> : null}
 
-        <div className="quick-actions">
-          <Link href={`${base}/ask`} className="btn-primary">
-            <Icon name="bolt" size={16} />
+        <div className="ui-quick-actions">
+          <Button
+            variant="primary"
+            icon={<Lightning size={16} weight="fill" />}
+            onClick={() => void router.push(`${base}/ask`)}
+          >
             Ask a question
-          </Link>
-          <Link href={`${base}/search`} className="btn-secondary">
-            <Icon name="search" size={16} />
+          </Button>
+          <Button
+            variant="secondary"
+            icon={<MagnifyingGlass size={16} weight="light" />}
+            onClick={() => void router.push(`${base}/search`)}
+          >
             Search code
-          </Link>
+          </Button>
         </div>
 
         {analytics ? (
@@ -68,16 +74,18 @@ export default function OverviewPage() {
         <div className="ui-bento-grid">
           <BentoPanel
             title="Active Pull Requests"
-            action={
-              <Link href={`${base}/pulls`}>View all</Link>
-            }
+            action={<Link href={`${base}/pulls`}>View all</Link>}
           >
             {pulls.length === 0 ? (
-              <p className="empty-state" style={{ padding: 16 }}>
-                No pull requests indexed yet.
-              </p>
+              <EmptyState
+                compact
+                className="ui-panel-empty"
+                icon={GitPullRequest}
+                title="No pull requests indexed yet"
+                description="Open PRs appear here after the repository is synced."
+              />
             ) : (
-              <div style={{ overflowX: 'auto' }}>
+              <div className="ui-table-scroll">
                 <table className="ui-data-table">
                   <thead>
                     <tr>
@@ -89,16 +97,24 @@ export default function OverviewPage() {
                   </thead>
                   <tbody>
                     {pulls.slice(0, 6).map((pull) => (
-                      <tr key={pull.pullNumber}>
-                        <td className="mono">#{pull.pullNumber}</td>
-                        <td>{pull.title}</td>
+                      <tr
+                        key={pull.pullNumber}
+                        className="ui-data-table__row-link"
+                        onClick={() => void router.push(`${base}/pulls/${pull.pullNumber}`)}
+                      >
+                        <td className="mono">
+                          <Link href={`${base}/pulls/${pull.pullNumber}`}>#{pull.pullNumber}</Link>
+                        </td>
+                        <td>
+                          <Link href={`${base}/pulls/${pull.pullNumber}`}>{pull.title}</Link>
+                        </td>
                         <td>
                           <StatusBadge variant={reviewStatusVariant(pull.latestReviewStatus)}>
                             {(pull.latestReviewStatus ?? pull.status).toUpperCase()}
                           </StatusBadge>
                         </td>
                         <td style={{ textAlign: 'center' }}>
-                          <Icon name={outcomeIconName(pull.latestReviewOutcome)} size={16} />
+                          <OutcomeIcon outcome={pull.latestReviewOutcome} />
                         </td>
                       </tr>
                     ))}
@@ -109,44 +125,7 @@ export default function OverviewPage() {
           </BentoPanel>
 
           <BentoPanel title="Code Hotspots">
-            {hotspots.length === 0 ? (
-              <p className="empty-state" style={{ padding: 16 }}>
-                No hotspot data yet.
-              </p>
-            ) : (
-              <div className="hotspot-list">
-                {hotspots.map((hotspot) => {
-                  const color = hotspotScoreClass(hotspot.score);
-                  return (
-                    <div key={hotspot.filePath} className="hotspot-item">
-                      <div className="hotspot-row">
-                        <div className="hotspot-file">
-                          <Icon name="draft" size={16} />
-                          <span className="mono">{hotspot.filePath}</span>
-                        </div>
-                        <span className="hotspot-score" style={{ color }}>
-                          {hotspot.score.toFixed(0)} pts
-                        </span>
-                      </div>
-                      <div className="hotspot-bar">
-                        <div
-                          className="hotspot-bar-fill"
-                          style={{ width: `${Math.min(hotspot.score, 100)}%`, background: color }}
-                        />
-                      </div>
-                      <div className="hotspot-tags">
-                        {hotspot.reasons.slice(0, 2).map((reason) => (
-                          <span key={reason} className="tag">
-                            {reason}
-                          </span>
-                        ))}
-                        <span className="tag">{hotspot.changeCount} changes</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            <HotspotList hotspots={hotspots} />
           </BentoPanel>
         </div>
       </div>

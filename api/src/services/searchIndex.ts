@@ -1,4 +1,4 @@
-import { getPrisma } from '../db/prisma';
+import { getPrisma, prismaInteractiveTxOptions } from '../db/prisma';
 import { resolveRepositoryRevision } from './repositoryRevisions';
 import { createEmbeddings, localEmbedding } from './embeddingProvider';
 
@@ -169,7 +169,7 @@ export async function indexRepositorySearch(args: {
         vectorLiteral(embedding)
       );
     }
-  });
+  }, prismaInteractiveTxOptions);
 
   logEvent('search.indexing.completed', {
     repositoryId: args.repositoryId,

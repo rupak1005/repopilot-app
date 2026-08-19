@@ -1,55 +1,44 @@
 # RepoPilot Design System — Master
 
-**Design read:** B2B developer-tool dashboard for senior engineers — Linear × GitHub mission control, restrained motion, high data density (cockpit), not a marketing landing page.
+**Design read:** Developer tool with **neo-brutalist tactile hierarchy** inspired by [GitDiagram](https://gitdiagram.com/) principles — not a visual clone. Technical, confident, purple/lavender surfaces, hard offset shadows, evidence-dense dashboard.
 
-**Dials:** Variance 5 · Motion 4 · Density 8
+**Dials:** Variance 6 · Motion 4 · Density 7
 
 ## Anti-patterns (never ship)
 
-- AI purple/pink gradients, mesh hero backgrounds, three equal feature cards
-- Material Symbols / generic icon font stacks
-- Inter as the only typeface (Geist + JetBrains Mono)
-- Harsh drop shadows, 1px `#30363d` borders everywhere with no hierarchy
-- Instant state changes — all interactive elements use spring or eased motion
-- Animating layout properties (`width`, `height`, `top`, `left`)
+- Generic SaaS cyan/green gradients (legacy Mission Control)
+- Soft blurred shadows on primary CTAs
+- 3px black borders on every row/cell
+- Glassmorphism on main panels
+- Cloning GitDiagram copy, logo, or page structure
+- Material Symbols / mixed icon families
 
-## Palette (Mission Control — refined)
+## Palette
 
-| Token | Value | Use |
-|-------|-------|-----|
-| `--bg-base` | `#09090b` | App canvas |
-| `--bg-elevated` | `#111113` | Sidebar, panels |
-| `--bg-surface` | `#18181b` | Cards, inputs |
-| `--border-hairline` | `rgba(255,255,255,0.06)` | Default borders |
-| `--border-strong` | `rgba(255,255,255,0.10)` | Hover / focus |
-| `--text-primary` | `#fafafa` | Headings, body |
-| `--text-secondary` | `#a1a1aa` | Labels, meta |
-| `--text-tertiary` | `#71717a` | Disabled, hints |
-| `--accent` | `#22d3ee` | Primary actions, active nav |
-| `--accent-dim` | `#0891b2` | Focus rings |
-| `--success` | `#22c55e` | Pass / healthy |
-| `--warn` | `#eab308` | Warn |
-| `--danger` | `#ef4444` | Fail |
+See `styles/tokens.css` — semantic `--color-*` with light default and `[data-theme="dark"]`.
+
+| Layer | Borders | Shadow |
+|-------|---------|--------|
+| A Brand | 3px heavy | 8×8 hard |
+| B App | 2px medium | 3–4px hard |
+| C Canvas | 1px soft | blur + soft |
 
 ## Typography
 
-- **UI:** Geist Sans — 14px body, 13px dense tables, tight tracking on headings
-- **Data:** JetBrains Mono — PR numbers, repo IDs, citations, caps labels
+- **UI:** Geist Sans
+- **Data:** JetBrains Mono
+- Headlines normal case; uppercase only for micro labels
 
-## Motion ([Motion](https://motion.dev/))
+## Motion
 
-- **Tap:** `scale: 0.98`, spring `stiffness: 400, damping: 30`
-- **Hover:** opacity / border-color only; optional `y: -1px` on primary CTAs
-- **`prefers-reduced-motion`:** disable scale/blur; keep color transitions ≤ 120ms
+- Hover: `translate(-2px, -2px)` on primary controls
+- Active: `translate(1px, 1px) scale(0.97)`
+- Easing: `cubic-bezier(0.23, 1, 0.32, 1)`
 
 ## Iconography
 
-- **Phosphor Icons** — `weight="light"` default, `regular` for emphasis
-
-## Spacing
-
-- 4px grid; sidebar 240px; table row 36px; panel padding 16–20px
+Phosphor Icons only — `weight="light"` default
 
 ## Phased rollout
 
-See [PHASES.md](./PHASES.md). One primitive per phase; do not skip ahead.
+See [PHASES.md](./PHASES.md) and [MIGRATION.md](./MIGRATION.md).

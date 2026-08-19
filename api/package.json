@@ -10,25 +10,28 @@
     "worker": "node dist/worker.js",
     "dev:worker": "ts-node-dev --respawn --transpile-only src/worker.ts",
     "build": "tsc -p tsconfig.json",
+    "mcp": "node dist/mcp/server.js",
+    "mcp:dev": "ts-node-dev --transpile-only src/mcp/server.ts",
     "lint": "eslint src --ext .ts",
     "type-check": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --config ../vitest.config.ts --project api --passWithNoTests"
   },
   "dependencies": {
+    "@fastify/cors": "*",
     "@fastify/env": "*",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@prisma/adapter-pg": "*",
     "@prisma/client": "*",
     "@repopilot/common": "0.0.0",
     "fast-glob": "*",
     "fastify": "*",
-    "@fastify/cors": "*",
     "ioredis": "*",
+    "pg": "*",
+    "prisma": "*",
     "tree-sitter": "*",
     "tree-sitter-javascript": "*",
     "tree-sitter-typescript": "*",
-    "pg": "*",
-    "prisma": "*"
+    "zod": "^4.4.3"
   },
   "devDependencies": {}
 }
-

@@ -1,8 +1,12 @@
+import dotenv from 'dotenv';
+import path from 'node:path';
 import { syncRepository } from './services/repositorySync';
 import { buildDependencyGraph } from './services/dependencyGraphBuilder';
 import { indexRepositorySearch } from './services/searchIndex';
 import { runPullRequestReview } from './services/prReview';
 import { ingestRepositoryHistory } from './services/historyIngest';
+
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 function getArgValue(flag: string): string | undefined {
   const idx = process.argv.indexOf(flag);

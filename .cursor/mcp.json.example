@@ -8,6 +8,15 @@
       "headers": {
         "X-Goog-Api-Key": "YOUR_STITCH_API_KEY"
       }
+    },
+    "repopilot": {
+      "command": "yarn",
+      "args": ["workspace", "@repopilot/api", "mcp"],
+      "env": {
+        "DATABASE_URL": "postgresql://rp:secret@localhost:5432/repopilot?schema=public",
+        "MCP_REPO_SLUG": "your-org/your-repo",
+        "MCP_API_KEY": ""
+      }
     }
   }
 }

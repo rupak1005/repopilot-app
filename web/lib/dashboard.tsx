@@ -7,7 +7,16 @@ import type {
   PullRequestRow,
   RepositoryAnalytics
 } from './types';
-import { API_BASE } from './types';
+import { repoApiPath } from './serverApi';
+import { DemoBanner } from '../components/ui/DemoBanner';
+import { PublicGuestBanner } from '../components/ui/PublicGuestBanner';
+import { IndexHint } from '../components/ui/IndexHint';
+import {
+  DEMO_ANALYTICS,
+  DEMO_HOTSPOTS,
+  DEMO_PULLS
+} from './demoData';
+import { isDemoMode } from './demoMode';
 import { formatLatency, hotspotScoreClass } from './metrics';
 
 type DashboardContext = {
@@ -63,7 +72,10 @@ export function DashboardLayout({ activeNav, canvasClass, children }: DashboardL
       userAvatar={ctx.user.avatarUrl}
       activeNav={activeNav}
       canvasClass={canvasClass}
+      demoMode={isDemoMode()}
     >
+      {isDemoMode() ? <DemoBanner /> : null}
+      {ctx.user.isPublicGuest && !isDemoMode() ? <PublicGuestBanner /> : null}
       {children}
     </AppShell>
   );
@@ -78,20 +90,29 @@ export function useRepoData(repoId: string | null) {
 
   useEffect(() => {
     if (!repoId) return;
+    const activeRepoId = repoId;
+
+    if (isDemoMode()) {
+      setPulls(DEMO_PULLS);
+      setAnalytics(DEMO_ANALYTICS);
+      setHotspots(DEMO_HOTSPOTS);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
     let cancelled = false;
     async function load() {
       setLoading(true);
       try {
         const [pullResponse, analyticsResponse, hotspotResponse] = await Promise.all([
-          fetch(`${API_BASE}/api/v1/repositories/${repoId}/pulls`),
-          fetch(`${API_BASE}/api/v1/repositories/${repoId}/analytics`),
-          fetch(`${API_BASE}/api/v1/repositories/${repoId}/hotspots?topK=5`)
+          fetch(repoApiPath(activeRepoId, 'pulls')),
+          fetch(repoApiPath(activeRepoId, 'analytics')),
+          fetch(repoApiPath(activeRepoId, 'hotspots?topK=5'))
         ]);
 
         if (!pullResponse.ok || !analyticsResponse.ok || !hotspotResponse.ok) {
-          throw new Error(
-            'Repository not indexed yet — run sync from the API/CLI, or pick a repo that has data.'
-          );
+          throw new Error('Could not reach the API — is it running on port 3001?');
         }
 
         if (!cancelled) {
@@ -115,6 +136,19 @@ export function useRepoData(repoId: string | null) {
   }, [repoId]);
 
   return { pulls, analytics, hotspots, error, loading };
+}
+
+export function showIndexHint(
+  pulls: PullRequestRow[],
+  hotspots: HotspotRow[],
+  analytics: RepositoryAnalytics | null
+): boolean {
+  if (isDemoMode()) return false;
+  const empty =
+    pulls.length === 0 &&
+    hotspots.length === 0 &&
+    (analytics?.totalReviews ?? 0) === 0;
+  return empty;
 }
 
 export { formatLatency, hotspotScoreClass };

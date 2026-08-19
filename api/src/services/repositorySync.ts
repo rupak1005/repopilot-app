@@ -87,16 +87,19 @@ export async function syncRepository(
   });
   await clearRevisionData({ revisionId: revision.id });
 
+  const concurrency = Math.max(
+    1,
+    args.concurrency ?? Number(process.env.SYNC_CONCURRENCY ?? 2)
+  );
+
   logEvent('repo.sync.started', {
     repositoryId: args.repositoryId,
     revisionId: revision.id,
     revisionSha,
     repoPath: args.repoPath,
     filesDiscovered: files.length,
-    concurrency: args.concurrency ?? 8
+    concurrency
   });
-
-  const concurrency = Math.max(1, args.concurrency ?? 8);
 
   let idx = 0;
   let filesScanned = files.length;

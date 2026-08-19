@@ -1,8 +1,10 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { Code } from '@phosphor-icons/react';
+import { Code, Sparkle } from '@phosphor-icons/react';
 import { Button, GitHubIcon } from '../components/ui/Button';
+import { ErrorBanner } from '../components/ui/ErrorBanner';
+import { PublicSiteHeader } from '../components/ui/PublicSiteHeader';
 import { MARKETING_URL } from '../lib/types';
 
 export default function LoginPage() {
@@ -14,7 +16,12 @@ export default function LoginPage() {
     async function check() {
       const response = await fetch('/api/auth/me');
       if (response.ok) {
-        void router.replace('/');
+        const user = (await response.json()) as { selectedRepoId?: string };
+        if (user.selectedRepoId) {
+          void router.replace(`/dashboard/${user.selectedRepoId}`);
+        } else {
+          void router.replace('/repos');
+        }
         return;
       }
       setChecking(false);
@@ -24,31 +31,49 @@ export default function LoginPage() {
 
   if (checking) {
     return (
-      <main className="login-page">
-        <p className="empty-state">Loading…</p>
-      </main>
+      <div className="login-page">
+        <PublicSiteHeader active="login" />
+        <main className="login-page__main">
+          <p className="empty-state">Loading…</p>
+        </main>
+      </div>
     );
   }
 
   return (
-    <main className="login-page">
-      <div className="login-shell">
-        <div className="login-card">
-          <span className="login-eyebrow">Mission control</span>
-          <div className="login-mark" aria-hidden>
-            <Code size={22} weight="light" />
+    <div className="login-page">
+      <PublicSiteHeader active="login" />
+      <main className="login-page__main">
+        <div className="login-shell">
+          <Sparkle className="neo-sparkle" size={22} weight="fill" aria-hidden />
+          <Sparkle className="neo-sparkle neo-sparkle--alt" size={16} weight="fill" aria-hidden />
+          <div className="login-card">
+            <span className="login-eyebrow">Mission control</span>
+            <div className="login-mark" aria-hidden>
+              <Code size={22} weight="light" />
+            </div>
+            <h1>Sign in for private repos</h1>
+            <p>
+              Connect GitHub for private repositories, or paste a public repo on the home page — no
+              account required.
+            </p>
+            {error ? <ErrorBanner>{error}</ErrorBanner> : null}
+            <div className="login-actions">
+              <Button href="/" variant="secondary" size="lg" fullWidth>
+                Analyze a public repo
+              </Button>
+              <Button href="/api/auth/github" variant="primary" size="lg" fullWidth icon={<GitHubIcon />}>
+                Sign in with GitHub
+              </Button>
+            </div>
+            <p className="login-footer">
+              <Link href="/browse">Browse public repos</Link>
+              <span aria-hidden> · </span>
+              <Link href={MARKETING_URL}>Marketing site</Link>
+            </p>
           </div>
-          <h1>RepoPilot</h1>
-          <p>Sign in with GitHub to pick a repository and open your codebase dashboard.</p>
-          {error ? <div className="error-banner">{error}</div> : null}
-          <Button href="/api/auth/github" variant="primary" size="lg" fullWidth icon={<GitHubIcon />}>
-            Sign in with GitHub
-          </Button>
-          <p className="login-footer">
-            <Link href={MARKETING_URL}>← Back to marketing site</Link>
-          </p>
         </div>
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }

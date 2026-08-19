@@ -1,6 +1,5 @@
 import 'dotenv/config';
 import { getPrisma } from './db/prisma';
-import { syncRepository } from './services/repositorySync';
 import { runPullRequestReview } from './services/prReview';
 import {
   isNonRetryableError,
@@ -8,7 +7,7 @@ import {
 } from './services/jobLifecycle';
 import { claimNextQueuedJob, MAX_JOB_ATTEMPTS } from './services/jobQueue';
 import { getDefaultReviewPublisher } from './services/githubCheckPublisher';
-import { ingestRepositoryHistory } from './services/historyIngest';
+import { runFullRepositoryIndex } from './services/repositoryIndex';
 import type { PrReviewJobPayload, RepoSyncJobPayload } from './services/jobQueue';
 
 function logEvent(event: string, fields: Record<string, unknown>) {
@@ -57,25 +56,13 @@ async function handleRepoSyncJob(jobId: string, payload: RepoSyncJobPayload, att
     attempts
   });
 
-  await syncRepository({
+  await runFullRepositoryIndex({
     repositoryId: payload.repositoryId,
     repoPath,
-    revisionSha: payload.revisionSha,
     owner: meta.owner,
-    repositoryName: meta.name
+    name: meta.name,
+    revisionSha: payload.revisionSha
   });
-
-  try {
-    await ingestRepositoryHistory({
-      repositoryId: payload.repositoryId,
-      repoPath
-    });
-  } catch (err) {
-    logEvent('history.ingest.skipped', {
-      repositoryId: payload.repositoryId,
-      error: err instanceof Error ? err.message : String(err)
-    });
-  }
 
   await updateQueuedJobStatus({
     queuedJobId: jobId,

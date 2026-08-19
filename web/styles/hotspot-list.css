@@ -1,0 +1,79 @@
+/* Hotspot list — Layer B density inside bento panels */
+
+.ui-hotspot-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+
+.ui-hotspot-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-bottom: var(--space-4);
+  border-bottom: var(--border-soft-width) solid var(--color-border);
+}
+
+.ui-hotspot-item:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.ui-hotspot-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.ui-hotspot-file {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  color: var(--color-text-muted);
+}
+
+.ui-hotspot-file span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-hotspot-score {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 700;
+}
+
+.ui-hotspot-bar {
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  border: var(--border-soft-width) solid var(--color-border);
+  background: var(--color-surface-muted);
+}
+
+.ui-hotspot-bar-fill {
+  height: 100%;
+  border-radius: calc(var(--radius-sm) - 1px);
+}
+
+.ui-hotspot-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.ui-hotspot-tag {
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  border: var(--border-medium);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--color-text-muted);
+}

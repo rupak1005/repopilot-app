@@ -1,6 +1,5 @@
-/* Phase 10 — focus rings + reduced-motion safety net */
+/* Phase 10 — focus rings on native controls */
 
-/* Native controls not yet on ui-* primitives */
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible,
@@ -9,17 +8,18 @@ a:focus-visible:not(.ui-nav-item):not(.ui-repo-picker):not(.ui-button) {
   box-shadow: var(--focus-ring);
 }
 
-button:focus-visible:not(.ui-button):not(.ui-icon-button):not(.ui-nav-item):not(.ui-repo-card):not(.ui-chat-composer__suggestion) {
+button:focus-visible:not(.ui-button):not(.ui-icon-button):not(.ui-nav-item):not(.ui-repo-card):not(.ui-chat-composer__suggestion):not(.mobile-nav-backdrop) {
   outline: none;
   box-shadow: var(--focus-ring);
 }
 
-/* Legacy dashboard controls until migrated */
-.btn-primary:focus-visible,
-.btn-secondary:focus-visible,
-.composer-send:focus-visible,
-.suggestion-chip:focus-visible,
-.repo-item:focus-visible {
+.ui-repo-card:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-hard-sm), var(--focus-ring);
+}
+
+.signout-btn:focus-visible,
+.ui-ask-toolbar__clear:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
 }

@@ -4,6 +4,9 @@ import { BentoPanel } from './BentoPanel';
 import { Button, GitHubIcon } from './Button';
 import { ChatBubble } from './ChatBubble';
 import { CitationChip } from './CitationChip';
+import { Dialog } from './Dialog';
+import { EmptyState } from './EmptyState';
+import { ErrorBanner } from './ErrorBanner';
 import { IconButton } from './IconButton';
 import { KpiTile } from './KpiTile';
 import { NavItem } from './NavItem';
@@ -151,5 +154,35 @@ describe('SearchHitRow', () => {
     );
     expect(html).toContain('lib/sync.ts:1–5');
     expect(html).toContain('syncRepository');
+  });
+});
+
+describe('EmptyState', () => {
+  it('renders title, description, and compact mode', () => {
+    const html = renderToStaticMarkup(
+      <EmptyState compact title="No data" description="Try again later" />
+    );
+    expect(html).toContain('ui-empty-state--compact');
+    expect(html).toContain('No data');
+    expect(html).toContain('Try again later');
+  });
+});
+
+describe('ErrorBanner', () => {
+  it('renders alert role', () => {
+    const html = renderToStaticMarkup(<ErrorBanner>Something broke</ErrorBanner>);
+    expect(html).toContain('role="alert"');
+    expect(html).toContain('Something broke');
+  });
+});
+
+describe('Dialog', () => {
+  it('renders title and footer', () => {
+    const html = renderToStaticMarkup(
+      <Dialog open title="Confirm" description="Are you sure?" footer={<button type="button">OK</button>} onClose={() => {}} />
+    );
+    expect(html).toContain('ui-dialog');
+    expect(html).toContain('Confirm');
+    expect(html).toContain('Are you sure?');
   });
 });

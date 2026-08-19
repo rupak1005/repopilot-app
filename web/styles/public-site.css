@@ -1,0 +1,131 @@
+/* Shared public marketing shell — header, theme pill (Layer A) */
+
+.public-page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-background);
+}
+
+.public-page__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6) var(--space-6) var(--space-10);
+}
+
+.public-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-6);
+  border-bottom: var(--border-medium);
+  background: color-mix(in srgb, var(--color-surface) 80%, transparent);
+}
+
+.public-header__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--color-text);
+}
+
+.public-header__mark {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  border: var(--border-medium);
+  box-shadow: var(--shadow-hard-sm);
+}
+
+.public-header__title {
+  font-size: var(--text-h2);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.public-header__accent {
+  color: var(--color-link);
+}
+
+.public-header__nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.public-header__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--text-ui);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  transition: color var(--duration-normal) var(--ease-out-expo);
+}
+
+.public-header__link:hover {
+  color: var(--color-text);
+}
+
+.public-header__link--active {
+  color: var(--color-text);
+  background: var(--color-surface-muted);
+  border: var(--border-soft-width);
+}
+
+.public-header__link--cta {
+  color: var(--color-text);
+}
+
+.public-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: var(--border-medium);
+  background: var(--color-surface);
+  font-size: var(--text-ui);
+  font-weight: 700;
+  color: var(--color-text);
+  box-shadow: var(--shadow-hard-sm);
+  transition: transform var(--duration-fast) var(--ease-out-expo);
+}
+
+.public-theme-toggle:hover {
+  transform: translate(-1px, -1px);
+}
+
+.public-theme-toggle:active {
+  transform: translate(1px, 1px);
+  box-shadow: none;
+}
+
+@media (max-width: 640px) {
+  .public-header {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .public-header__link span {
+    display: none;
+  }
+
+  .public-header__link--cta span {
+    display: inline;
+  }
+
+  .public-theme-toggle span {
+    display: none;
+  }
+}

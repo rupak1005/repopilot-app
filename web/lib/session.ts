@@ -5,13 +5,14 @@ export const SESSION_COOKIE = 'rp_session';
 export const OAUTH_STATE_COOKIE = 'rp_oauth_state';
 
 export type SessionData = {
-  githubId: number;
+  githubId?: number;
   login: string;
   name: string | null;
   avatarUrl: string;
-  accessToken: string;
+  accessToken?: string;
   selectedRepoFullName?: string;
   selectedRepoId?: string;
+  isPublicGuest?: boolean;
 };
 
 export type PublicUser = {
@@ -20,6 +21,7 @@ export type PublicUser = {
   avatarUrl: string;
   selectedRepoFullName?: string;
   selectedRepoId?: string;
+  isPublicGuest?: boolean;
 };
 
 function getSecret(): string {
@@ -78,7 +80,22 @@ export function toPublicUser(session: SessionData): PublicUser {
     name: session.name,
     avatarUrl: session.avatarUrl,
     selectedRepoFullName: session.selectedRepoFullName,
-    selectedRepoId: session.selectedRepoId
+    selectedRepoId: session.selectedRepoId,
+    isPublicGuest: session.isPublicGuest
+  };
+}
+
+export function createPublicGuestSession(args: {
+  fullName: string;
+  repositoryId: string;
+}): SessionData {
+  return {
+    login: 'guest',
+    name: null,
+    avatarUrl: '',
+    isPublicGuest: true,
+    selectedRepoFullName: args.fullName,
+    selectedRepoId: args.repositoryId
   };
 }
 

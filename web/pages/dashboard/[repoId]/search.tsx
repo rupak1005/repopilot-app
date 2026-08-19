@@ -3,8 +3,13 @@ import { useRouter } from 'next/router';
 import { MagnifyingGlass } from '@phosphor-icons/react';
 import { DashboardLayout } from '../../../lib/dashboard';
 import { Button } from '../../../components/ui/Button';
+import { EmptyState } from '../../../components/ui/EmptyState';
+import { ErrorBanner } from '../../../components/ui/ErrorBanner';
 import { SearchHitRow } from '../../../components/ui/SearchHitRow';
-import { API_BASE, type SearchHit } from '../../../lib/types';
+import { repoApiPath } from '../../../lib/serverApi';
+import { demoDelay, demoSearchResults } from '../../../lib/demoData';
+import { isDemoMode } from '../../../lib/demoMode';
+import { type SearchHit } from '../../../lib/types';
 
 export default function SearchPage() {
   const router = useRouter();
@@ -13,19 +18,31 @@ export default function SearchPage() {
   const [results, setResults] = useState<SearchHit[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (!repoId || !query.trim()) return;
     setLoading(true);
     setError(null);
+    setHasSearched(true);
     try {
-      const response = await fetch(`${API_BASE}/api/v1/repositories/${repoId}/search`, {
+      if (isDemoMode()) {
+        await demoDelay();
+        setResults(demoSearchResults(query));
+        return;
+      }
+
+      const response = await fetch(repoApiPath(repoId, 'search'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query, topK: 10 })
       });
-      if (!response.ok) throw new Error('Search failed — is this repo indexed?');
+      if (!response.ok) {
+        throw new Error(
+          'Search failed — index the repo first (./scripts/index-repo.sh owner/repo) or enable demo mode.'
+        );
+      }
       const data = (await response.json()) as { results: SearchHit[] };
       setResults(data.results ?? []);
     } catch (err) {
@@ -43,12 +60,12 @@ export default function SearchPage() {
           <p>Semantic search across indexed files.</p>
         </div>
 
-        {error ? <div className="error-banner">{error}</div> : null}
+        {error ? <ErrorBanner onDismiss={() => setError(null)}>{error}</ErrorBanner> : null}
 
         <section className="ui-search-panel">
           <form onSubmit={handleSubmit} className="ui-search-form">
             <input
-              className="ui-search-input"
+              className="ui-search-input ui-input"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="repository sync, auth middleware…"
@@ -70,9 +87,18 @@ export default function SearchPage() {
                 <SearchHitRow key={`${hit.file}:${hit.lines[0]}`} hit={hit} />
               ))}
             </ul>
-          ) : (
-            <p className="empty-state">Run a query to see matches.</p>
-          )}
+          ) : !loading ? (
+            <EmptyState
+              compact
+              icon={MagnifyingGlass}
+              title={hasSearched ? 'No matches found' : 'Run a query to see matches'}
+              description={
+                hasSearched
+                  ? 'Try different keywords or check that the repo is indexed.'
+                  : 'Semantic search runs against your indexed codebase.'
+              }
+            />
+          ) : null}
         </section>
       </div>
     </DashboardLayout>

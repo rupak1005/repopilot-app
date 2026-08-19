@@ -1,25 +1,20 @@
+import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { DashboardLayout, useRepoData } from '../../../lib/dashboard';
-import { Icon } from '../../../components/Icon';
+import { GitPullRequest } from '@phosphor-icons/react';
+import { BentoPanel } from '../../../components/ui/BentoPanel';
+import { EmptyState } from '../../../components/ui/EmptyState';
+import { ErrorBanner } from '../../../components/ui/ErrorBanner';
+import { IndexHint } from '../../../components/ui/IndexHint';
+import { OutcomeIcon } from '../../../components/ui/OutcomeIcon';
 import { StatusBadge, reviewStatusVariant } from '../../../components/ui/StatusBadge';
-
-function outcomeIconName(outcome: string | null): string {
-  switch (outcome) {
-    case 'PASS':
-      return 'check_circle';
-    case 'FAIL':
-      return 'cancel';
-    case 'WARN':
-      return 'warning';
-    default:
-      return 'pending';
-  }
-}
+import { DashboardLayout, showIndexHint, useRepoData } from '../../../lib/dashboard';
 
 export default function PullsPage() {
   const router = useRouter();
   const repoId = typeof router.query.repoId === 'string' ? router.query.repoId : null;
-  const { pulls, error, loading } = useRepoData(repoId);
+  const { pulls, analytics, hotspots, error, loading } = useRepoData(repoId);
+  const needsIndex = showIndexHint(pulls, hotspots, analytics);
+  const base = repoId ? `/dashboard/${repoId}` : '';
 
   return (
     <DashboardLayout activeNav="pulls">
@@ -29,19 +24,21 @@ export default function PullsPage() {
           <p>Review status and outcomes.</p>
         </div>
 
-        {error ? <div className="error-banner">{error}</div> : null}
+        {error ? <ErrorBanner>{error}</ErrorBanner> : null}
+        {needsIndex ? <IndexHint /> : null}
         {loading ? <p className="empty-state">Loading pull requests…</p> : null}
 
-        <section className="panel">
-          <div className="panel-header">
-            <h2>All Pull Requests</h2>
-          </div>
+        <BentoPanel title="All Pull Requests">
           {pulls.length === 0 ? (
-            <p className="empty-state" style={{ padding: 16 }}>
-              No pull requests indexed yet.
-            </p>
+            <EmptyState
+              compact
+              className="ui-panel-empty"
+              icon={GitPullRequest}
+              title="No pull requests indexed yet"
+              description="Open PRs appear here after the repository is synced and reviewed."
+            />
           ) : (
-            <div style={{ overflowX: 'auto' }}>
+            <div className="ui-table-scroll">
               <table className="ui-data-table">
                 <thead>
                   <tr>
@@ -54,19 +51,26 @@ export default function PullsPage() {
                 </thead>
                 <tbody>
                   {pulls.map((pull) => (
-                    <tr key={pull.pullNumber}>
-                      <td className="mono">#{pull.pullNumber}</td>
-                      <td>{pull.title}</td>
+                    <tr
+                      key={pull.pullNumber}
+                      className="ui-data-table__row-link"
+                      onClick={() => void router.push(`${base}/pulls/${pull.pullNumber}`)}
+                    >
+                      <td className="mono">
+                        <Link href={`${base}/pulls/${pull.pullNumber}`}>#{pull.pullNumber}</Link>
+                      </td>
+                      <td>
+                        <Link href={`${base}/pulls/${pull.pullNumber}`}>{pull.title}</Link>
+                      </td>
                       <td>{pull.status}</td>
                       <td>
                         <StatusBadge variant={reviewStatusVariant(pull.latestReviewStatus)}>
                           {(pull.latestReviewStatus ?? 'none').toUpperCase()}
                         </StatusBadge>
                       </td>
-                      <td>
-                        <Icon name={outcomeIconName(pull.latestReviewOutcome)} size={16} />
-                        {' '}
-                        {pull.latestReviewOutcome ?? 'pending'}
+                      <td className="ui-outcome-cell">
+                        <OutcomeIcon outcome={pull.latestReviewOutcome} />
+                        <span>{pull.latestReviewOutcome ?? 'pending'}</span>
                       </td>
                     </tr>
                   ))}
@@ -74,7 +78,7 @@ export default function PullsPage() {
               </table>
             </div>
           )}
-        </section>
+        </BentoPanel>
       </div>
     </DashboardLayout>
   );

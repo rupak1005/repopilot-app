@@ -1,4 +1,5 @@
 import { getPrisma } from '../db/prisma';
+import { getModuleArchitectureGraph } from './contextGraph';
 import { resolveRepositoryRevision } from './repositoryRevisions';
 
 export type HotspotResult = {
@@ -322,53 +323,18 @@ export async function getArchitectureGraph(args: {
   repositoryId: string;
   revisionSha?: string;
 }): Promise<{ nodes: ArchitectureNode[]; edges: ArchitectureEdge[] }> {
-  const revision = await resolveRepositoryRevision({
-    repositoryId: args.repositoryId,
-    revisionSha: args.revisionSha
-  });
-  if (!revision) {
-    return { nodes: [], edges: [] };
-  }
-
-  const prisma = getPrisma();
-  const edgeRows = (await prisma.$queryRawUnsafe(
-    `
-      SELECT "fromModule", "toModule"
-      FROM "ModuleDependency"
-      WHERE "revisionId" = $1
-    `,
-    revision.id
-  )) as ArchitectureEdge[];
-
-  const hotspotRows = (await prisma.$queryRawUnsafe(
-    `
-      SELECT "filePath", "score"
-      FROM "ModuleHotspot"
-      WHERE "repositoryId" = $1
-    `,
-    args.repositoryId
-  )) as Array<{ filePath: string; score: number }>;
-  const hotspotMap = new Map(hotspotRows.map((row) => [row.filePath, row.score]));
-
-  const nodePaths = new Set<string>();
-  for (const edge of edgeRows) {
-    nodePaths.add(edge.fromModule);
-    nodePaths.add(edge.toModule);
-  }
-  for (const hotspot of hotspotRows) {
-    nodePaths.add(hotspot.filePath);
-  }
-
-  const nodes: ArchitectureNode[] = Array.from(nodePaths).map((filePath) => {
-    const score = hotspotMap.get(filePath) ?? 0;
-    return {
-      filePath,
-      isHotspot: score > 0,
-      score
-    };
-  });
-
-  return { nodes, edges: edgeRows };
+  const slice = await getModuleArchitectureGraph(args);
+  return {
+    nodes: slice.nodes.map((node) => ({
+      filePath: node.filePath ?? node.id,
+      isHotspot: node.isHotspot ?? false,
+      score: node.score ?? 0
+    })),
+    edges: slice.edges.map((edge) => ({
+      fromModule: edge.from,
+      toModule: edge.to
+    }))
+  };
 }
 
 export async function getSymbolChangeHistory(args: {

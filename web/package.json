@@ -16,7 +16,8 @@
     "motion": "^13.1.0",
     "next": "*",
     "react": "*",
-    "react-dom": "*"
+    "react-dom": "*",
+    "react-force-graph-2d": "^1.29.1"
   },
   "devDependencies": {
     "@types/react": "*",

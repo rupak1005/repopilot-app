@@ -10,6 +10,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return;
   }
 
+  if (!session.accessToken || session.isPublicGuest) {
+    res.status(401).json({ error: 'GitHub sign-in required' });
+    return;
+  }
+
   if (req.method === 'GET') {
     try {
       const repos = await fetchGitHubRepos(session.accessToken);

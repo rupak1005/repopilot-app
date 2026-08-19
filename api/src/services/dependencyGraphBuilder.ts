@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { getPrisma } from '../db/prisma';
+import { getPrisma, prismaInteractiveTxOptions } from '../db/prisma';
 import { createTreeSitterParser } from '../repo/treeSitterParser';
 import { resolveRepositoryRevision } from './repositoryRevisions';
 
@@ -404,7 +404,7 @@ async function replaceDependenciesForFile(args: {
         edge.toModule
       );
     }
-  });
+  }, prismaInteractiveTxOptions);
 }
 
 function countCycles(adjacency: Map<string, Set<string>>): number {

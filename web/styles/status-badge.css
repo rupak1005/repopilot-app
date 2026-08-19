@@ -1,19 +1,20 @@
-/* Phase 4 — StatusBadge primitive */
+/* Phase 4 — StatusBadge */
 
 .ui-status-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 2px 8px;
+  padding: 2px var(--space-2);
   border-radius: var(--radius-sm);
-  border: 1px solid;
+  border: var(--border-medium);
   font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
+  font-size: var(--text-micro);
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   line-height: 1.3;
   white-space: nowrap;
+  box-shadow: var(--shadow-hard-sm);
 }
 
 .ui-status-badge__dot {
@@ -31,25 +32,25 @@
 }
 
 .ui-status-badge--success {
-  border-color: rgba(34, 197, 94, 0.35);
-  color: var(--success);
-  background: rgba(34, 197, 94, 0.08);
+  border-color: var(--color-success);
+  color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 12%, var(--color-surface));
 }
 
 .ui-status-badge--warn {
-  border-color: rgba(234, 179, 8, 0.35);
-  color: var(--warn);
-  background: rgba(234, 179, 8, 0.08);
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning) 12%, var(--color-surface));
 }
 
 .ui-status-badge--fail {
-  border-color: rgba(239, 68, 68, 0.35);
-  color: var(--danger);
-  background: rgba(239, 68, 68, 0.08);
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 12%, var(--color-surface));
 }
 
 .ui-status-badge--muted {
-  border-color: var(--border-strong);
-  color: var(--text-secondary);
-  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
+  background: var(--color-surface);
 }

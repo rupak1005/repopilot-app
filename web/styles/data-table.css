@@ -1,4 +1,4 @@
-/* Phase 4 — data table row hover (overview + pulls only) */
+/* Phase 4 — data table (Layer B) */
 
 .ui-data-table {
   width: 100%;
@@ -6,32 +6,34 @@
 }
 
 .ui-data-table th {
-  padding: 8px 16px;
+  padding: var(--space-2) var(--space-4);
   text-align: left;
   font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  font-size: var(--text-micro);
+  font-weight: 700;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-tertiary);
-  background: var(--bg-elevated);
-  border-bottom: 1px solid var(--border-hairline);
+  color: var(--color-text-subtle);
+  background: var(--color-surface-muted);
+  border-bottom: var(--border-medium);
 }
 
 .ui-data-table td {
-  padding: 0 16px;
-  height: 36px;
-  border-bottom: 1px solid var(--border-hairline);
-  color: var(--text-primary);
+  padding: 0 var(--space-4);
+  height: 40px;
+  border-bottom: var(--border-soft-width);
+  color: var(--color-text);
   vertical-align: middle;
+  font-size: var(--text-ui);
 }
 
 .ui-data-table tbody tr {
-  transition: background 160ms var(--ease-out-expo);
+  transition: background var(--duration-normal) var(--ease-out-expo);
 }
 
 .ui-data-table tbody tr:hover {
-  background: var(--bg-surface-hover);
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
+  cursor: default;
 }
 
 .ui-data-table tbody tr:last-child td {
@@ -40,6 +42,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ui-data-table tbody tr {
-    transition: background 120ms ease;
+    transition: background var(--duration-fast) ease;
   }
 }

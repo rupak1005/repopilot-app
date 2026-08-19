@@ -1,6 +1,8 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import { PublicSiteHeader } from '../components/ui/PublicSiteHeader';
 import { RepoCard } from '../components/ui/RepoCard';
+import { ErrorBanner } from '../components/ui/ErrorBanner';
 
 type RepoRow = {
   id: string;
@@ -52,39 +54,45 @@ export default function ReposPage() {
       setSelecting(null);
       return;
     }
+    void fetch(`/api/repositories/${id}/index`, { method: 'POST' });
     void router.push(`/dashboard/${id}`);
   }
 
   return (
-    <main className="ui-repos-page">
-      <div className="page-title-block">
-        <h1>Choose a repository</h1>
-        <p>Pick a repo to open its dashboard.</p>
-      </div>
-
-      {error ? <div className="error-banner">{error}</div> : null}
-
-      {loading ? (
-        <p className="empty-state">Loading your GitHub repositories…</p>
-      ) : repos.length === 0 ? (
-        <p className="empty-state">No repositories found on your GitHub account.</p>
-      ) : (
-        <div className="ui-repos-grid">
-          {repos.map((repo) => (
-            <RepoCard
-              key={repo.id}
-              fullName={repo.fullName}
-              owner={repo.owner}
-              name={repo.name}
-              description={repo.description}
-              isPrivate={repo.private}
-              updatedAt={repo.updatedAt}
-              selecting={selecting === repo.fullName}
-              onSelect={() => void selectRepo(repo.fullName, repo.id)}
-            />
-          ))}
+    <div className="ui-repos-page">
+      <PublicSiteHeader />
+      <main className="ui-repos-page__main">
+      <div className="ui-repos-shell">
+        <div className="page-title-block">
+          <h1>Choose a repository</h1>
+          <p>Pick a repo to open its dashboard.</p>
         </div>
-      )}
-    </main>
+
+        {error ? <ErrorBanner>{error}</ErrorBanner> : null}
+
+        {loading ? (
+          <p className="empty-state">Loading your GitHub repositories…</p>
+        ) : repos.length === 0 ? (
+          <p className="empty-state">No repositories found on your GitHub account.</p>
+        ) : (
+          <div className="ui-repos-grid">
+            {repos.map((repo) => (
+              <RepoCard
+                key={repo.id}
+                fullName={repo.fullName}
+                owner={repo.owner}
+                name={repo.name}
+                description={repo.description}
+                isPrivate={repo.private}
+                updatedAt={repo.updatedAt}
+                selecting={selecting === repo.fullName}
+                onSelect={() => void selectRepo(repo.fullName, repo.id)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+      </main>
+    </div>
   );
 }

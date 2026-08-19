@@ -1,29 +1,30 @@
-/* Phase 3 — NavItem primitive */
+/* Neo-brutalist NavItem */
 
 .ui-nav-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  height: 36px;
-  padding: 0 10px 0 8px;
+  gap: var(--space-2);
+  height: 40px;
+  padding: 0 var(--space-3);
   border-radius: var(--radius-md);
-  border: 1px solid transparent;
-  border-left: 2px solid transparent;
-  color: var(--text-secondary);
-  font-size: 13px;
-  font-weight: 500;
+  border: 2px solid transparent;
+  color: var(--color-text-muted);
+  font-size: var(--text-ui);
+  font-weight: 600;
   letter-spacing: -0.01em;
   text-decoration: none;
   transition:
-    background 160ms var(--ease-out-expo),
-    border-color 160ms var(--ease-out-expo),
-    color 160ms var(--ease-out-expo),
-    transform 120ms var(--ease-spring);
+    background var(--duration-normal) var(--ease-out-expo),
+    border-color var(--duration-normal) var(--ease-out-expo),
+    color var(--duration-normal) var(--ease-out-expo),
+    transform var(--duration-fast) var(--ease-out-expo),
+    box-shadow var(--duration-normal) var(--ease-out-expo);
 }
 
 .ui-nav-item:hover {
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.04);
+  color: var(--color-text);
+  background: var(--color-surface);
+  border-color: var(--color-border-soft);
 }
 
 .ui-nav-item:focus-visible {
@@ -32,15 +33,14 @@
 }
 
 .ui-nav-item--active {
-  color: var(--accent);
-  font-weight: 600;
-  background: rgba(34, 211, 238, 0.08);
-  border-left-color: var(--accent);
+  color: var(--color-text);
+  background: var(--color-primary);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-hard-sm);
 }
 
 .ui-nav-item--active:hover {
-  color: var(--accent);
-  background: rgba(34, 211, 238, 0.1);
+  transform: translate(-1px, -1px);
 }
 
 .ui-nav-item__icon {
@@ -61,6 +61,10 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ui-nav-item {
-    transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+    transition: background var(--duration-fast) ease, border-color var(--duration-fast) ease, color var(--duration-fast) ease;
+  }
+
+  .ui-nav-item--active:hover {
+    transform: none;
   }
 }

@@ -1,29 +1,36 @@
-/* Phase 2 — IconButton primitive */
+/* Neo-brutalist IconButton */
 
 .ui-icon-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border: 1px solid transparent;
+  border: var(--border-medium);
   border-radius: var(--radius-md);
-  color: var(--text-secondary);
-  background: transparent;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-sm);
   cursor: pointer;
   transition:
-    background 160ms var(--ease-out-expo),
-    border-color 160ms var(--ease-out-expo),
-    color 160ms var(--ease-out-expo),
-    transform 120ms var(--ease-spring);
+    background var(--duration-normal) var(--ease-out-expo),
+    color var(--duration-normal) var(--ease-out-expo),
+    transform var(--duration-fast) var(--ease-out-expo),
+    box-shadow var(--duration-normal) var(--ease-out-expo);
 }
 
 .ui-icon-button:focus-visible {
   outline: none;
-  box-shadow: var(--focus-ring);
+  box-shadow: var(--shadow-hard-sm), var(--focus-ring);
+}
+
+.ui-icon-button:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  color: var(--color-text);
 }
 
 .ui-icon-button:active:not(:disabled) {
-  transform: scale(0.98);
+  transform: translate(1px, 1px) scale(0.97);
+  box-shadow: 1px 1px 0 var(--shadow-color);
 }
 
 .ui-icon-button:disabled {
@@ -33,36 +40,39 @@
 }
 
 .ui-icon-button--sm {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
 }
 
 .ui-icon-button--md {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+}
+
+.ui-icon-button--ghost {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .ui-icon-button--ghost:hover:not(:disabled) {
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-surface);
+  border-color: var(--color-border-soft);
+  box-shadow: var(--shadow-hard-sm);
 }
 
 .ui-icon-button--subtle {
-  background: var(--bg-surface);
-  border-color: var(--border-hairline);
+  background: var(--color-surface-muted);
 }
 
 .ui-icon-button--subtle:hover:not(:disabled) {
-  color: var(--text-primary);
-  background: var(--bg-surface-hover);
-  border-color: var(--border-strong);
+  background: var(--color-primary);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ui-icon-button {
-    transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
-  }
-
+  .ui-icon-button:hover:not(:disabled),
   .ui-icon-button:active:not(:disabled) {
     transform: none;
   }

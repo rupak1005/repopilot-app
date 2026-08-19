@@ -1,0 +1,309 @@
+/* GitDiagram-inspired diagram canvas — full-bleed, box nodes, layer chips */
+
+.canvas--diagram {
+  padding: 0;
+  overflow: hidden;
+}
+
+.ui-diagram-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: calc(100vh - 52px);
+  padding: 20px 20px 24px;
+}
+
+.ui-diagram-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ui-diagram-hero__eyebrow {
+  margin: 0 0 6px;
+  color: var(--accent);
+  font-size: var(--text-micro);
+}
+
+.ui-diagram-hero h1 {
+  margin: 0 0 8px;
+  font-size: var(--text-h1);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: var(--text-primary);
+}
+
+.ui-diagram-hero__sub {
+  margin: 0;
+  max-width: 520px;
+  font-size: var(--text-body);
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.ui-diagram-repo-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 13px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.ui-diagram-explainer {
+  margin: 0;
+  padding: 14px 18px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-hairline);
+  background: linear-gradient(180deg, rgba(34, 211, 238, 0.06), transparent);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.ui-diagram {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+
+.ui-diagram__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ui-diagram__chip {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border-hairline);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    border-color 160ms var(--ease-out-expo),
+    color 160ms var(--ease-out-expo),
+    background 160ms var(--ease-out-expo);
+}
+
+.ui-diagram__chip:hover {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.ui-diagram__chip--active {
+  border-color: rgba(34, 211, 238, 0.45);
+  background: rgba(34, 211, 238, 0.08);
+  color: var(--accent);
+}
+
+.ui-diagram__stage {
+  position: relative;
+  flex: 1;
+  min-height: min(560px, calc(100vh - 280px));
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-strong);
+  background-color: #0c0c0e;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 20px 20px;
+  overflow: hidden;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 24px 48px rgba(0, 0, 0, 0.35);
+}
+
+.ui-diagram__stage--solo {
+  min-height: 400px;
+}
+
+.ui-diagram__toolbar {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+}
+
+.ui-diagram__stats {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: var(--border-soft-width);
+  background: color-mix(in srgb, var(--color-surface) 90%, transparent);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-soft);
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--color-text-subtle);
+}
+
+.ui-diagram__loading,
+.ui-diagram__empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.ui-diagram__spinner {
+  animation: ui-diagram-spin 0.9s linear infinite;
+  color: var(--accent);
+}
+
+@keyframes ui-diagram-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ui-diagram__hint {
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.ui-diagram__inspector {
+  position: relative;
+  margin-top: -4px;
+  padding: 16px 18px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(34, 211, 238, 0.25);
+  background: var(--bg-elevated);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+}
+
+.ui-diagram__inspector-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  border: none;
+  background: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 4px;
+}
+
+.ui-diagram__inspector-close:hover {
+  color: var(--text-primary);
+}
+
+.ui-diagram__inspector-label {
+  margin: 0 0 4px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.ui-diagram__inspector-path {
+  margin: 0 0 12px;
+  padding-right: 24px;
+  font-size: 12px;
+  line-height: 1.5;
+  word-break: break-all;
+  color: var(--text-primary);
+}
+
+.ui-diagram__inspector-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.ui-diagram__inspector-note {
+  margin: 0 0 14px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.ui-diagram__inspector-deps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.ui-diagram__inspector-deps-label {
+  margin: 0 0 6px;
+  color: var(--text-secondary);
+}
+
+.ui-diagram__inspector-deps ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ui-diagram__inspector-deps li {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-primary);
+  word-break: break-all;
+}
+
+.ui-diagram__inspector-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.ui-diagram__action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border-hairline);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: border-color 160ms var(--ease-out-expo);
+}
+
+.ui-diagram__action:hover {
+  border-color: var(--border-strong);
+}
+
+.ui-diagram__action--primary {
+  border-color: rgba(34, 211, 238, 0.35);
+  background: rgba(34, 211, 238, 0.1);
+  color: var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-diagram__spinner {
+    animation: none;
+  }
+}

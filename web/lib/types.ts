@@ -12,6 +12,86 @@ export type PullRequestRow = {
   latestReviewOutcome: string | null;
 };
 
+export type ReviewEvidence = {
+  type: string;
+  file: string;
+  lines: [number, number];
+};
+
+export type ReviewFinding = {
+  title: string;
+  severity: string;
+  category: string;
+  confidence: string;
+  description: string;
+  suggestedAction?: string;
+  evidence: ReviewEvidence[];
+};
+
+export type PullReviewSummary = {
+  summary: string;
+  filesChanged: number;
+  symbolsChanged: number;
+  findingsCount: number;
+  testSignals: string[];
+};
+
+export type PullReviewResult = {
+  reviewId: string;
+  status: string;
+  outcome?: string;
+  headRevision: string;
+  baseRevision: string;
+  summary: PullReviewSummary;
+  findings: ReviewFinding[];
+};
+
+export type PullRequestDetail = {
+  pullNumber: number;
+  title: string;
+  body: string | null;
+  status: string;
+  baseRevision: string;
+  headRevision: string;
+  latestReview: PullReviewResult | null;
+};
+
+export type SimilarChange = {
+  pullNumber: number;
+  title: string;
+  overlapFiles: string[];
+  overlapCount: number;
+};
+
+export type PullImpactSummary = {
+  risk: 'LOW' | 'MEDIUM' | 'HIGH';
+  directDependents: number;
+  transitiveDependents: number;
+  relevantTests: number;
+  changedModules: string[];
+  note?: string;
+};
+
+export type ImpactTestRecommendation = {
+  filePath: string;
+  reason: string;
+  confidence: 'HIGH' | 'MEDIUM';
+};
+
+export type FileImpactAnalysis = {
+  target: { filePath: string };
+  revisionSha: string;
+  risk: 'LOW' | 'MEDIUM' | 'HIGH';
+  directDependents: string[];
+  transitiveDependents: string[];
+  outboundImports: string[];
+  relevantTests: ImpactTestRecommendation[];
+  coChanges: Array<{ file: string; pairedWith: string; count: number }>;
+  hotspot: { score: number; changeCount: number; reasons: string[] } | null;
+  checklist: string[];
+  summary: string;
+};
+
 export type RepositoryAnalytics = {
   totalReviews: number;
   completedReviews: number;

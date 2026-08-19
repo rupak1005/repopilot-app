@@ -6,10 +6,12 @@ import Redis from 'ioredis';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
+import { deriveRepositoryId } from '@repopilot/common';
 import {
   handleGitHubWebhook,
   verifyGitHubSignature
 } from './services/githubWebhook';
+import { fetchPublicRepositoryMeta, searchPublicRepositories } from './services/githubPublic';
 import {
   getModuleDependencyTraversal,
   getSymbolDependencyTraversal
@@ -38,6 +40,17 @@ import {
   listModuleHotspots,
   searchHistory
 } from './services/engineeringIntelligence';
+import {
+  expandContext,
+  parseContextGraphView
+} from './services/contextGraph';
+import { analyzeFileImpact } from './services/impactAnalysis';
+import { requireInternalApiAuth } from './middleware/internalAuth';
+import {
+  getRepositoryIndexStatus,
+  startPublicRepositoryIndex,
+  startRepositoryIndex
+} from './services/repositoryIndex';
 
 async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -131,6 +144,11 @@ async function bootstrap() {
         tls: process.env.REDIS_TLS === 'true' ? {} : undefined
       });
 
+  server.addHook('onRequest', async (request, reply) => {
+    if (!request.url.startsWith('/api/v1/')) return;
+    if (!requireInternalApiAuth(request, reply)) return;
+  });
+
   server.get('/health', async (_request, reply) => {
     try {
       await prisma.$queryRaw`SELECT 1`;
@@ -141,6 +159,70 @@ async function bootstrap() {
       reply.code(503);
       return { status: 'degraded', postgres: false, redis: false };
     }
+  });
+
+  server.post('/api/v1/public/repositories/open', async (request, reply) => {
+    const body = ((request.body as ParsedJsonBody | undefined)?.json ?? {}) as {
+      owner?: string;
+      name?: string;
+      inline?: boolean;
+    };
+
+    if (!body.owner?.trim() || !body.name?.trim()) {
+      reply.code(400);
+      return { error: 'owner and name are required' };
+    }
+
+    const owner = body.owner.trim();
+    const name = body.name.trim();
+    const meta = await fetchPublicRepositoryMeta({ owner, name });
+    if (!meta) {
+      reply.code(404);
+      return {
+        error: 'Repository not found or not public. Sign in with GitHub for private repositories.'
+      };
+    }
+
+    const repositoryId = deriveRepositoryId(meta.fullName);
+    try {
+      const result = await startPublicRepositoryIndex({
+        repositoryId,
+        owner: meta.owner,
+        name: meta.name,
+        inline: body.inline
+      });
+      return {
+        repositoryId,
+        fullName: meta.fullName,
+        description: meta.description,
+        ...result
+      };
+    } catch (err) {
+      server.log.error({ err, owner, name }, 'Public repository open failed');
+      reply.code(500);
+      return {
+        error: err instanceof Error ? err.message : 'Failed to index public repository'
+      };
+    }
+  });
+
+  server.get('/api/v1/public/repositories/browse', async (request) => {
+    const query = request.query as {
+      q?: string;
+      sort?: string;
+      minStars?: string;
+      page?: string;
+    };
+    const sort = query.sort === 'updated' ? 'updated' : 'stars';
+    const minStars = query.minStars ? Number(query.minStars) : undefined;
+    const page = query.page ? Number(query.page) : 1;
+
+    return searchPublicRepositories({
+      q: query.q,
+      sort,
+      minStars: Number.isFinite(minStars) ? minStars : undefined,
+      page: Number.isFinite(page) ? page : 1
+    });
   });
 
   server.get('/api/v1/repositories/:repoId/dependencies', async (request, reply) => {
@@ -431,6 +513,116 @@ async function bootstrap() {
       pullNumber,
       topK: query.topK ? Number(query.topK) : undefined
     });
+  });
+
+  server.get('/api/v1/repositories/:repoId/index/status', async (request) => {
+    const params = request.params as { repoId: string };
+    return getRepositoryIndexStatus(params.repoId);
+  });
+
+  server.post('/api/v1/repositories/:repoId/index', async (request, reply) => {
+    const params = request.params as { repoId: string };
+    const body = ((request.body as ParsedJsonBody | undefined)?.json ?? {}) as {
+      owner?: string;
+      name?: string;
+      accessToken?: string;
+      inline?: boolean;
+    };
+
+    if (!body.owner || !body.name || !body.accessToken) {
+      reply.code(400);
+      return { error: 'owner, name, and accessToken are required' };
+    }
+
+    try {
+      const result = await startRepositoryIndex({
+        repositoryId: params.repoId,
+        owner: body.owner,
+        name: body.name,
+        accessToken: body.accessToken,
+        inline: body.inline
+      });
+      return result;
+    } catch (err) {
+      server.log.error({ err, repositoryId: params.repoId }, 'Index start failed');
+      reply.code(500);
+      return {
+        error: err instanceof Error ? err.message : 'Failed to start repository index'
+      };
+    }
+  });
+
+  server.get('/api/v1/repositories/:repoId/impact', async (request, reply) => {
+    const params = request.params as { repoId: string };
+    const query = request.query as {
+      filePath?: string;
+      revisionSha?: string;
+      depth?: string;
+    };
+
+    if (!query.filePath?.trim()) {
+      reply.code(400);
+      return { error: 'filePath is required' };
+    }
+
+    const depth = query.depth ? Number(query.depth) : undefined;
+    if (query.depth && (!Number.isFinite(depth) || Number(depth) < 1)) {
+      reply.code(400);
+      return { error: 'depth must be a positive integer' };
+    }
+
+    const result = await analyzeFileImpact({
+      repositoryId: params.repoId,
+      filePath: query.filePath.trim(),
+      revisionSha: query.revisionSha,
+      depth
+    });
+
+    if (!result) {
+      reply.code(404);
+      return { error: 'file not found for repository' };
+    }
+
+    return result;
+  });
+
+  server.get('/api/v1/repositories/:repoId/graph', async (request, reply) => {
+    const params = request.params as { repoId: string };
+    const query = request.query as {
+      view?: string;
+      filePath?: string;
+      symbolId?: string;
+      revisionSha?: string;
+      depth?: string;
+    };
+    const view = parseContextGraphView(query.view);
+    const depth = query.depth ? Number(query.depth) : undefined;
+
+    if (query.depth && (!Number.isFinite(depth) || Number(depth) < 1)) {
+      reply.code(400);
+      return { error: 'depth must be a positive integer' };
+    }
+
+    if (view === 'neighbors' && !query.filePath && !query.symbolId) {
+      reply.code(400);
+      return { error: 'filePath or symbolId is required for neighbors view' };
+    }
+
+    const result = await expandContext({
+      repositoryId: params.repoId,
+      view,
+      filePath: query.filePath,
+      symbolId: query.symbolId,
+      revisionSha: query.revisionSha,
+      depth
+    });
+
+    if (view === 'neighbors' && !result) {
+      reply.code(404);
+      return { error: 'graph seed not found for repository' };
+    }
+
+    return result ?? { revisionSha: '', nodes: [], edges: [] };
   });
 
   server.get('/api/v1/repositories/:repoId/architecture', async (request) => {

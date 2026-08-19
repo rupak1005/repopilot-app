@@ -1,4 +1,4 @@
-/* Phase 6 — Ask composer */
+/* Phase 6 — Ask composer (Layer C bar) */
 
 .ui-chat-composer {
   position: fixed;
@@ -6,10 +6,10 @@
   left: var(--sidebar-width, 240px);
   right: 0;
   z-index: 30;
-  padding: 16px 24px 24px;
-  background: rgba(9, 9, 11, 0.88);
+  padding: var(--space-4) var(--space-6) var(--space-6);
+  background: color-mix(in srgb, var(--color-background) 92%, transparent);
   backdrop-filter: blur(12px);
-  border-top: 1px solid var(--border-hairline);
+  border-top: var(--border-heavy);
 }
 
 .ui-chat-composer__inner {
@@ -17,12 +17,12 @@
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-3);
 }
 
 .ui-chat-composer__suggestions {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   overflow-x: auto;
   padding-bottom: 2px;
 }
@@ -32,29 +32,30 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--border-hairline);
-  background: var(--bg-surface);
-  color: var(--text-secondary);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: var(--border-medium);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-sm);
+  color: var(--color-text-muted);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-micro);
+  font-weight: 600;
   cursor: pointer;
   transition:
-    background 160ms var(--ease-out-expo),
-    border-color 160ms var(--ease-out-expo),
-    color 160ms var(--ease-out-expo);
+    background var(--duration-normal) var(--ease-out-expo),
+    color var(--duration-normal) var(--ease-out-expo),
+    transform var(--duration-fast) var(--ease-out-expo);
 }
 
 .ui-chat-composer__suggestion:hover:not(:disabled) {
-  background: var(--bg-surface-hover);
-  border-color: var(--border-strong);
-  color: var(--text-primary);
+  color: var(--color-text);
+  transform: translate(-1px, -1px);
 }
 
 .ui-chat-composer__suggestion:focus-visible {
   outline: none;
-  box-shadow: var(--focus-ring);
+  box-shadow: var(--shadow-hard-sm), var(--focus-ring);
 }
 
 .ui-chat-composer__suggestion:disabled {
@@ -65,17 +66,16 @@
 .ui-chat-composer__box {
   display: flex;
   align-items: flex-end;
-  gap: 10px;
-  padding: 10px 10px 10px 14px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-hairline);
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-surface-muted);
+  border: var(--border-heavy);
   border-radius: var(--radius-lg);
-  transition: border-color 160ms var(--ease-out-expo), box-shadow 160ms var(--ease-out-expo);
+  box-shadow: var(--shadow-hard-md);
 }
 
 .ui-chat-composer__box:focus-within {
-  border-color: var(--accent-dim);
-  box-shadow: var(--focus-ring);
+  box-shadow: var(--shadow-hard-md), var(--focus-ring);
 }
 
 .ui-chat-composer__box textarea {
@@ -85,34 +85,37 @@
   outline: none;
   resize: none;
   background: transparent;
-  color: var(--text-primary);
+  color: var(--color-text);
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--text-ui);
   line-height: 1.5;
 }
 
 .ui-chat-composer__box textarea::placeholder {
-  color: var(--text-tertiary);
+  color: var(--color-text-subtle);
 }
 
 .ui-chat-composer__send.ui-icon-button--subtle {
-  background: linear-gradient(180deg, #2ee8ff 0%, var(--accent) 55%, var(--accent-dim) 100%);
-  border-color: rgba(34, 211, 238, 0.3);
-  color: #042f2e;
+  background: var(--color-primary);
+  border: var(--border-heavy);
+  color: var(--color-text);
+  box-shadow: var(--shadow-hard-sm);
 }
 
 .ui-chat-composer__send.ui-icon-button--subtle:hover:not(:disabled) {
-  color: #042f2e;
+  background: var(--color-primary-hover);
+  color: var(--color-text);
 }
 
 @media (max-width: 768px) {
   .ui-chat-composer {
     left: 0;
+    padding: var(--space-3);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ui-chat-composer__suggestion {
-    transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+  .ui-chat-composer__suggestion:hover:not(:disabled) {
+    transform: none;
   }
 }

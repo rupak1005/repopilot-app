@@ -15,6 +15,13 @@ Ship one primitive at a time. Each phase ends with a runnable page slice you can
 | **8** | Repo picker cards + login polish | ✅ |
 | **9** | Page enter transitions (`motion`) | ✅ |
 | **10** | Reduced-motion audit + focus rings | ✅ |
+| **11** | Neo token foundation + light/dark themes | ✅ |
+| **12** | Neo primitives (Button, IconButton, NavItem) | ✅ |
+| **13** | Shell + login hero (Layer A) | ✅ |
+| **14** | Dashboard page migration (search, ask, pulls…) | ✅ |
+| **15** | Repos + mobile nav overlay | ✅ |
+| **16** | Dialog, toast, empty/error primitives | ✅ |
+| **17** | Visual QA + globals.css legacy purge | ✅ |
 
 ## Phase 1 acceptance (Button)
 
@@ -75,6 +82,38 @@ Ship one primitive at a time. Each phase ends with a runnable page slice you can
 - [x] `focus-audit.css` — focus rings on native + legacy controls
 - [x] All new `ui-*` inputs/composers use `--focus-ring`
 - [x] Motion tap/enter disabled via `useReducedMotion` / `MotionConfig`
+
+## Phase 14 acceptance (Dashboard pages)
+
+- [x] `page-layout.css` — canvas-inner, page-title, error/empty, ui-input, settings-dl
+- [x] Search, pulls, hotspots use neo page chrome
+- [x] Settings refactored to `BentoPanel` stack
+- [x] Legacy page-title/error/settings rules removed from `globals.css`
+
+## Phase 15 acceptance (Repos + mobile nav)
+
+- [x] `/repos` neo shell + hard-shadow `RepoCard` grid
+- [x] `RepoPicker` migrated to semantic neo tokens
+- [x] Mobile hamburger → slide-in drawer + backdrop
+- [x] Escape / route change / backdrop closes drawer
+- [x] Legacy `.repo-grid` / `.repo-item` removed from globals
+
+## Phase 16 acceptance (Feedback primitives)
+
+- [x] `EmptyState` — icon, title, description, action, compact mode
+- [x] `ErrorBanner` — dismissible alert wrapping neo `.error-banner`
+- [x] `Dialog` — native `<dialog>` modal with footer actions
+- [x] `ToastProvider` + `useToast` — bottom-right stack
+- [x] Wired on Ask (clear-history dialog + toast), Search, Pulls, Hotspots
+
+## Phase 17 acceptance (Legacy purge)
+
+- [x] `globals.css` trimmed to reset + `.mono` / `.label-caps` utilities (~50 lines)
+- [x] Shell layout consolidated in `shell.css`
+- [x] Hotspots migrated to `hotspot-list.css` + `ui-hotspot-*` classes
+- [x] Remaining pages use `ErrorBanner` / `EmptyState` primitives
+- [x] Dead `Icon.tsx` (Material Symbols) removed
+- [x] Legacy focus-audit rules for `.btn-primary` / `.ask-composer` removed
 
 ## References
 

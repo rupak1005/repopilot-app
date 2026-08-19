@@ -1,0 +1,77 @@
+/* Layer A/B panel tiers — neo-brutalist hierarchy */
+
+.neo-panel {
+  background: var(--color-surface-muted);
+  border: var(--border-heavy);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-hard-lg);
+}
+
+.neo-panel__inner {
+  padding: var(--space-6);
+}
+
+.neo-card {
+  background: var(--color-surface);
+  border: var(--border-medium);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-hard-sm);
+}
+
+.neo-utility {
+  background: var(--color-surface);
+  border: var(--border-medium);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+/* Layer C — canvas / floating controls */
+.neo-canvas-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  border: var(--border-soft-width);
+  background: color-mix(in srgb, var(--color-surface) 88%, transparent);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-soft);
+  color: var(--color-text-muted);
+  transition:
+    background var(--duration-normal) var(--ease-out-expo),
+    color var(--duration-normal) var(--ease-out-expo),
+    transform var(--duration-fast) var(--ease-out-expo);
+}
+
+.neo-canvas-control:hover {
+  color: var(--color-text);
+  background: var(--color-surface);
+}
+
+.neo-canvas-control:active {
+  transform: scale(0.97);
+}
+
+.neo-canvas-bar {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-1);
+  border-radius: var(--radius-md);
+  border: var(--border-soft-width);
+  background: color-mix(in srgb, var(--color-surface) 90%, transparent);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-soft);
+}
+
+.neo-sparkle {
+  position: absolute;
+  pointer-events: none;
+  color: var(--color-primary);
+  opacity: 0.85;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .neo-canvas-control:active {
+    transform: none;
+  }
+}

@@ -1,4 +1,5 @@
 import { Head, Html, Main, NextScript } from 'next/document';
+import { THEME_INIT_SCRIPT } from '../lib/theme';
 
 export default function Document() {
   return (
@@ -14,6 +15,7 @@ export default function Document() {
         />
       </Head>
       <body>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <Main />
         <NextScript />
       </body>

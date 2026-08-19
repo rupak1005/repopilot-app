@@ -1,5 +1,5 @@
 import type { ParsedFile, ParsedSymbol } from './treeSitterParser';
-import { getPrisma } from '../db/prisma';
+import { getPrisma, prismaInteractiveTxOptions } from '../db/prisma';
 
 export type PersistedCounts = {
   fileId: string;
@@ -78,7 +78,7 @@ export async function clearRevisionData(args: { revisionId: string }): Promise<v
       `,
       args.revisionId
     );
-  });
+  }, prismaInteractiveTxOptions);
 }
 
 export async function insertFileParsedData(args: {
@@ -155,6 +155,6 @@ export async function insertFileParsedData(args: {
       imports: args.parsed.imports.length,
       exports: args.parsed.exports.length
     };
-  });
+  }, prismaInteractiveTxOptions);
 }
 

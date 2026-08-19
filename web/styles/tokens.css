@@ -1,34 +1,204 @@
-/* Premium tokens — see design-system/MASTER.md */
+/**
+ * RepoPilot Design Tokens — GitDiagram-inspired neo-brutalist system
+ * Layer A: brand surfaces · Layer B: app UI · Layer C: canvas (see neo-panels.css)
+ */
+
 :root {
-  --bg-base: #09090b;
-  --bg-elevated: #111113;
-  --bg-surface: #18181b;
-  --bg-surface-hover: #1f1f23;
-  --border-hairline: rgba(255, 255, 255, 0.06);
-  --border-strong: rgba(255, 255, 255, 0.1);
-  --text-primary: #fafafa;
-  --text-secondary: #a1a1aa;
-  --text-tertiary: #71717a;
-  --accent: #22d3ee;
-  --accent-dim: #0891b2;
-  --accent-glow: rgba(34, 211, 238, 0.15);
-  --success: #22c55e;
-  --warn: #eab308;
-  --danger: #ef4444;
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  color-scheme: light;
+
+  /* ——— Semantic colors (light) ——— */
+  --color-background: hsl(269 100% 95%);
+  --color-surface: hsl(270 100% 98%);
+  --color-surface-muted: hsl(270 100% 92%);
+  --color-surface-accent: hsl(270 100% 90%);
+  --color-primary: hsl(270 97% 75%);
+  --color-primary-hover: hsl(270 97% 80%);
+  --color-secondary: hsl(270 40% 96%);
+  --color-text: hsl(0 0% 8%);
+  --color-text-muted: hsl(0 0% 28%);
+  --color-text-subtle: hsl(0 0% 45%);
+  --color-border: hsl(0 0% 12%);
+  --color-border-strong: hsl(0 0% 0%);
+  --color-border-soft: hsl(270 20% 82%);
+  --color-focus: hsl(270 90% 55%);
+  --color-link: hsl(270 85% 42%);
+  --color-link-hover: hsl(270 85% 32%);
+  --color-success: hsl(142 55% 38%);
+  --color-warning: hsl(38 92% 42%);
+  --color-danger: hsl(0 72% 48%);
+  --color-info: hsl(270 70% 50%);
+
+  --shadow-color: hsl(0 0% 0%);
+  --shadow-hard-lg: 8px 8px 0 var(--shadow-color);
+  --shadow-hard-md: 4px 4px 0 var(--shadow-color);
+  --shadow-hard-sm: 3px 3px 0 var(--shadow-color);
+  --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+  /* ——— Legacy aliases (existing components) ——— */
+  --bg-base: var(--color-background);
+  --bg-elevated: var(--color-surface-muted);
+  --bg-surface: var(--color-surface);
+  --bg-surface-hover: var(--color-surface-accent);
+  --border-hairline: var(--color-border-soft);
+  --border-strong: var(--color-border);
+  --text-primary: var(--color-text);
+  --text-secondary: var(--color-text-muted);
+  --text-tertiary: var(--color-text-subtle);
+  --accent: var(--color-link);
+  --accent-dim: var(--color-focus);
+  --accent-glow: hsl(270 97% 75% / 0.35);
+  --success: var(--color-success);
+  --warn: var(--color-warning);
+  --danger: var(--color-danger);
+  --status-success: var(--color-success);
+  --status-warn: var(--color-warning);
+  --status-danger: var(--color-danger);
+
+  /* Stitch bridge (globals.css pages) */
+  --background: var(--color-background);
+  --surface: var(--color-surface-muted);
+  --surface-dim: var(--color-surface-muted);
+  --surface-container-lowest: var(--color-background);
+  --surface-container-low: var(--color-surface);
+  --surface-container: var(--color-surface);
+  --surface-container-high: var(--color-surface-accent);
+  --surface-container-highest: var(--color-surface-muted);
+  --border: var(--color-border-soft);
+  --border-subtle: var(--color-border-soft);
+  --on-surface: var(--color-text);
+  --on-surface-variant: var(--color-text-muted);
+  --on-background: var(--color-text);
+  --primary: var(--color-primary);
+  --primary-container: var(--color-primary);
+  --on-primary-container: var(--color-text);
+  --secondary: var(--color-link);
+
+  /* ——— Typography ——— */
   --font-sans: 'Geist', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
-  --focus-ring: 0 0 0 2px var(--bg-base), 0 0 0 4px var(--accent-dim);
+  --text-display: clamp(2.25rem, 5vw, 3.25rem);
+  --text-h1: clamp(2rem, 4vw, 2.75rem);
+  --text-h2: clamp(1.25rem, 2.5vw, 1.625rem);
+  --text-body: 1rem;
+  --text-ui: 0.9375rem;
+  --text-micro: 0.75rem;
+
+  /* ——— Spacing ——— */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ——— Borders ——— */
+  --border-heavy: 3px solid var(--color-border-strong);
+  --border-medium: 2px solid var(--color-border);
+  --border-soft-width: 1px solid var(--color-border-soft);
+
+  /* ——— Radii ——— */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius: var(--radius-sm);
+
+  /* ——— Layout ——— */
+  --sidebar-width: 240px;
+  --header-height: 64px;
+  --container-max: 1280px;
+
+  /* ——— Motion ——— */
+  --ease-out-expo: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-fast: 120ms;
+  --duration-normal: 180ms;
+  --duration-slow: 240ms;
+
+  --focus-ring: 0 0 0 2px var(--color-background), 0 0 0 4px var(--color-focus);
+
+  --z-dropdown: 40;
+  --z-overlay: 50;
+  --z-toast: 60;
+
+  /* Architecture canvas (Layer C) */
+  --diagram-canvas-bg: hsl(270 35% 94%);
+  --diagram-canvas-dot: hsl(270 15% 78%);
+  --diagram-node-fill: hsl(270 100% 99%);
+  --diagram-node-fill-dim: hsl(270 20% 88% / 0.75);
+  --diagram-node-fill-selected: hsl(270 97% 75% / 0.28);
+  --diagram-node-text: hsl(0 0% 10%);
+  --diagram-node-text-dim: hsl(0 0% 42%);
+  --diagram-link-active: hsl(270 85% 48% / 0.55);
+  --diagram-link-dim: hsl(270 10% 65% / 0.4);
+  --diagram-accent: hsl(270 90% 48%);
+  --diagram-hotspot: hsl(25 95% 48%);
+  --diagram-border-dim: hsl(270 10% 70% / 0.45);
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-background: hsl(260 28% 7%);
+  --color-surface: hsl(260 24% 11%);
+  --color-surface-muted: hsl(260 22% 14%);
+  --color-surface-accent: hsl(260 26% 18%);
+  --color-primary: hsl(270 70% 68%);
+  --color-primary-hover: hsl(270 70% 74%);
+  --color-secondary: hsl(260 20% 16%);
+  --color-text: hsl(270 30% 94%);
+  --color-text-muted: hsl(270 15% 72%);
+  --color-text-subtle: hsl(270 10% 55%);
+  --color-border: hsl(270 15% 28%);
+  --color-border-strong: hsl(270 20% 88%);
+  --color-border-soft: hsl(260 18% 20%);
+  --color-focus: hsl(270 80% 72%);
+  --color-link: hsl(270 85% 78%);
+  --color-link-hover: hsl(270 90% 88%);
+  --color-success: hsl(142 50% 52%);
+  --color-warning: hsl(38 90% 58%);
+  --color-danger: hsl(0 75% 62%);
+  --color-info: hsl(270 70% 72%);
+
+  --shadow-color: hsl(0 0% 0%);
+  --shadow-hard-lg: 8px 8px 0 hsl(0 0% 0% / 0.85);
+  --shadow-hard-md: 4px 4px 0 hsl(0 0% 0% / 0.85);
+  --shadow-hard-sm: 3px 3px 0 hsl(0 0% 0% / 0.85);
+  --shadow-soft: 0 12px 32px hsl(0 0% 0% / 0.45);
+
+  --accent-glow: hsl(270 70% 68% / 0.25);
+
+  --diagram-canvas-bg: hsl(260 28% 7%);
+  --diagram-canvas-dot: hsl(260 15% 22%);
+  --diagram-node-fill: hsl(260 24% 14%);
+  --diagram-node-fill-dim: hsl(260 20% 10% / 0.65);
+  --diagram-node-fill-selected: hsl(270 70% 68% / 0.18);
+  --diagram-node-text: hsl(270 30% 94%);
+  --diagram-node-text-dim: hsl(270 10% 55%);
+  --diagram-link-active: hsl(270 80% 72% / 0.45);
+  --diagram-link-dim: hsl(260 12% 28% / 0.55);
+  --diagram-accent: hsl(270 80% 72%);
+  --diagram-hotspot: hsl(25 95% 58%);
+  --diagram-border-dim: hsl(260 12% 32% / 0.5);
+}
+
+@media (max-width: 640px) {
+  :root {
+    --shadow-hard-lg: 5px 5px 0 var(--shadow-color);
+    --shadow-hard-md: 3px 3px 0 var(--shadow-color);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   :root {
     --ease-spring: ease;
     --ease-out-expo: ease;
+    --duration-fast: 0ms;
+    --duration-normal: 0ms;
+    --duration-slow: 0ms;
   }
 }

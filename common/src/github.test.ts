@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { deriveRepositoryId } from './github';
+import { deriveRepositoryId, parseGithubRepoUrl } from './github';
 
 describe('deriveRepositoryId', () => {
   it('is deterministic and case-insensitive', () => {
@@ -8,5 +8,15 @@ describe('deriveRepositoryId', () => {
     expect(id).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
     );
+  });
+});
+
+describe('parseGithubRepoUrl', () => {
+  it('parses https github URLs and shorthand', () => {
+    expect(parseGithubRepoUrl('https://github.com/torvalds/linux')).toEqual({
+      owner: 'torvalds',
+      name: 'linux'
+    });
+    expect(parseGithubRepoUrl('torvalds/linux')).toEqual({ owner: 'torvalds', name: 'linux' });
   });
 });

@@ -1,0 +1,164 @@
+/* Browse — GitDiagram-style public repo catalog */
+
+.browse-page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-background);
+}
+
+.browse-main {
+  flex: 1;
+  width: 100%;
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-6) var(--space-12);
+}
+
+.browse-hero h1 {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-h1);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+
+.browse-hero p {
+  margin: 0 0 var(--space-8);
+  max-width: 56ch;
+  font-size: var(--text-body);
+  line-height: 1.65;
+  color: var(--color-text-muted);
+}
+
+.browse-filters {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+  padding: var(--space-5);
+  border: var(--border-heavy);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-muted);
+  box-shadow: var(--shadow-hard-md);
+}
+
+.browse-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: var(--text-micro);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-subtle);
+}
+
+.browse-filters .ui-input,
+.browse-filters select {
+  font-size: var(--text-body);
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-medium);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.browse-meta {
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-ui);
+  color: var(--color-text-muted);
+}
+
+.browse-table-wrap {
+  border: var(--border-heavy);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-md);
+}
+
+.browse-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-ui);
+}
+
+.browse-table th {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  font-size: var(--text-micro);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-subtle);
+  background: var(--color-surface-muted);
+  border-bottom: var(--border-medium);
+}
+
+.browse-table td {
+  padding: var(--space-4);
+  border-bottom: var(--border-soft-width);
+  vertical-align: middle;
+}
+
+.browse-table tr:last-child td {
+  border-bottom: none;
+}
+
+.browse-repo-name {
+  font-weight: 700;
+  font-size: var(--text-body);
+  color: var(--color-text);
+}
+
+.browse-repo-desc {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-ui);
+  color: var(--color-text-muted);
+  max-width: 420px;
+}
+
+.browse-stars {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.browse-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.browse-empty {
+  padding: var(--space-10);
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--text-body);
+}
+
+@media (max-width: 768px) {
+  .browse-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .browse-table thead {
+    display: none;
+  }
+
+  .browse-table tr {
+    display: block;
+    padding: var(--space-4);
+    border-bottom: var(--border-medium);
+  }
+
+  .browse-table td {
+    display: block;
+    padding: var(--space-1) 0;
+    border: none;
+  }
+
+  .browse-actions {
+    margin-top: var(--space-3);
+  }
+}
