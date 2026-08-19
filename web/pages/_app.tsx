@@ -1,5 +1,4 @@
 import type { AppProps } from 'next/app';
-import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { AnimatePresence, MotionConfig, motion } from 'motion/react';
 import { usePageEnter } from '../lib/motion';
@@ -38,19 +37,5 @@ function AnimatedPage({ Component, pageProps }: AppProps) {
 }
 
 export default function App(props: AppProps) {
-  return (
-    <>
-      <Head>
-        <link
-          rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-sans/style.css"
-        />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap"
-        />
-      </Head>
-      <AnimatedPage {...props} />
-    </>
-  );
+  return <AnimatedPage {...props} />;
 }

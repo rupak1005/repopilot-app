@@ -8,6 +8,7 @@ import type {
   RepositoryAnalytics
 } from './types';
 import { API_BASE } from './types';
+import { formatLatency, hotspotScoreClass } from './metrics';
 
 type DashboardContext = {
   repoId: string;
@@ -116,16 +117,6 @@ export function useRepoData(repoId: string | null) {
   return { pulls, analytics, hotspots, error, loading };
 }
 
-export function formatLatency(ms: number | null): string {
-  if (ms == null) return 'n/a';
-  if (ms >= 1000) return `${(ms / 1000).toFixed(1)}s`;
-  return `${ms}ms`;
-}
-
-export function hotspotScoreClass(score: number): string {
-  if (score >= 80) return 'var(--status-fail)';
-  if (score >= 50) return 'var(--status-warn)';
-  return 'var(--primary)';
-}
+export { formatLatency, hotspotScoreClass };
 
 export type { PublicUser };

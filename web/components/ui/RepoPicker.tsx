@@ -10,7 +10,7 @@ type RepoPickerProps = {
   href?: string;
 };
 
-function splitRepo(fullName: string): { owner: string; name: string } {
+export function splitRepoFullName(fullName: string): { owner: string; name: string } {
   const slash = fullName.indexOf('/');
   if (slash === -1) return { owner: '', name: fullName };
   return { owner: fullName.slice(0, slash), name: fullName.slice(slash + 1) };
@@ -18,7 +18,7 @@ function splitRepo(fullName: string): { owner: string; name: string } {
 
 /** Phase 2 primitive — topbar repository switcher. */
 export function RepoPicker({ repoFullName, href = '/repos' }: RepoPickerProps) {
-  const { owner, name } = splitRepo(repoFullName);
+  const { owner, name } = splitRepoFullName(repoFullName);
   const tap = useTapMotion(0.99);
 
   return (

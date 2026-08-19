@@ -97,17 +97,24 @@ async function bootstrap() {
     dotenv: true,
     schema: {
       type: 'object',
-      required: ['DATABASE_URL', 'REDIS_HOST', 'REDIS_PORT'],
+      required: ['DATABASE_URL'],
       properties: {
         PORT: { type: 'string', default: '3001' },
         DATABASE_URL: { type: 'string' },
+        REDIS_URL: { type: 'string' },
         REDIS_HOST: { type: 'string' },
         REDIS_PORT: { type: 'string' },
+        REDIS_PASSWORD: { type: 'string' },
+        REDIS_TLS: { type: 'string' },
         CORS_ORIGINS: { type: 'string' },
         GITHUB_WEBHOOK_SECRET: { type: 'string' }
       }
     }
   });
+
+  if (!process.env.REDIS_URL && (!process.env.REDIS_HOST || !process.env.REDIS_PORT)) {
+    throw new Error('Set REDIS_URL or both REDIS_HOST and REDIS_PORT');
+  }
 
   // Connectivity checks (so `docker compose up` can validate infrastructure quickly).
   const pool = new Pool({
