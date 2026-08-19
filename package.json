@@ -1,0 +1,30 @@
+{
+  "name": "repopilot",
+  "private": true,
+  "packageManager": "yarn@1.22.22",
+  "workspaces": [
+    "common",
+    "api",
+    "web"
+  ],
+  "scripts": {
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check",
+    "test": "turbo run test",
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel"
+  },
+  "devDependencies": {
+    "@types/node": "*",
+    "@typescript-eslint/eslint-plugin": "*",
+    "@typescript-eslint/parser": "*",
+    "eslint": "*",
+    "eslint-config-prettier": "*",
+    "prettier": "*",
+    "ts-node-dev": "*",
+    "turbo": "*",
+    "typescript": "^6.0.0",
+    "vitest": "*"
+  }
+}
+

@@ -1,0 +1,29 @@
+{
+  "name": "@repopilot/api",
+  "private": true,
+  "version": "0.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "start": "node dist/server.js",
+    "build": "tsc -p tsconfig.json",
+    "lint": "eslint src --ext .ts",
+    "type-check": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --config ../vitest.config.ts --passWithNoTests"
+  },
+  "dependencies": {
+    "@fastify/env": "*",
+    "@prisma/adapter-pg": "*",
+    "@prisma/client": "*",
+    "fastify": "*",
+    "fastify-cors": "*",
+    "ioredis": "*",
+    "pg": "*",
+    "prisma": "*"
+  },
+  "devDependencies": {
+    "@types/fastify-cors": "*"
+  }
+}
+

@@ -1,0 +1,24 @@
+{
+  "name": "@repopilot/web",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "start": "next start -p 3000",
+    "build": "next build",
+    "lint": "eslint pages --ext .ts,.tsx",
+    "type-check": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --config ../vitest.config.ts --passWithNoTests"
+  },
+  "dependencies": {
+    "@repopilot/common": "0.0.0",
+    "next": "*",
+    "react": "*",
+    "react-dom": "*"
+  },
+  "devDependencies": {
+    "@types/react": "*",
+    "@types/react-dom": "*"
+  }
+}
+
