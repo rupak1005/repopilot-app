@@ -1,19 +1,13 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.chunkText = chunkText;
 exports.indexRepositorySearch = indexRepositorySearch;
 exports.searchRepository = searchRepository;
-const node_crypto_1 = __importDefault(require("node:crypto"));
 const prisma_1 = require("../db/prisma");
 const repositoryRevisions_1 = require("./repositoryRevisions");
-const EMBEDDING_MODEL = 'text-embedding-3-small';
-const EMBEDDING_DIMENSIONS = 1536;
+const embeddingProvider_1 = require("./embeddingProvider");
 const MAX_CHUNK_LINES = 40;
 const CHUNK_OVERLAP_LINES = 8;
-const EMBEDDING_BATCH_SIZE = 50;
 function logEvent(event, fields) {
     console.log(JSON.stringify({
         event,
@@ -45,61 +39,6 @@ function chunkText(text) {
 }
 function vectorLiteral(values) {
     return `[${values.map((value) => Number(value.toFixed(8))).join(',')}]`;
-}
-function normalizeVector(values) {
-    const norm = Math.sqrt(values.reduce((sum, value) => sum + value * value, 0));
-    if (!norm)
-        return values;
-    return values.map((value) => value / norm);
-}
-function localEmbedding(text) {
-    const values = Array.from({ length: EMBEDDING_DIMENSIONS }, () => 0);
-    const tokens = text.toLowerCase().match(/[a-z0-9_]+/g) ?? [];
-    for (const token of tokens) {
-        const hash = node_crypto_1.default.createHash('sha256').update(token).digest();
-        const index = hash.readUInt16BE(0) % EMBEDDING_DIMENSIONS;
-        const direction = hash[2] % 2 === 0 ? 1 : -1;
-        values[index] += direction * Math.max(1, token.length / 4);
-    }
-    return normalizeVector(values);
-}
-async function createEmbeddings(texts) {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-        return {
-            provider: 'local-hash',
-            embeddings: texts.map((text) => localEmbedding(text))
-        };
-    }
-    const embeddings = [];
-    for (let idx = 0; idx < texts.length; idx += EMBEDDING_BATCH_SIZE) {
-        const batch = texts.slice(idx, idx + EMBEDDING_BATCH_SIZE);
-        const response = await fetch('https://api.openai.com/v1/embeddings', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
-                model: EMBEDDING_MODEL,
-                input: batch,
-                dimensions: EMBEDDING_DIMENSIONS,
-                encoding_format: 'float'
-            })
-        });
-        if (!response.ok) {
-            const errorBody = await response.text();
-            throw new Error(`Embedding request failed: ${response.status} ${errorBody}`);
-        }
-        const payload = (await response.json());
-        for (const row of payload.data) {
-            embeddings.push(row.embedding);
-        }
-    }
-    return {
-        provider: `openai:${EMBEDDING_MODEL}`,
-        embeddings
-    };
 }
 async function indexRepositorySearch(args) {
     const revision = await (0, repositoryRevisions_1.resolveRepositoryRevision)({
@@ -135,7 +74,7 @@ async function indexRepositorySearch(args) {
             });
         }
     }
-    const embeddingResult = await createEmbeddings(pendingChunks.map((chunk) => chunk.text));
+    const embeddingResult = await (0, embeddingProvider_1.createEmbeddings)(pendingChunks.map((chunk) => chunk.text));
     await prisma.$transaction(async (tx) => {
         await tx.$executeRawUnsafe(`
         DELETE FROM "CodeChunk"
@@ -143,7 +82,7 @@ async function indexRepositorySearch(args) {
       `, revision.id);
         for (let idx = 0; idx < pendingChunks.length; idx += 1) {
             const chunk = pendingChunks[idx];
-            const embedding = embeddingResult.embeddings[idx] ?? localEmbedding(chunk.text);
+            const embedding = embeddingResult.embeddings[idx] ?? (0, embeddingProvider_1.localEmbedding)(chunk.text);
             await tx.$executeRawUnsafe(`
           INSERT INTO "CodeChunk" (
             "repositoryId",
@@ -235,8 +174,8 @@ async function searchRepository(args) {
         return { results: [] };
     }
     const topK = Math.max(1, Math.min(args.topK ?? 5, 20));
-    const embeddingResult = await createEmbeddings([query]);
-    const queryEmbedding = embeddingResult.embeddings[0] ?? localEmbedding(query);
+    const embeddingResult = await (0, embeddingProvider_1.createEmbeddings)([query]);
+    const queryEmbedding = embeddingResult.embeddings[0] ?? (0, embeddingProvider_1.localEmbedding)(query);
     const [lexicalResults, semanticResults] = await Promise.all([
         lexicalSearch({
             revisionId: revision.id,

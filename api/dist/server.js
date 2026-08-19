@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+require("dotenv/config");
 const fastify_1 = __importDefault(require("fastify"));
 const cors_1 = __importDefault(require("@fastify/cors"));
 const env_1 = __importDefault(require("@fastify/env"));
@@ -41,8 +42,13 @@ async function bootstrap() {
             level: 'info'
         }
     });
-    // Keep Phase 1 intentionally small: wire CORS and validate required env upfront.
-    await server.register(cors_1.default, { origin: true });
+    function parseCorsOrigins() {
+        const raw = process.env.CORS_ORIGINS?.trim();
+        if (!raw || raw === '*')
+            return true;
+        return raw.split(',').map((origin) => origin.trim()).filter(Boolean);
+    }
+    await server.register(cors_1.default, { origin: parseCorsOrigins() });
     server.addContentTypeParser('application/json', { parseAs: 'string' }, (request, body, done) => {
         try {
             const rawBody = typeof body === 'string' ? body : body.toString('utf8');
@@ -63,11 +69,37 @@ async function bootstrap() {
                 DATABASE_URL: { type: 'string' },
                 REDIS_HOST: { type: 'string' },
                 REDIS_PORT: { type: 'string' },
+                CORS_ORIGINS: { type: 'string' },
                 GITHUB_WEBHOOK_SECRET: { type: 'string' }
             }
         }
     });
-    server.get('/health', async () => ({ status: 'ok' }));
+    // Connectivity checks (so `docker compose up` can validate infrastructure quickly).
+    const pool = new pg_1.Pool({
+        connectionString: process.env.DATABASE_URL
+    });
+    const adapter = new adapter_pg_1.PrismaPg(pool);
+    const prisma = new client_1.PrismaClient({ adapter });
+    const redis = process.env.REDIS_URL
+        ? new ioredis_1.default(process.env.REDIS_URL)
+        : new ioredis_1.default({
+            host: process.env.REDIS_HOST,
+            port: Number(process.env.REDIS_PORT),
+            password: process.env.REDIS_PASSWORD || undefined,
+            tls: process.env.REDIS_TLS === 'true' ? {} : undefined
+        });
+    server.get('/health', async (_request, reply) => {
+        try {
+            await prisma.$queryRaw `SELECT 1`;
+            await redis.ping();
+            return { status: 'ok', postgres: true, redis: true };
+        }
+        catch (err) {
+            server.log.error({ err }, 'Health check failed');
+            reply.code(503);
+            return { status: 'degraded', postgres: false, redis: false };
+        }
+    });
     server.get('/api/v1/repositories/:repoId/dependencies', async (request, reply) => {
         const params = request.params;
         const query = request.query;
@@ -355,16 +387,6 @@ async function bootstrap() {
             reply.code(500);
             return { error: 'webhook processing failed' };
         }
-    });
-    // Connectivity checks (so `docker compose up` can validate infrastructure quickly).
-    const pool = new pg_1.Pool({
-        connectionString: process.env.DATABASE_URL
-    });
-    const adapter = new adapter_pg_1.PrismaPg(pool);
-    const prisma = new client_1.PrismaClient({ adapter });
-    const redis = new ioredis_1.default({
-        host: process.env.REDIS_HOST,
-        port: Number(process.env.REDIS_PORT)
     });
     try {
         await withRetries(async () => {

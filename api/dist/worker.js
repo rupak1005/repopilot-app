@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+require("dotenv/config");
 const prisma_1 = require("./db/prisma");
 const repositorySync_1 = require("./services/repositorySync");
 const prReview_1 = require("./services/prReview");

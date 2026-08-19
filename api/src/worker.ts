@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { getPrisma } from './db/prisma';
 import { syncRepository } from './services/repositorySync';
 import { runPullRequestReview } from './services/prReview';

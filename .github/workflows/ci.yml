@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:15
+        image: pgvector/pgvector:pg15
         env:
           POSTGRES_DB: repopilot
           POSTGRES_USER: rp
@@ -33,10 +33,13 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Generate Prisma client
+      - name: Enable pgvector and migrate
         env:
           DATABASE_URL: postgresql://rp:secret@localhost:5432/repopilot?schema=public
-        run: yarn --cwd api prisma generate
+        run: |
+          PGPASSWORD=secret psql -h localhost -U rp -d repopilot -c "CREATE EXTENSION IF NOT EXISTS vector;"
+          yarn --cwd api prisma generate
+          yarn --cwd api prisma migrate deploy
 
       - name: Lint
         run: yarn lint
@@ -45,5 +48,6 @@ jobs:
         run: yarn type-check
 
       - name: Test
+        env:
+          TMPDIR: ${{ runner.temp }}
         run: yarn test
-

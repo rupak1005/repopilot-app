@@ -1,12 +1,9 @@
-import crypto from 'node:crypto';
 import { getPrisma } from '../db/prisma';
 import { resolveRepositoryRevision } from './repositoryRevisions';
+import { createEmbeddings, localEmbedding } from './embeddingProvider';
 
-const EMBEDDING_MODEL = 'text-embedding-3-small';
-const EMBEDDING_DIMENSIONS = 1536;
 const MAX_CHUNK_LINES = 40;
 const CHUNK_OVERLAP_LINES = 8;
-const EMBEDDING_BATCH_SIZE = 50;
 
 type FileRow = {
   id: string;
@@ -78,74 +75,6 @@ export function chunkText(text: string): TextChunk[] {
 
 function vectorLiteral(values: number[]): string {
   return `[${values.map((value) => Number(value.toFixed(8))).join(',')}]`;
-}
-
-function normalizeVector(values: number[]): number[] {
-  const norm = Math.sqrt(values.reduce((sum, value) => sum + value * value, 0));
-  if (!norm) return values;
-  return values.map((value) => value / norm);
-}
-
-function localEmbedding(text: string): number[] {
-  const values = Array.from({ length: EMBEDDING_DIMENSIONS }, () => 0);
-  const tokens = text.toLowerCase().match(/[a-z0-9_]+/g) ?? [];
-
-  for (const token of tokens) {
-    const hash = crypto.createHash('sha256').update(token).digest();
-    const index = hash.readUInt16BE(0) % EMBEDDING_DIMENSIONS;
-    const direction = hash[2] % 2 === 0 ? 1 : -1;
-    values[index] += direction * Math.max(1, token.length / 4);
-  }
-
-  return normalizeVector(values);
-}
-
-async function createEmbeddings(texts: string[]): Promise<{
-  provider: string;
-  embeddings: number[][];
-}> {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    return {
-      provider: 'local-hash',
-      embeddings: texts.map((text) => localEmbedding(text))
-    };
-  }
-
-  const embeddings: number[][] = [];
-  for (let idx = 0; idx < texts.length; idx += EMBEDDING_BATCH_SIZE) {
-    const batch = texts.slice(idx, idx + EMBEDDING_BATCH_SIZE);
-    const response = await fetch('https://api.openai.com/v1/embeddings', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: EMBEDDING_MODEL,
-        input: batch,
-        dimensions: EMBEDDING_DIMENSIONS,
-        encoding_format: 'float'
-      })
-    });
-
-    if (!response.ok) {
-      const errorBody = await response.text();
-      throw new Error(`Embedding request failed: ${response.status} ${errorBody}`);
-    }
-
-    const payload = (await response.json()) as {
-      data: Array<{ embedding: number[] }>;
-    };
-    for (const row of payload.data) {
-      embeddings.push(row.embedding);
-    }
-  }
-
-  return {
-    provider: `openai:${EMBEDDING_MODEL}`,
-    embeddings
-  };
 }
 
 export async function indexRepositorySearch(args: {
