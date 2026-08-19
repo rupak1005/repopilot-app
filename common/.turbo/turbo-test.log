@@ -8,11 +8,15 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
  RUN  v4.1.11 /home/deadlyr/repoPilot
 
- ✓ tests/smoke.test.ts (1 test) 4ms
+ ✓ tests/smoke.test.ts (1 test) 12ms
+stderr | api/src/repo/treeSitterParser.test.ts > Phase 2 persistence (integration, optional) > sync-repo parses and persists file/symbol/import/export rows
+Skipping integration test: set TEST_DATABASE_URL to enable.
 
- Test Files  1 passed (1)
-      Tests  1 passed (1)
-   Start at  14:29:04
-   Duration  383ms (transform 35ms, setup 0ms, import 61ms, tests 4ms, environment 0ms)
+ ✓ api/src/repo/treeSitterParser.test.ts (2 tests) 60ms
 
-Done in 1.27s.
+ Test Files  2 passed (2)
+      Tests  3 passed (3)
+   Start at  14:51:51
+   Duration  2.18s (transform 536ms, setup 0ms, import 1.05s, tests 72ms, environment 2ms)
+
+Done in 3.90s.

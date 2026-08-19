@@ -12,3 +12,68 @@ model User {
   createdAt DateTime @default(now())
 }
 
+// ---- Phase 2: Repository Analyzer (Repository -> Parsed files -> Symbols/Imports/Exports) ----
+
+model Repository {
+  id        String   @id @default(uuid())
+  name      String
+  owner     String
+  createdAt DateTime @default(now())
+
+  files File[]
+}
+
+model File {
+  id           String        @id @default(uuid())
+  repositoryId String
+  repository   Repository    @relation(fields: [repositoryId], references: [id])
+
+  path       String
+  content    String
+  indexedAt  DateTime       @default(now())
+
+  symbols    Symbol[]
+  imports    FileImport[]
+  exports    FileExport[]
+
+  @@unique([repositoryId, path])
+  @@index([repositoryId])
+}
+
+model Symbol {
+  id        String   @id @default(uuid())
+  fileId    String
+  file      File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  name       String
+  type       String
+  startLine  Int
+  endLine    Int
+
+  @@index([fileId])
+  @@index([name])
+}
+
+model FileImport {
+  id         String   @id @default(uuid())
+  fileId     String
+  file       File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  module     String
+  specifiers String[]
+
+  @@index([fileId])
+  @@index([module])
+}
+
+model FileExport {
+  id      String @id @default(uuid())
+  fileId  String
+  file    File   @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  name String
+
+  @@index([fileId])
+  @@index([name])
+}
+

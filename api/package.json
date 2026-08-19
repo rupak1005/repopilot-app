@@ -16,9 +16,13 @@
     "@fastify/env": "*",
     "@prisma/adapter-pg": "*",
     "@prisma/client": "*",
+    "fast-glob": "*",
     "fastify": "*",
     "fastify-cors": "*",
     "ioredis": "*",
+    "tree-sitter": "*",
+    "tree-sitter-javascript": "*",
+    "tree-sitter-typescript": "*",
     "pg": "*",
     "prisma": "*"
   },
