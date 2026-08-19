@@ -20,7 +20,8 @@ model Repository {
   owner     String
   createdAt DateTime @default(now())
 
-  files File[]
+  files              File[]
+  moduleDependencies ModuleDependency[]
 }
 
 model File {
@@ -50,6 +51,9 @@ model Symbol {
   startLine  Int
   endLine    Int
 
+  outgoingDependencies SymbolDependency[] @relation("SymbolDependencyFrom")
+  incomingDependencies SymbolDependency[] @relation("SymbolDependencyTo")
+
   @@index([fileId])
   @@index([name])
 }
@@ -75,5 +79,30 @@ model FileExport {
 
   @@index([fileId])
   @@index([name])
+}
+
+model SymbolDependency {
+  id           String @id @default(uuid())
+  fromSymbolId String
+  toSymbolId   String
+
+  fromSymbol Symbol @relation("SymbolDependencyFrom", fields: [fromSymbolId], references: [id], onDelete: Cascade)
+  toSymbol   Symbol @relation("SymbolDependencyTo", fields: [toSymbolId], references: [id], onDelete: Cascade)
+
+  @@unique([fromSymbolId, toSymbolId])
+  @@index([fromSymbolId])
+  @@index([toSymbolId])
+}
+
+model ModuleDependency {
+  id           String @id @default(uuid())
+  repositoryId String
+  repository   Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  fromModule   String
+  toModule     String
+
+  @@unique([repositoryId, fromModule, toModule])
+  @@index([repositoryId])
+  @@index([toModule])
 }
 

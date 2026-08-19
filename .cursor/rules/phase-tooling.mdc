@@ -1,0 +1,22 @@
+---
+description: Use Context7 and Ponytail before each project phase
+alwaysApply: true
+---
+
+# Phase Workflow
+
+Before starting each new project phase or major implementation chunk:
+
+1. Check whether external library, framework, SDK, or API behavior matters.
+2. If it does, consult Context7 first for current docs and examples before relying on memory.
+3. Then apply Ponytail: prefer the smallest correct change, existing patterns, standard library, and already-installed dependencies.
+
+If Context7 is unavailable in the current session, say so briefly and proceed with local code inspection plus the simplest safe implementation.
+
+Use this especially for:
+
+- dependency or package setup
+- framework conventions
+- database or ORM behavior
+- auth, integrations, and API contracts
+- build, CI, and tooling changes

@@ -16,6 +16,7 @@
     "@fastify/env": "*",
     "@prisma/adapter-pg": "*",
     "@prisma/client": "*",
+    "@repopilot/common": "0.0.0",
     "fast-glob": "*",
     "fastify": "*",
     "fastify-cors": "*",

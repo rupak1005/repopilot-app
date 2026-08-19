@@ -8,15 +8,20 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
  RUN  v4.1.11 /home/deadlyr/repoPilot
 
- ✓ tests/smoke.test.ts (1 test) 18ms
+ ✓ api/src/services/dependencyGraphQueries.test.ts (2 tests) 20ms
 stderr | api/src/repo/treeSitterParser.test.ts > Phase 2 persistence (integration, optional) > sync-repo parses and persists file/symbol/import/export rows
 Skipping integration test: set TEST_DATABASE_URL to enable.
 
- ✓ api/src/repo/treeSitterParser.test.ts (2 tests) 134ms
+ ✓ api/src/repo/treeSitterParser.test.ts (2 tests) 30ms
+stderr | api/src/services/dependencyGraphBuilder.test.ts > dependencyGraphBuilder (integration, optional) > builds symbol and module dependency edges from synced repository data
+Skipping integration test: set TEST_DATABASE_URL to enable.
 
- Test Files  2 passed (2)
-      Tests  3 passed (3)
-   Start at  14:51:51
-   Duration  2.17s (transform 482ms, setup 0ms, import 1.10s, tests 152ms, environment 1ms)
+ ✓ api/src/services/dependencyGraphBuilder.test.ts (1 test) 8ms
+ ✓ tests/smoke.test.ts (1 test) 7ms
 
-Done in 3.86s.
+ Test Files  4 passed (4)
+      Tests  6 passed (6)
+   Start at  15:05:17
+   Duration  1.91s (transform 670ms, setup 0ms, import 2.29s, tests 65ms, environment 1ms)
+
+Done in 2.88s.

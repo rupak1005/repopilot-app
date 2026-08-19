@@ -2,4 +2,4 @@ yarn run v1.22.22
 warning Skipping preferred cache folder "/usr/local/share/.cache/yarn" because it is not writable.
 warning Selected the next writable cache folder in the list, will be "/tmp/.yarn-cache-0".
 $ eslint src --ext .ts
-Done in 4.61s.
+Done in 2.45s.
