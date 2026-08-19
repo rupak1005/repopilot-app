@@ -1,4 +1,0 @@
-yarn run v1.22.22
-$ tsc -p tsconfig.json
-error Error: ENOSPC: no space left on device, write
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.

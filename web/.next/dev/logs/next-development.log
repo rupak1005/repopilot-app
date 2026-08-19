@@ -1,5 +1,0 @@
-{"timestamp":"00:00:00.881","source":"Server","level":"LOG","message":""}
-{"timestamp":"00:00:00.883","source":"Server","level":"LOG","message":"✓ Generated AGENTS.md and CLAUDE.md for AI agents. Set `agentRules: false` in next.config to disable."}
-{"timestamp":"00:20:03.424","source":"Server","level":"LOG","message":"✓ Compiled in 105ms"}
-{"timestamp":"00:20:08.070","source":"Server","level":"LOG","message":"  Reload env: .env.local"}
-{"timestamp":"00:20:08.151","source":"Server","level":"LOG","message":"✓ Compiled in 20ms"}
