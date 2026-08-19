@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import { Button, GitHubIcon } from '../components/ui/Button';
 import { MARKETING_URL } from '../lib/types';
 
 export default function LoginPage() {
@@ -30,18 +31,24 @@ export default function LoginPage() {
 
   return (
     <main className="login-page">
-      <div className="login-card">
-        <h1>
-          Repo<span style={{ color: 'var(--accent)' }}>Pilot</span>
-        </h1>
-        <p>Sign in with GitHub to pick a repository and open mission control.</p>
-        {error ? <div className="error-banner">{error}</div> : null}
-        <a href="/api/auth/github" className="btn btn-primary" style={{ width: '100%' }}>
-          Sign in with GitHub
-        </a>
-        <p style={{ marginTop: 24, fontSize: 13 }}>
-          <Link href={MARKETING_URL}>← Back to marketing site</Link>
-        </p>
+      <div className="login-shell">
+        <div className="login-card">
+          <span className="login-eyebrow">Mission control</span>
+          <div className="login-mark" aria-hidden>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <h1>RepoPilot</h1>
+          <p>Sign in with GitHub to pick a repository and open your codebase dashboard.</p>
+          {error ? <div className="error-banner">{error}</div> : null}
+          <Button href="/api/auth/github" variant="primary" size="lg" fullWidth icon={<GitHubIcon />}>
+            Sign in with GitHub
+          </Button>
+          <p className="login-footer">
+            <Link href={MARKETING_URL}>← Back to marketing site</Link>
+          </p>
+        </div>
       </div>
     </main>
   );

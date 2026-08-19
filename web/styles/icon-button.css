@@ -1,0 +1,69 @@
+/* Phase 2 — IconButton primitive */
+
+.ui-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    background 160ms var(--ease-out-expo),
+    border-color 160ms var(--ease-out-expo),
+    color 160ms var(--ease-out-expo),
+    transform 120ms var(--ease-spring);
+}
+
+.ui-icon-button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.ui-icon-button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.ui-icon-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.ui-icon-button--sm {
+  width: 32px;
+  height: 32px;
+}
+
+.ui-icon-button--md {
+  width: 36px;
+  height: 36px;
+}
+
+.ui-icon-button--ghost:hover:not(:disabled) {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.ui-icon-button--subtle {
+  background: var(--bg-surface);
+  border-color: var(--border-hairline);
+}
+
+.ui-icon-button--subtle:hover:not(:disabled) {
+  color: var(--text-primary);
+  background: var(--bg-surface-hover);
+  border-color: var(--border-strong);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-icon-button {
+    transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+  }
+
+  .ui-icon-button:active:not(:disabled) {
+    transform: none;
+  }
+}

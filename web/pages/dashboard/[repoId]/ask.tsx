@@ -1,26 +1,34 @@
 import { type FormEvent, useState } from 'react';
 import { useRouter } from 'next/router';
 import { DashboardLayout } from '../../../lib/dashboard';
+import { Icon } from '../../../components/Icon';
 import { API_BASE, type AskResponse } from '../../../lib/types';
+
+const SUGGESTIONS = [
+  'What does syncRepository do?',
+  'Show architecture of auth module'
+];
 
 export default function AskPage() {
   const router = useRouter();
   const repoId = typeof router.query.repoId === 'string' ? router.query.repoId : null;
   const [query, setQuery] = useState('');
+  const [lastQuery, setLastQuery] = useState('');
   const [result, setResult] = useState<AskResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault();
-    if (!repoId || !query.trim()) return;
+  async function runAsk(text: string) {
+    if (!repoId || !text.trim()) return;
     setLoading(true);
     setError(null);
+    setLastQuery(text);
+    setQuery('');
     try {
       const response = await fetch(`${API_BASE}/api/v1/repositories/${repoId}/ask`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query })
+        body: JSON.stringify({ query: text })
       });
       if (!response.ok) throw new Error('Ask failed — is this repo indexed?');
       setResult((await response.json()) as AskResponse);
@@ -31,41 +39,90 @@ export default function AskPage() {
     }
   }
 
+  function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    void runAsk(query);
+  }
+
   return (
-    <DashboardLayout title="Ask RepoPilot" subtitle="Natural-language Q&A with citations.">
+    <DashboardLayout activeNav="ask" canvasClass="canvas--ask">
       {error ? <div className="error-banner">{error}</div> : null}
-      <section className="card">
-        <form onSubmit={handleSubmit} className="form-row">
-          <input
-            className="input"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="What does syncRepository do?"
-          />
-          <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? '…' : 'Ask'}
-          </button>
-        </form>
+
+      <div className="ask-wrap">
+        {lastQuery ? (
+          <div className="ask-user-bubble">{lastQuery}</div>
+        ) : null}
+
         {result ? (
-          <div className="answer-box">
-            <span className="badge badge-accent">{result.confidence} confidence</span>
-            <p style={{ marginTop: 12 }}>{result.answer}</p>
-            {result.citations.length > 0 ? (
-              <ul style={{ marginTop: 12, paddingLeft: 18, fontSize: 13, color: 'var(--text-muted)' }}>
-                {result.citations.map((c) => (
-                  <li key={`${c.file}:${c.lines[0]}`}>
-                    {c.file}:{c.lines[0]}–{c.lines[1]}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
+          <div>
+            <div className="confidence-row" style={{ marginBottom: 12 }}>
+              <Icon name="bolt" size={20} filled />
+              <span className="label-caps">RepoPilot</span>
+              <span className="confidence-badge">
+                <span className="pulse-dot" style={{ width: 6, height: 6 }} />
+                {result.confidence} confidence
+              </span>
+            </div>
+            <div className="answer-card">
+              <p style={{ margin: 0, lineHeight: 1.6 }}>{result.answer}</p>
+              {result.citations.length > 0 ? (
+                <div>
+                  <span className="label-caps" style={{ color: 'var(--on-surface-variant)' }}>
+                    Citations & Evidence
+                  </span>
+                  <div className="citation-chips" style={{ marginTop: 8 }}>
+                    {result.citations.map((c) => (
+                      <span key={`${c.file}:${c.lines[0]}`} className="citation-chip">
+                        <Icon name="description" size={14} />
+                        {c.file}:{c.lines[0]}–{c.lines[1]}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
           </div>
-        ) : (
-          <p className="empty-state" style={{ marginTop: 16 }}>
-            Ask a question about this codebase.
-          </p>
-        )}
-      </section>
+        ) : !loading && !lastQuery ? (
+          <p className="empty-state">Ask anything about your codebase.</p>
+        ) : null}
+
+        {loading ? <p className="empty-state">Thinking…</p> : null}
+      </div>
+
+      <div className="ask-composer">
+        <form className="ask-composer-inner" onSubmit={handleSubmit}>
+          <div className="suggestion-row">
+            {SUGGESTIONS.map((s) => (
+              <button
+                key={s}
+                type="button"
+                className="suggestion-chip"
+                onClick={() => void runAsk(s)}
+              >
+                <Icon name="search" size={14} />
+                {s}
+              </button>
+            ))}
+          </div>
+          <div className="composer-box">
+            <textarea
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Ask anything about your codebase..."
+              rows={3}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  void runAsk(query);
+                }
+              }}
+            />
+            <button type="submit" className="composer-send" disabled={loading || !query.trim()}>
+              <Icon name="send" size={20} filled />
+            </button>
+          </div>
+        </form>
+      </div>
     </DashboardLayout>
   );
 }

@@ -1,6 +1,27 @@
 import { useRouter } from 'next/router';
 import { DashboardLayout, useRepoData } from '../../../lib/dashboard';
-import { outcomeIcon } from '../../../lib/types';
+import { Icon } from '../../../components/Icon';
+
+function reviewStatusClass(status: string | null): string {
+  const s = (status ?? '').toLowerCase();
+  if (s.includes('fail') || s.includes('error')) return 'status-badge--fail';
+  if (s.includes('warn') || s.includes('review')) return 'status-badge--warn';
+  if (s.includes('pass') || s.includes('complete') || s.includes('merge')) return 'status-badge--success';
+  return 'status-badge--muted';
+}
+
+function outcomeIconName(outcome: string | null): string {
+  switch (outcome) {
+    case 'PASS':
+      return 'check_circle';
+    case 'FAIL':
+      return 'cancel';
+    case 'WARN':
+      return 'warning';
+    default:
+      return 'pending';
+  }
+}
 
 export default function PullsPage() {
   const router = useRouter();
@@ -8,39 +29,63 @@ export default function PullsPage() {
   const { pulls, error, loading } = useRepoData(repoId);
 
   return (
-    <DashboardLayout title="Pull requests" subtitle="Review status and outcomes.">
-      {error ? <div className="error-banner">{error}</div> : null}
-      {loading ? <p className="empty-state">Loading pull requests…</p> : null}
-      <section className="card">
-        {pulls.length === 0 ? (
-          <p className="empty-state">No pull requests indexed yet.</p>
-        ) : (
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>PR</th>
-                <th>Title</th>
-                <th>Status</th>
-                <th>Review</th>
-                <th>Outcome</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pulls.map((pull) => (
-                <tr key={pull.pullNumber}>
-                  <td>#{pull.pullNumber}</td>
-                  <td>{pull.title}</td>
-                  <td>{pull.status}</td>
-                  <td>{pull.latestReviewStatus ?? 'none'}</td>
-                  <td>
-                    {outcomeIcon(pull.latestReviewOutcome)} {pull.latestReviewOutcome ?? 'pending'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
+    <DashboardLayout activeNav="pulls">
+      <div className="canvas-inner">
+        <div className="page-title-block">
+          <h1>Pull Requests</h1>
+          <p>Review status and outcomes.</p>
+        </div>
+
+        {error ? <div className="error-banner">{error}</div> : null}
+        {loading ? <p className="empty-state">Loading pull requests…</p> : null}
+
+        <section className="panel">
+          <div className="panel-header">
+            <h2>All Pull Requests</h2>
+          </div>
+          {pulls.length === 0 ? (
+            <p className="empty-state" style={{ padding: 16 }}>
+              No pull requests indexed yet.
+            </p>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>PR</th>
+                    <th>Title</th>
+                    <th>Status</th>
+                    <th>Review</th>
+                    <th>Outcome</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pulls.map((pull) => (
+                    <tr key={pull.pullNumber}>
+                      <td className="mono">#{pull.pullNumber}</td>
+                      <td>{pull.title}</td>
+                      <td>{pull.status}</td>
+                      <td>
+                        <span
+                          className={`status-badge ${reviewStatusClass(pull.latestReviewStatus)}`}
+                        >
+                          <span className="status-dot" />
+                          {(pull.latestReviewStatus ?? 'none').toUpperCase()}
+                        </span>
+                      </td>
+                      <td>
+                        <Icon name={outcomeIconName(pull.latestReviewOutcome)} size={16} />
+                        {' '}
+                        {pull.latestReviewOutcome ?? 'pending'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      </div>
     </DashboardLayout>
   );
 }

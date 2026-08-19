@@ -55,11 +55,11 @@ export default function ReposPage() {
   }
 
   return (
-    <main className="main-content" style={{ maxWidth: 720, margin: '0 auto', paddingTop: 48 }}>
-      <header className="page-header">
+    <main className="standalone-page">
+      <div className="page-title-block">
         <h1>Choose a repository</h1>
-        <p>Pick a repo to open its dashboard. RepoPilot IDs are derived from the GitHub full name.</p>
-      </header>
+        <p>Pick a repo to open its dashboard.</p>
+      </div>
 
       {error ? <div className="error-banner">{error}</div> : null}
 

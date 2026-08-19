@@ -11,7 +11,9 @@
     "test": "vitest run --config ../vitest.config.ts --passWithNoTests"
   },
   "dependencies": {
+    "@phosphor-icons/react": "^2.1.10",
     "@repopilot/common": "0.0.0",
+    "motion": "^13.1.0",
     "next": "*",
     "react": "*",
     "react-dom": "*"
@@ -21,4 +23,3 @@
     "@types/react-dom": "*"
   }
 }
-

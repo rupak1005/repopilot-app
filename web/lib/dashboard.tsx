@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { AppShell } from '../components/AppShell';
+import { AppShell, type NavKey } from '../components/AppShell';
 import type { PublicUser } from './session';
 import type {
   HotspotRow,
@@ -38,11 +38,17 @@ export function useDashboardContext(): DashboardContext | null {
   return { repoId, repoFullName, user };
 }
 
-export function DashboardLayout({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
+type DashboardLayoutProps = {
+  activeNav: NavKey;
+  canvasClass?: string;
+  children: React.ReactNode;
+};
+
+export function DashboardLayout({ activeNav, canvasClass, children }: DashboardLayoutProps) {
   const ctx = useDashboardContext();
   if (!ctx) {
     return (
-      <main className="main-content">
+      <main className="standalone-page">
         <p className="empty-state">Loading…</p>
       </main>
     );
@@ -54,11 +60,9 @@ export function DashboardLayout({ title, subtitle, children }: { title: string; 
       repoFullName={ctx.repoFullName}
       userLogin={ctx.user.login}
       userAvatar={ctx.user.avatarUrl}
+      activeNav={activeNav}
+      canvasClass={canvasClass}
     >
-      <header className="page-header">
-        <h1>{title}</h1>
-        {subtitle ? <p>{subtitle}</p> : null}
-      </header>
       {children}
     </AppShell>
   );
@@ -110,6 +114,18 @@ export function useRepoData(repoId: string | null) {
   }, [repoId]);
 
   return { pulls, analytics, hotspots, error, loading };
+}
+
+export function formatLatency(ms: number | null): string {
+  if (ms == null) return 'n/a';
+  if (ms >= 1000) return `${(ms / 1000).toFixed(1)}s`;
+  return `${ms}ms`;
+}
+
+export function hotspotScoreClass(score: number): string {
+  if (score >= 80) return 'var(--status-fail)';
+  if (score >= 50) return 'var(--status-warn)';
+  return 'var(--primary)';
 }
 
 export type { PublicUser };
