@@ -125,3 +125,13 @@ export interface RepositoryAnalytics {
   recurringFindings: Array<{ fingerprint: string; count: number }>;
 }
 
+export interface HotspotResult {
+  filePath: string;
+  score: number;
+  changeCount: number;
+  dependentCount: number;
+  coChangeCount: number;
+  findingsCount: number;
+  reasons: string[];
+}
+

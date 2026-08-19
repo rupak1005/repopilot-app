@@ -21,7 +21,7 @@
     "@repopilot/common": "0.0.0",
     "fast-glob": "*",
     "fastify": "*",
-    "fastify-cors": "*",
+    "@fastify/cors": "*",
     "ioredis": "*",
     "tree-sitter": "*",
     "tree-sitter-javascript": "*",
@@ -29,8 +29,6 @@
     "pg": "*",
     "prisma": "*"
   },
-  "devDependencies": {
-    "@types/fastify-cors": "*"
-  }
+  "devDependencies": {}
 }
 

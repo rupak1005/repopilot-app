@@ -1,5 +1,4 @@
 yarn run v1.22.22
-warning Skipping preferred cache folder "/usr/local/share/.cache/yarn" because it is not writable.
-warning Selected the next writable cache folder in the list, will be "/tmp/.yarn-cache-0".
 $ tsc -p tsconfig.json
-Done in 0.49s.
+error Error: ENOSPC: no space left on device, write
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.

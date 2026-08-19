@@ -1,5 +1,5 @@
 import Fastify from 'fastify';
-import cors from 'fastify-cors';
+import cors from '@fastify/cors';
 import fastifyEnv from '@fastify/env';
 import Redis from 'ioredis';
 import { PrismaClient } from '@prisma/client';
@@ -28,6 +28,15 @@ import {
   getRepositoryAnalytics,
   listReviewHistory
 } from './services/repositoryAnalytics';
+import { ingestRepositoryHistory } from './services/historyIngest';
+import {
+  findSimilarChanges,
+  getArchitectureGraph,
+  getCoChanges,
+  getSymbolChangeHistory,
+  listModuleHotspots,
+  searchHistory
+} from './services/engineeringIntelligence';
 
 async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -279,6 +288,131 @@ async function bootstrap() {
   server.get('/api/v1/repositories/:repoId/analytics', async (request) => {
     const params = request.params as { repoId: string };
     return getRepositoryAnalytics(params.repoId);
+  });
+
+  server.post('/api/v1/repositories/:repoId/history/ingest', async (request, reply) => {
+    const params = request.params as { repoId: string };
+    const body = ((request.body as ParsedJsonBody | undefined)?.json ?? {}) as {
+      repoPath?: string;
+      rebuild?: boolean;
+      maxCount?: number;
+    };
+
+    let repoPath = body.repoPath;
+    if (!repoPath) {
+      const cloneRoot = process.env.REPO_CLONE_ROOT;
+      if (!cloneRoot) {
+        reply.code(400);
+        return { error: 'repoPath is required (or set REPO_CLONE_ROOT with indexed repository metadata)' };
+      }
+
+      const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+      const rows = (await pool.query(
+        'SELECT "owner", "name" FROM "Repository" WHERE "id" = $1 LIMIT 1',
+        [params.repoId]
+      )) as { rows: Array<{ owner: string; name: string }> };
+      await pool.end();
+      const meta = rows.rows[0];
+      if (!meta) {
+        reply.code(404);
+        return { error: 'repository not found' };
+      }
+      repoPath = `${cloneRoot}/${meta.owner}/${meta.name}`;
+    }
+
+    return ingestRepositoryHistory({
+      repositoryId: params.repoId,
+      repoPath,
+      rebuild: body.rebuild === true,
+      maxCount: body.maxCount
+    });
+  });
+
+  server.get('/api/v1/repositories/:repoId/hotspots', async (request) => {
+    const params = request.params as { repoId: string };
+    const query = request.query as { topK?: string };
+    const topK = query.topK ? Number(query.topK) : undefined;
+
+    return listModuleHotspots({
+      repositoryId: params.repoId,
+      topK
+    });
+  });
+
+  server.get('/api/v1/repositories/:repoId/co-change', async (request, reply) => {
+    const params = request.params as { repoId: string };
+    const query = request.query as { file?: string; topK?: string };
+
+    if (!query.file) {
+      reply.code(400);
+      return { error: 'file query parameter is required' };
+    }
+
+    const topK = query.topK ? Number(query.topK) : undefined;
+    return getCoChanges({
+      repositoryId: params.repoId,
+      filePath: query.file,
+      topK
+    });
+  });
+
+  server.post('/api/v1/repositories/:repoId/search/history', async (request, reply) => {
+    const params = request.params as { repoId: string };
+    const body = ((request.body as ParsedJsonBody | undefined)?.json ?? {}) as {
+      query?: string;
+      type?: 'commit' | 'pull_request' | 'all';
+      topK?: number;
+    };
+
+    if (!body.query?.trim()) {
+      reply.code(400);
+      return { error: 'query is required' };
+    }
+
+    return searchHistory({
+      repositoryId: params.repoId,
+      query: body.query,
+      type: body.type,
+      topK: body.topK
+    });
+  });
+
+  server.get('/api/v1/repositories/:repoId/similar-changes', async (request, reply) => {
+    const params = request.params as { repoId: string };
+    const query = request.query as { pullNumber?: string; topK?: string };
+    const pullNumber = query.pullNumber ? Number(query.pullNumber) : NaN;
+
+    if (!Number.isFinite(pullNumber) || pullNumber < 1) {
+      reply.code(400);
+      return { error: 'pullNumber query parameter is required' };
+    }
+
+    return findSimilarChanges({
+      repositoryId: params.repoId,
+      pullNumber,
+      topK: query.topK ? Number(query.topK) : undefined
+    });
+  });
+
+  server.get('/api/v1/repositories/:repoId/architecture', async (request) => {
+    const params = request.params as { repoId: string };
+    const query = request.query as { revisionSha?: string };
+
+    return getArchitectureGraph({
+      repositoryId: params.repoId,
+      revisionSha: query.revisionSha
+    });
+  });
+
+  server.get('/api/v1/repositories/:repoId/symbols/:name/history', async (request) => {
+    const params = request.params as { repoId: string; name: string };
+    const query = request.query as { topK?: string };
+
+    return getSymbolChangeHistory({
+      repositoryId: params.repoId,
+      symbolName: params.name,
+      topK: query.topK ? Number(query.topK) : undefined
+    });
   });
 
   server.post('/webhook', async (request, reply) => {

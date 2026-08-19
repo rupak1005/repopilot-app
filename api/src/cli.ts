@@ -2,6 +2,7 @@ import { syncRepository } from './services/repositorySync';
 import { buildDependencyGraph } from './services/dependencyGraphBuilder';
 import { indexRepositorySearch } from './services/searchIndex';
 import { runPullRequestReview } from './services/prReview';
+import { ingestRepositoryHistory } from './services/historyIngest';
 
 function getArgValue(flag: string): string | undefined {
   const idx = process.argv.indexOf(flag);
@@ -74,8 +75,24 @@ async function main() {
     return;
   }
 
+  if (cmd === 'ingest-history') {
+    const repositoryId = requireArg('--repo-id');
+    const repoPath = requireArg('--path');
+    const rebuild = process.argv.includes('--rebuild');
+    const maxCountRaw = getArgValue('--max-count');
+    const maxCount = maxCountRaw ? Number(maxCountRaw) : undefined;
+    const result = await ingestRepositoryHistory({
+      repositoryId,
+      repoPath,
+      rebuild,
+      maxCount
+    });
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+
   console.error(
-    'Usage: node api/dist/cli.js <sync-repo|build-graph|index-search|review-pr> --repo-id <repositoryId> [--revision-sha <sha>] [sync-repo flags: --path <repoPath> --repo-name <name> --owner <owner> --concurrency <n>] [review-pr flags: --pull-number <n> --force]'
+    'Usage: node api/dist/cli.js <sync-repo|build-graph|index-search|review-pr|ingest-history> --repo-id <repositoryId> [--revision-sha <sha>] [sync-repo flags: --path <repoPath> --repo-name <name> --owner <owner> --concurrency <n>] [review-pr flags: --pull-number <n> --force] [ingest-history flags: --path <repoPath> --rebuild --max-count <n>]'
   );
   process.exit(1);
 }

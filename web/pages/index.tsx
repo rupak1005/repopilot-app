@@ -17,6 +17,13 @@ type RepositoryAnalytics = {
   findingsBySeverity: Record<string, number>;
 };
 
+type HotspotRow = {
+  filePath: string;
+  score: number;
+  changeCount: number;
+  reasons: string[];
+};
+
 function outcomeIcon(outcome: string | null): string {
   switch (outcome) {
     case 'PASS':
@@ -35,6 +42,7 @@ export default function HomePage() {
   const [repoId, setRepoId] = useState('');
   const [pulls, setPulls] = useState<PullRequestRow[]>([]);
   const [analytics, setAnalytics] = useState<RepositoryAnalytics | null>(null);
+  const [hotspots, setHotspots] = useState<HotspotRow[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -47,20 +55,23 @@ export default function HomePage() {
     let cancelled = false;
     async function load() {
       try {
-        const [pullResponse, analyticsResponse] = await Promise.all([
+        const [pullResponse, analyticsResponse, hotspotResponse] = await Promise.all([
           fetch(`${apiBase}/api/v1/repositories/${repoId}/pulls`),
-          fetch(`${apiBase}/api/v1/repositories/${repoId}/analytics`)
+          fetch(`${apiBase}/api/v1/repositories/${repoId}/analytics`),
+          fetch(`${apiBase}/api/v1/repositories/${repoId}/hotspots?topK=5`)
         ]);
 
-        if (!pullResponse.ok || !analyticsResponse.ok) {
+        if (!pullResponse.ok || !analyticsResponse.ok || !hotspotResponse.ok) {
           throw new Error('Failed to load repository dashboard data');
         }
 
         const pullData = (await pullResponse.json()) as PullRequestRow[];
         const analyticsData = (await analyticsResponse.json()) as RepositoryAnalytics;
+        const hotspotData = (await hotspotResponse.json()) as HotspotRow[];
         if (!cancelled) {
           setPulls(pullData);
           setAnalytics(analyticsData);
+          setHotspots(hotspotData);
           setError(null);
         }
       } catch (err) {
@@ -113,6 +124,21 @@ export default function HomePage() {
                 ? `${analytics.averageReviewLatencyMs} ms`
                 : 'n/a'}
             </li>
+          </ul>
+        </section>
+      ) : null}
+
+      {hotspots.length > 0 ? (
+        <section style={{ marginTop: 24 }}>
+          <h2>Hotspots</h2>
+          <ul>
+            {hotspots.map((hotspot) => (
+              <li key={hotspot.filePath}>
+                <strong>{hotspot.filePath}</strong> — score {hotspot.score.toFixed(1)} (
+                {hotspot.changeCount} changes)
+                {hotspot.reasons[0] ? ` — ${hotspot.reasons[0]}` : ''}
+              </li>
+            ))}
           </ul>
         </section>
       ) : null}

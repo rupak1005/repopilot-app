@@ -27,6 +27,10 @@ model Repository {
   pullRequests       PullRequest[]
   webhookDeliveries  WebhookDelivery[]
   queuedJobs         QueuedJob[]
+  historyIngestState HistoryIngestState?
+  commits            CommitRecord[]
+  coChangePairs      CoChangePair[]
+  moduleHotspots     ModuleHotspot[]
 }
 
 model RepositoryRevision {
@@ -280,5 +284,69 @@ model QueuedJob {
 
   @@index([repositoryId])
   @@index([pullRequestId])
+}
+
+model HistoryIngestState {
+  repositoryId     String   @id
+  repository       Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  lastProcessedSha String?
+  updatedAt        DateTime @default(now())
+}
+
+model CommitRecord {
+  id           String   @id @default(uuid())
+  repositoryId String
+  repository   Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  sha          String
+  authorName   String?
+  authorEmail  String?
+  authoredAt   DateTime
+  message      String
+  searchVector Unsupported("tsvector")?
+
+  fileChanges CommitFileChange[]
+
+  @@unique([repositoryId, sha])
+  @@index([repositoryId, authoredAt])
+}
+
+model CommitFileChange {
+  id         String @id @default(uuid())
+  commitId   String
+  commit     CommitRecord @relation(fields: [commitId], references: [id], onDelete: Cascade)
+  filePath   String
+  changeType String
+  additions  Int    @default(0)
+  deletions  Int    @default(0)
+
+  @@index([commitId])
+  @@index([filePath])
+}
+
+model CoChangePair {
+  repositoryId String
+  repository   Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  fileA        String
+  fileB        String
+  count        Int @default(0)
+
+  @@id([repositoryId, fileA, fileB])
+  @@index([repositoryId, fileA])
+}
+
+model ModuleHotspot {
+  repositoryId   String
+  repository     Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  filePath       String
+  score          Float
+  changeCount    Int @default(0)
+  dependentCount Int @default(0)
+  coChangeCount  Int @default(0)
+  findingsCount  Int @default(0)
+  reasons        Json
+  updatedAt      DateTime @default(now())
+
+  @@id([repositoryId, filePath])
+  @@index([repositoryId])
 }
 

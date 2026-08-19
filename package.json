@@ -12,7 +12,8 @@
     "type-check": "turbo run type-check",
     "test": "turbo run test",
     "build": "turbo run build",
-    "dev": "turbo run dev --parallel"
+    "dev": "turbo run dev --parallel",
+    "setup:test": "bash scripts/setup-and-test.sh"
   },
   "devDependencies": {
     "@types/node": "*",

@@ -1,38 +1,4 @@
 yarn run v1.22.22
-warning Skipping preferred cache folder "/usr/local/share/.cache/yarn" because it is not writable.
-warning Selected the next writable cache folder in the list, will be "/tmp/.yarn-cache-0".
 $ vitest run --config ../vitest.config.ts --passWithNoTests
-(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
-  - ESM syntax in a file loaded as CommonJS (../vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
-Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
-
- RUN  v4.1.11 /home/deadlyr/repoPilot
-
- ✓ api/src/services/diffParser.test.ts (2 tests) 63ms
-stderr | api/src/services/githubWebhook.test.ts > githubWebhook (integration, optional) > stores pull request metadata and dedupes repeated deliveries
-Skipping integration test: set TEST_DATABASE_URL to enable.
-
- ✓ api/src/services/githubWebhook.test.ts (3 tests) 34ms
- ✓ api/src/services/prReview.test.ts (4 tests | 1 skipped) 148ms
- ✓ api/src/services/dependencyGraphQueries.test.ts (2 tests) 10ms
-stderr | api/src/services/dependencyGraphBuilder.test.ts > dependencyGraphBuilder (integration, optional) > builds symbol and module dependency edges from synced repository data
-Skipping integration test: set TEST_DATABASE_URL to enable.
-
- ✓ api/src/services/dependencyGraphBuilder.test.ts (1 test) 9ms
-stderr | api/src/repo/treeSitterParser.test.ts > Phase 2 persistence (integration, optional) > sync-repo parses and persists file/symbol/import/export rows
-Skipping integration test: set TEST_DATABASE_URL to enable.
-
- ✓ api/src/repo/treeSitterParser.test.ts (2 tests) 40ms
-stderr | api/src/services/searchIndex.test.ts > searchIndex (integration, optional) > returns relevant chunks for a repository query
-Skipping integration test: set TEST_DATABASE_URL to enable.
-
- ✓ api/src/services/searchIndex.test.ts (2 tests) 18ms
- ✓ tests/smoke.test.ts (1 test) 7ms
- ✓ api/src/services/codebaseQa.test.ts (3 tests) 9ms
-
- Test Files  9 passed (9)
-      Tests  19 passed | 1 skipped (20)
-   Start at  15:48:17
-   Duration  4.63s (transform 1.17s, setup 0ms, import 4.90s, tests 338ms, environment 4ms)
-
-Done in 5.50s.
+error Error: ENOSPC: no space left on device, write
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.

@@ -88,6 +88,14 @@
     ajv-formats "^3.0.1"
     fast-uri "^4.0.0"
 
+"@fastify/cors@*":
+  version "11.3.0"
+  resolved "https://registry.yarnpkg.com/@fastify/cors/-/cors-11.3.0.tgz#5e4fe2dc9bd3988b393a585605d631f3635c2968"
+  integrity sha512-ggQGua+xHv1MvePbPr0v//xLYEsCXbWspquXCJS9Ot5YoRXq8J8ZWzHnxDBVnbtXosvistXo6LtNzOJswf64Fw==
+  dependencies:
+    fastify-plugin "^6.0.0"
+    toad-cache "^3.7.0"
+
 "@fastify/env@*":
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/@fastify/env/-/env-7.0.0.tgz#1c602a010fae4f5847778d633bcb0ef2a20d69e5"
@@ -844,13 +852,6 @@
   version "1.0.9"
   resolved "https://registry.yarnpkg.com/@types/estree/-/estree-1.0.9.tgz#cf3f0e876d7bee15a93ab925b82bf570a3904a24"
   integrity sha512-GhdPgy1el4/ImP05X05Uw4cw2/M93BCUmnEvWZNStlCzEKME4Fkk+YpoA5OiHNQmoS7Cafb8Xa3Pya8m1Qrzeg==
-
-"@types/fastify-cors@*":
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/@types/fastify-cors/-/fastify-cors-2.1.2.tgz#3e98bf4ff7da6be116c384022852dbc27f5a0c0d"
-  integrity sha512-fH+ZjoLcV6DXs/C7OMsveS9dePt8qnrhW27NOqPtzjGKNln+ocJ5Mhdne22JOHh955RLu6NUY/EHoHlgOOZkLQ==
-  dependencies:
-    fastify-cors "*"
 
 "@types/geojson@*":
   version "7946.0.16"
@@ -1778,31 +1779,15 @@ fast-uri@^4.0.0:
   resolved "https://registry.yarnpkg.com/fast-uri/-/fast-uri-4.1.2.tgz#1e225af32fb0a178db8f14d7d9ba93ff24485694"
   integrity sha512-TyGmBcbDTZXcb2cj5MV89DrF42DKvb3y5DDUNh95iO+IMeAzMkVSxK1PZRrRIpc9yg8U2GhGdbofNa0LS/a4Bw==
 
-"fastify-cors-deprecated@npm:fastify-cors@6.0.3":
-  version "6.0.3"
-  resolved "https://registry.yarnpkg.com/fastify-cors/-/fastify-cors-6.0.3.tgz#1907f92c3f855a18ef6fb6213186c73cf0bbf9e4"
-  integrity sha512-fMbXubKKyBHHCfSBtsCi3+7VyVRdhJQmGes5gM+eGKkRErCdm0NaYO0ozd31BQBL1ycoTIjbqOZhJo4RTF/Vlg==
-  dependencies:
-    fastify-plugin "^3.0.0"
-    vary "^1.1.2"
-
-fastify-cors@*:
-  version "6.1.0"
-  resolved "https://registry.yarnpkg.com/fastify-cors/-/fastify-cors-6.1.0.tgz#b47bd7faf29113a884e59413ee198a9c323cf180"
-  integrity sha512-QBKz32IoY/iuT74CunRY1XOSpjSTIOh9E3FxulXIBhd0D2vdgG0kDvy0eG6HA/88sRfWHeba43LkGEXPz0Rh8g==
-  dependencies:
-    fastify-cors-deprecated "npm:fastify-cors@6.0.3"
-    process-warning "^1.0.0"
-
-fastify-plugin@^3.0.0:
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/fastify-plugin/-/fastify-plugin-3.0.1.tgz#79e84c29f401020f38b524f59f2402103fd21ed2"
-  integrity sha512-qKcDXmuZadJqdTm6vlCqioEbyewF60b/0LOFCcYN1B6BIZGlYJumWWOYs70SFYLDAH4YqdE1cxH/RKMG7rFxgA==
-
 fastify-plugin@^5.0.0:
   version "5.1.0"
   resolved "https://registry.yarnpkg.com/fastify-plugin/-/fastify-plugin-5.1.0.tgz#7083e039d6418415f9a669f8c25e72fc5bf2d3e7"
   integrity sha512-FAIDA8eovSt5qcDgcBvDuX/v0Cjz0ohGhENZ/wpc3y+oZCY2afZ9Baqql3g/lC+OHRnciQol4ww7tuthOb9idw==
+
+fastify-plugin@^6.0.0:
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/fastify-plugin/-/fastify-plugin-6.0.0.tgz#7cd659c6aad5f3bf07b4c59205412351a47d39c8"
+  integrity sha512-fZOty7z3O7vOliF6d8bHE3wiEh1KcNnKEQensSgTk9C1DvN6nRLS++XVd86v33Hw/8u9Un8A1zDrQ8ujcQDHEg==
 
 fastify@*:
   version "5.12.1"
@@ -2610,11 +2595,6 @@ prisma@*:
     mysql2 "3.15.3"
     postgres "3.4.7"
 
-process-warning@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/process-warning/-/process-warning-1.0.0.tgz#980a0b25dc38cd6034181be4b7726d89066b4616"
-  integrity sha512-du4wfLyj4yCZq1VupnVSZmRsPJsNuxoDQFdCFHLaYiEbFBD7QE0a+I4D7hOxrVnh78QE/YipFAj9lXHiXocV+Q==
-
 process-warning@^4.0.0:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/process-warning/-/process-warning-4.0.1.tgz#5c1db66007c67c756e4e09eb170cdece15da32fb"
@@ -3144,11 +3124,6 @@ valibot@1.4.2:
   version "1.4.2"
   resolved "https://registry.yarnpkg.com/valibot/-/valibot-1.4.2.tgz#da857781187f170aeaf4498d463d25028615b0d6"
   integrity sha512-gjdCvJ6d3RyHAneqxMYMW9QMCwYMb3jpOO0IyHZV1bnRHFBHrX3VkIILt5XYR0WhwHiH7Mty8ovuPZ/O3gamrg==
-
-vary@^1.1.2:
-  version "1.1.2"
-  resolved "https://registry.yarnpkg.com/vary/-/vary-1.1.2.tgz#2299f02c6ded30d4a5961b0b9f74524a18f634fc"
-  integrity sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==
 
 "vite@^6.0.0 || ^7.0.0 || ^8.0.0":
   version "8.2.1"

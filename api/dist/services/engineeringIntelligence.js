@@ -1,0 +1,256 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.listModuleHotspots = listModuleHotspots;
+exports.getCoChanges = getCoChanges;
+exports.searchHistory = searchHistory;
+exports.findSimilarChanges = findSimilarChanges;
+exports.getArchitectureGraph = getArchitectureGraph;
+exports.getSymbolChangeHistory = getSymbolChangeHistory;
+const prisma_1 = require("../db/prisma");
+const repositoryRevisions_1 = require("./repositoryRevisions");
+async function listModuleHotspots(args) {
+    const topK = Math.max(1, args.topK ?? 10);
+    const rows = (await (0, prisma_1.getPrisma)().$queryRawUnsafe(`
+      SELECT
+        "filePath",
+        "score",
+        "changeCount",
+        "dependentCount",
+        "coChangeCount",
+        "findingsCount",
+        "reasons"
+      FROM "ModuleHotspot"
+      WHERE "repositoryId" = $1
+      ORDER BY "score" DESC
+      LIMIT $2
+    `, args.repositoryId, topK));
+    return rows.map((row) => ({
+        filePath: row.filePath,
+        score: row.score,
+        changeCount: row.changeCount,
+        dependentCount: row.dependentCount,
+        coChangeCount: row.coChangeCount,
+        findingsCount: row.findingsCount,
+        reasons: Array.isArray(row.reasons) ? row.reasons : []
+    }));
+}
+async function getCoChanges(args) {
+    const topK = Math.max(1, args.topK ?? 10);
+    const rows = (await (0, prisma_1.getPrisma)().$queryRawUnsafe(`
+      SELECT
+        CASE
+          WHEN "fileA" = $2 THEN "fileB"
+          ELSE "fileA"
+        END AS "pairedWith",
+        "count"
+      FROM "CoChangePair"
+      WHERE "repositoryId" = $1
+        AND ($2 = "fileA" OR $2 = "fileB")
+      ORDER BY "count" DESC
+      LIMIT $3
+    `, args.repositoryId, args.filePath, topK));
+    return rows.map((row) => ({
+        file: args.filePath,
+        pairedWith: row.pairedWith,
+        count: row.count
+    }));
+}
+async function searchHistory(args) {
+    const topK = Math.max(1, args.topK ?? 10);
+    const type = args.type ?? 'all';
+    const results = [];
+    if (type === 'commit' || type === 'all') {
+        const commitRows = (await (0, prisma_1.getPrisma)().$queryRawUnsafe(`
+        SELECT
+          "id",
+          "sha",
+          "message",
+          "authoredAt",
+          ts_rank("searchVector", plainto_tsquery('english', $2)) AS rank
+        FROM "CommitRecord"
+        WHERE "repositoryId" = $1
+          AND "searchVector" @@ plainto_tsquery('english', $2)
+        ORDER BY rank DESC, "authoredAt" DESC
+        LIMIT $3
+      `, args.repositoryId, args.query, topK));
+        for (const row of commitRows) {
+            results.push({
+                type: 'commit',
+                id: row.sha,
+                title: row.message.split('\n')[0] ?? row.sha,
+                snippet: row.message.slice(0, 240),
+                authoredAt: row.authoredAt.toISOString()
+            });
+        }
+    }
+    if (type === 'pull_request' || type === 'all') {
+        const pullRows = (await (0, prisma_1.getPrisma)().$queryRawUnsafe(`
+        SELECT
+          "number",
+          "title",
+          COALESCE("body", '') AS body,
+          "updatedAt"
+        FROM "PullRequest"
+        WHERE "repositoryId" = $1
+          AND (
+            "title" ILIKE '%' || $2 || '%'
+            OR COALESCE("body", '') ILIKE '%' || $2 || '%'
+          )
+        ORDER BY "updatedAt" DESC
+        LIMIT $3
+      `, args.repositoryId, args.query, topK));
+        for (const row of pullRows) {
+            results.push({
+                type: 'pull_request',
+                id: String(row.number),
+                title: row.title,
+                snippet: (row.body || row.title).slice(0, 240),
+                authoredAt: row.updatedAt.toISOString()
+            });
+        }
+    }
+    return results.slice(0, topK);
+}
+async function findSimilarChanges(args) {
+    const topK = Math.max(1, args.topK ?? 5);
+    const prisma = (0, prisma_1.getPrisma)();
+    const targetRows = (await prisma.$queryRawUnsafe(`
+      SELECT "headRevision", "baseRevision"
+      FROM "PullRequest"
+      WHERE "repositoryId" = $1
+        AND "number" = $2
+      LIMIT 1
+    `, args.repositoryId, args.pullNumber));
+    const target = targetRows[0];
+    if (!target)
+        return [];
+    const headRevision = await (0, repositoryRevisions_1.resolveRepositoryRevision)({
+        repositoryId: args.repositoryId,
+        revisionSha: target.headRevision
+    });
+    const baseRevision = await (0, repositoryRevisions_1.resolveRepositoryRevision)({
+        repositoryId: args.repositoryId,
+        revisionSha: target.baseRevision
+    });
+    if (!headRevision || !baseRevision)
+        return [];
+    const targetFiles = (await prisma.$queryRawUnsafe(`
+      SELECT DISTINCT h."path"
+      FROM "File" h
+      LEFT JOIN "File" b
+        ON b."revisionId" = $2
+       AND b."path" = h."path"
+       AND b."content" = h."content"
+      WHERE h."revisionId" = $1
+        AND (b."id" IS NULL)
+    `, headRevision.id, baseRevision.id));
+    const targetPaths = new Set(targetFiles.map((row) => row.path));
+    if (targetPaths.size === 0)
+        return [];
+    const otherPulls = (await prisma.$queryRawUnsafe(`
+      SELECT "number", "title", "headRevision", "baseRevision"
+      FROM "PullRequest"
+      WHERE "repositoryId" = $1
+        AND "number" <> $2
+      ORDER BY "updatedAt" DESC
+      LIMIT 20
+    `, args.repositoryId, args.pullNumber));
+    const results = [];
+    for (const pull of otherPulls) {
+        const pullHead = await (0, repositoryRevisions_1.resolveRepositoryRevision)({
+            repositoryId: args.repositoryId,
+            revisionSha: pull.headRevision
+        });
+        const pullBase = await (0, repositoryRevisions_1.resolveRepositoryRevision)({
+            repositoryId: args.repositoryId,
+            revisionSha: pull.baseRevision
+        });
+        if (!pullHead || !pullBase)
+            continue;
+        const changedFiles = (await prisma.$queryRawUnsafe(`
+        SELECT DISTINCT h."path"
+        FROM "File" h
+        LEFT JOIN "File" b
+          ON b."revisionId" = $2
+         AND b."path" = h."path"
+         AND b."content" = h."content"
+        WHERE h."revisionId" = $1
+          AND (b."id" IS NULL)
+      `, pullHead.id, pullBase.id));
+        const overlapFiles = changedFiles
+            .map((row) => row.path)
+            .filter((path) => targetPaths.has(path));
+        if (overlapFiles.length === 0)
+            continue;
+        results.push({
+            pullNumber: pull.number,
+            title: pull.title,
+            overlapFiles,
+            overlapCount: overlapFiles.length
+        });
+    }
+    return results.sort((a, b) => b.overlapCount - a.overlapCount).slice(0, topK);
+}
+async function getArchitectureGraph(args) {
+    const revision = await (0, repositoryRevisions_1.resolveRepositoryRevision)({
+        repositoryId: args.repositoryId,
+        revisionSha: args.revisionSha
+    });
+    if (!revision) {
+        return { nodes: [], edges: [] };
+    }
+    const prisma = (0, prisma_1.getPrisma)();
+    const edgeRows = (await prisma.$queryRawUnsafe(`
+      SELECT "fromModule", "toModule"
+      FROM "ModuleDependency"
+      WHERE "revisionId" = $1
+    `, revision.id));
+    const hotspotRows = (await prisma.$queryRawUnsafe(`
+      SELECT "filePath", "score"
+      FROM "ModuleHotspot"
+      WHERE "repositoryId" = $1
+    `, args.repositoryId));
+    const hotspotMap = new Map(hotspotRows.map((row) => [row.filePath, row.score]));
+    const nodePaths = new Set();
+    for (const edge of edgeRows) {
+        nodePaths.add(edge.fromModule);
+        nodePaths.add(edge.toModule);
+    }
+    for (const hotspot of hotspotRows) {
+        nodePaths.add(hotspot.filePath);
+    }
+    const nodes = Array.from(nodePaths).map((filePath) => {
+        const score = hotspotMap.get(filePath) ?? 0;
+        return {
+            filePath,
+            isHotspot: score > 0,
+            score
+        };
+    });
+    return { nodes, edges: edgeRows };
+}
+async function getSymbolChangeHistory(args) {
+    const topK = Math.max(1, args.topK ?? 10);
+    const rows = (await (0, prisma_1.getPrisma)().$queryRawUnsafe(`
+      SELECT
+        cr."sha",
+        cr."message",
+        cr."authoredAt",
+        cfc."filePath"
+      FROM "CommitRecord" cr
+      JOIN "CommitFileChange" cfc ON cfc."commitId" = cr."id"
+      WHERE cr."repositoryId" = $1
+        AND (
+          cfc."filePath" ILIKE '%' || $2 || '%'
+          OR cr."message" ILIKE '%' || $2 || '%'
+        )
+      ORDER BY cr."authoredAt" DESC
+      LIMIT $3
+    `, args.repositoryId, args.symbolName, topK));
+    return rows.map((row) => ({
+        sha: row.sha,
+        message: row.message,
+        authoredAt: row.authoredAt.toISOString(),
+        filePath: row.filePath
+    }));
+}

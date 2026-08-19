@@ -7,6 +7,7 @@ import {
 } from './services/jobLifecycle';
 import { claimNextQueuedJob, MAX_JOB_ATTEMPTS } from './services/jobQueue';
 import { getDefaultReviewPublisher } from './services/githubCheckPublisher';
+import { ingestRepositoryHistory } from './services/historyIngest';
 import type { PrReviewJobPayload, RepoSyncJobPayload } from './services/jobQueue';
 
 function logEvent(event: string, fields: Record<string, unknown>) {
@@ -62,6 +63,18 @@ async function handleRepoSyncJob(jobId: string, payload: RepoSyncJobPayload, att
     owner: meta.owner,
     repositoryName: meta.name
   });
+
+  try {
+    await ingestRepositoryHistory({
+      repositoryId: payload.repositoryId,
+      repoPath
+    });
+  } catch (err) {
+    logEvent('history.ingest.skipped', {
+      repositoryId: payload.repositoryId,
+      error: err instanceof Error ? err.message : String(err)
+    });
+  }
 
   await updateQueuedJobStatus({
     queuedJobId: jobId,
