@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
 import { GitBranch } from '@phosphor-icons/react';
 import { ArchitectureGraphView } from '../../../components/ui/ArchitectureGraph';
+import { DifferentiatorsStrip } from '../../../components/ui/DifferentiatorsStrip';
 import { ErrorBanner } from '../../../components/ui/ErrorBanner';
 import { IndexHint } from '../../../components/ui/IndexHint';
 import { DashboardLayout } from '../../../lib/dashboard';
@@ -20,6 +21,7 @@ export default function ArchitecturePage() {
   const [graph, setGraph] = useState<ArchitectureGraph | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     async function loadUser() {
@@ -67,7 +69,7 @@ export default function ArchitecturePage() {
     return () => {
       cancelled = true;
     };
-  }, [repoId]);
+  }, [repoId, reloadToken]);
 
   const forceData = useMemo(() => (graph ? toForceGraphData(graph) : null), [graph]);
   const empty = graph && graph.nodes.length === 0;
@@ -81,7 +83,8 @@ export default function ArchitecturePage() {
             <p className="ui-diagram-hero__eyebrow label-caps">Repository → diagram</p>
             <h1>See how your codebase fits together</h1>
             <p className="ui-diagram-hero__sub">
-              Interactive module map from real dependency edges — click through to GitHub or search.
+              Interactive module map from real dependency edges — not AI-generated Mermaid. Click
+              through to GitHub, search, or impact analysis.
             </p>
           </div>
           <div className="ui-diagram-repo-bar" aria-label="Current repository">
@@ -89,6 +92,14 @@ export default function ArchitecturePage() {
             <span className="mono">{slug}</span>
           </div>
         </header>
+
+        {repoId ? (
+          <DifferentiatorsStrip
+            title="Explore this repo"
+            repoBase={`/dashboard/${repoId}`}
+            className="diff-strip--dashboard"
+          />
+        ) : null}
 
         {(isDemoMode() || forceData) && !empty ? (
           <p className="ui-diagram-explainer">{DEMO_EXPLANATION}</p>
@@ -103,6 +114,7 @@ export default function ArchitecturePage() {
             repoFullName={repoFullName || undefined}
             repoId={repoId ?? undefined}
             loading={loading}
+            onGraphRebuilt={() => setReloadToken((n) => n + 1)}
           />
         ) : loading ? (
           <div className="ui-diagram__stage ui-diagram__stage--solo">

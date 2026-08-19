@@ -78,6 +78,11 @@
   box-shadow: var(--shadow-hard-md), var(--focus-ring);
 }
 
+.ui-chat-composer__box--loading {
+  border-color: var(--color-link);
+  box-shadow: var(--shadow-hard-md), 0 0 0 1px color-mix(in srgb, var(--color-link) 35%, transparent);
+}
+
 .ui-chat-composer__box textarea {
   flex: 1;
   min-height: 72px;
@@ -105,6 +110,10 @@
 .ui-chat-composer__send.ui-icon-button--subtle:hover:not(:disabled) {
   background: var(--color-primary-hover);
   color: var(--color-text);
+}
+
+.ui-chat-composer__send.ui-icon-button--subtle:disabled {
+  opacity: 0.55;
 }
 
 @media (max-width: 768px) {

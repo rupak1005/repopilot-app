@@ -18,5 +18,9 @@ describe('parseGithubRepoUrl', () => {
       name: 'linux'
     });
     expect(parseGithubRepoUrl('torvalds/linux')).toEqual({ owner: 'torvalds', name: 'linux' });
+    expect(parseGithubRepoUrl('https://gitpilot.com/fastapi/fastapi')).toEqual({
+      owner: 'fastapi',
+      name: 'fastapi'
+    });
   });
 });

@@ -6,6 +6,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
+  padding-bottom: calc(var(--ask-composer-height, 180px) + var(--space-8));
 }
 
 .ui-chat-bubble--user {
@@ -17,7 +18,7 @@
   background: var(--color-primary);
   border: var(--border-heavy);
   box-shadow: var(--shadow-hard-sm);
-  color: var(--color-text);
+  color: hsl(0 0% 8%);
   font-size: var(--text-ui);
   line-height: 1.55;
 }
@@ -97,20 +98,34 @@
 }
 
 .canvas--ask {
-  padding-bottom: 180px;
+  --ask-scroll-gap: calc(var(--ask-composer-height, 180px) + var(--space-8));
+  scroll-padding-bottom: var(--ask-scroll-gap);
   display: flex;
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
+  min-height: 0;
 }
 
 .ui-ask-page {
   width: 100%;
   max-width: 896px;
   margin: 0 auto;
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  min-height: calc(100dvh - var(--header-height) - 220px);
+}
+
+.ui-ask-hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: var(--space-4) 0 var(--space-8);
 }
 
 .ui-ask-hero h1 {
@@ -130,6 +145,8 @@
 .ui-ask-hint {
   text-align: center;
   color: var(--color-text-subtle);
+  max-width: 42ch;
+  margin: 0 auto;
 }
 
 .ui-ask-toolbar {
@@ -186,12 +203,59 @@
   color: var(--color-text-subtle);
 }
 
+.ui-thinking-bubble {
+  align-self: stretch;
+  max-width: 420px;
+}
+
+.ui-thinking-bubble__body {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  padding-bottom: var(--space-3);
+}
+
+.ui-thinking-bubble__label {
+  font-size: var(--text-ui);
+  color: var(--color-text-muted);
+}
+
+.ui-typing-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.ui-typing-dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-link);
+  animation: ui-typing-dot 1.2s ease-in-out infinite;
+}
+
+.ui-typing-dots span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.ui-typing-dots span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
 .ui-ask-thread__anchor {
-  height: 1px;
+  height: 0;
+  flex-shrink: 0;
+  scroll-margin-bottom: var(--ask-scroll-gap, calc(var(--ask-composer-height, 180px) + var(--space-8)));
 }
 
 @media (prefers-reduced-motion: reduce) {
   .ui-ask-toolbar__clear:hover {
     transform: none;
+  }
+
+  .ui-typing-dots span {
+    animation: none;
+    opacity: 0.7;
   }
 }

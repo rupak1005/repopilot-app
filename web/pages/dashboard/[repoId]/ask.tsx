@@ -5,6 +5,7 @@ import { ChatBubble } from '../../../components/ui/ChatBubble';
 import { ChatComposer } from '../../../components/ui/ChatComposer';
 import { CitationChip } from '../../../components/ui/CitationChip';
 import { Dialog } from '../../../components/ui/Dialog';
+import { ThinkingBubble } from '../../../components/ui/ThinkingBubble';
 import { useToast } from '../../../components/ui/ToastProvider';
 import {
   clearAskThread,
@@ -65,7 +66,24 @@ export default function AskPage() {
   }, [repoId, messages, hydrated]);
 
   useEffect(() => {
-    threadEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    const anchor = threadEndRef.current;
+    if (!anchor) return;
+
+    const scrollToBottom = () => {
+      const canvas = anchor.closest('.canvas');
+      if (canvas instanceof HTMLElement) {
+        canvas.scrollTo({ top: canvas.scrollHeight, behavior: 'smooth' });
+        return;
+      }
+      anchor.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    };
+
+    const frame = requestAnimationFrame(() => requestAnimationFrame(scrollToBottom));
+    const timer = window.setTimeout(scrollToBottom, 120);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+    };
   }, [messages, loading]);
 
   async function runAsk(text: string) {
@@ -189,7 +207,7 @@ export default function AskPage() {
             );
           })}
 
-          {loading ? <p className="empty-state ui-ask-thinking">Thinking…</p> : null}
+          {loading ? <ThinkingBubble label="Searching codebase and drafting answer" /> : null}
           <div ref={threadEndRef} className="ui-ask-thread__anchor" aria-hidden />
         </div>
       </div>

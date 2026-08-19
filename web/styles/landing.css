@@ -12,37 +12,27 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-8) var(--space-6) var(--space-12);
+  padding: var(--space-5) var(--space-5) var(--space-6);
+  overflow: visible;
 }
 
 .landing-shell {
-  position: relative;
-  width: 100%;
-  max-width: 640px;
-}
-
-.landing-shell .neo-sparkle {
-  top: -16px;
-  right: 12px;
-}
-
-.landing-shell .neo-sparkle--alt {
-  bottom: 32px;
-  left: -12px;
-  transform: rotate(-12deg);
+  max-width: min(980px, 96vw);
 }
 
 .landing-card {
+  position: relative;
+  z-index: 1;
   background: var(--color-surface-muted);
   border: var(--border-heavy);
   border-radius: var(--radius-xl);
-  padding: var(--space-10) var(--space-8);
+  padding: var(--space-6) var(--space-8);
   box-shadow: var(--shadow-hard-lg);
 }
 
 .landing-eyebrow {
   display: inline-block;
-  margin: 0 0 var(--space-4);
+  margin: 0 0 var(--space-3);
   padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-sm);
   border: var(--border-medium);
@@ -56,19 +46,19 @@
 }
 
 .landing-card h1 {
-  margin: 0 0 var(--space-4);
-  font-size: var(--text-display);
+  margin: 0 0 var(--space-3);
+  font-size: clamp(2rem, 4.2vw, 2.65rem);
   font-weight: 800;
   letter-spacing: -0.04em;
-  line-height: 1.05;
+  line-height: 1.02;
 }
 
 .landing-lede {
-  margin: 0 0 var(--space-6);
+  margin: 0 0 var(--space-4);
   font-size: var(--text-body);
-  line-height: 1.65;
+  line-height: 1.5;
   color: var(--color-text-muted);
-  max-width: 52ch;
+  max-width: none;
 }
 
 .landing-form {
@@ -96,7 +86,38 @@
 }
 
 .landing-examples {
-  margin-top: var(--space-5);
+  margin-top: var(--space-4);
+}
+
+.diff-strip--landing {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: var(--border-medium);
+  gap: var(--space-3);
+}
+
+.diff-strip--landing .diff-strip__tagline {
+  font-size: var(--text-caption);
+  line-height: 1.45;
+}
+
+.diff-strip--landing .diff-strip__grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.diff-strip--landing .diff-card {
+  padding: var(--space-2) var(--space-3);
+}
+
+.diff-strip--landing .diff-card__icon {
+  width: 28px;
+  height: 28px;
+}
+
+.diff-strip--landing .diff-card__desc {
+  font-size: var(--text-micro);
+  line-height: 1.35;
 }
 
 .landing-examples__label {
@@ -134,9 +155,9 @@
 
 .landing-note,
 .landing-footer {
-  margin: var(--space-5) 0 0;
-  font-size: var(--text-ui);
-  line-height: 1.55;
+  margin: var(--space-3) 0 0;
+  font-size: var(--text-caption);
+  line-height: 1.45;
   color: var(--color-text-muted);
   text-align: center;
 }
@@ -151,7 +172,7 @@
 }
 
 .landing-signed-in {
-  margin-top: var(--space-4);
+  margin-top: var(--space-2);
   text-align: center;
 }
 
@@ -182,9 +203,118 @@
   font-weight: 600;
 }
 
+.index-progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.index-progress__title {
+  margin: 0;
+  font-size: var(--text-body-lg, var(--text-body));
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.index-progress__steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.index-progress__step {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-medium);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.index-progress__step--done {
+  color: var(--color-text-muted);
+}
+
+.index-progress__step--done .index-progress__icon {
+  color: var(--color-success, #16a34a);
+}
+
+.index-progress__step--active {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent);
+}
+
+.index-progress__step--active .index-progress__icon {
+  color: var(--color-accent);
+}
+
+.index-progress__step--failed {
+  border-color: var(--color-danger);
+}
+
+.index-progress__step--failed .index-progress__icon {
+  color: var(--color-danger);
+}
+
+.index-progress__step--pending {
+  opacity: 0.55;
+}
+
+.index-progress__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.index-progress__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-border-strong);
+}
+
+.index-progress__label {
+  font-weight: 600;
+  font-size: var(--text-body);
+}
+
+.index-progress__meta {
+  font-size: var(--text-micro);
+  color: var(--color-text-subtle);
+}
+
+.index-progress__spinner {
+  animation: ui-spin 0.85s linear infinite;
+}
+
+.index-progress__error {
+  margin: 0;
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 8%, var(--color-surface));
+  font-size: var(--text-caption);
+  color: var(--color-danger);
+}
+
+@media (max-width: 900px) {
+  .diff-strip--landing .diff-strip__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 640px) {
   .landing-card {
-    padding: var(--space-8) var(--space-5);
+    padding: var(--space-6) var(--space-5);
+  }
+
+  .diff-strip--landing .diff-strip__grid {
+    grid-template-columns: 1fr;
   }
 
   .landing-form__row .ui-button {

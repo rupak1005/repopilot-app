@@ -13,27 +13,16 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-6);
+  overflow: visible;
 }
 
 .login-shell {
-  position: relative;
-  width: 100%;
   max-width: 440px;
-}
-
-.login-shell .neo-sparkle {
-  top: -12px;
-  right: 8px;
-}
-
-.login-shell .neo-sparkle--alt {
-  bottom: 24px;
-  left: -8px;
-  transform: rotate(-12deg);
 }
 
 .login-card {
   position: relative;
+  z-index: 1;
   background: var(--color-surface-muted);
   border: var(--border-heavy);
   border-radius: var(--radius-xl);

@@ -18,7 +18,8 @@ export function parseGithubRepoUrl(input: string): { owner: string; name: string
   try {
     const url = new URL(trimmed.includes('://') ? trimmed : `https://${trimmed}`);
     const host = url.hostname.replace(/^www\./, '');
-    if (host !== 'github.com') return null;
+    const repoHosts = new Set(['github.com', 'gitpilot.com', 'gitpilot.dev']);
+    if (!repoHosts.has(host) && !host.endsWith('.gitpilot.com')) return null;
 
     const parts = url.pathname.replace(/^\/+|\/+$/g, '').split('/').filter(Boolean);
     if (parts.length < 2) return null;

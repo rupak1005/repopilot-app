@@ -1,6 +1,10 @@
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { PublicSiteHeader } from '../components/ui/PublicSiteHeader';
+import { GithubLogo } from '@phosphor-icons/react';
+import { Button } from '../components/ui/Button';
+import { GITHUB_SIGN_IN_URL } from '../lib/auth';
+import { PublicPageLayout } from '../components/ui/PublicPageLayout';
 import { RepoCard } from '../components/ui/RepoCard';
 import { ErrorBanner } from '../components/ui/ErrorBanner';
 
@@ -20,14 +24,24 @@ export default function ReposPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [selecting, setSelecting] = useState<string | null>(null);
+  const [needsSignIn, setNeedsSignIn] = useState(false);
 
   useEffect(() => {
     async function load() {
       const me = await fetch('/api/auth/me');
       if (!me.ok) {
-        void router.replace('/login');
+        setNeedsSignIn(true);
+        setLoading(false);
         return;
       }
+
+      const user = (await me.json()) as { isPublicGuest?: boolean };
+      if (user.isPublicGuest) {
+        setNeedsSignIn(true);
+        setLoading(false);
+        return;
+      }
+
       const response = await fetch('/api/repos');
       if (!response.ok) {
         const body = (await response.json()) as { error?: string };
@@ -59,22 +73,33 @@ export default function ReposPage() {
   }
 
   return (
-    <div className="ui-repos-page">
-      <PublicSiteHeader />
-      <main className="ui-repos-page__main">
-      <div className="ui-repos-shell">
+    <PublicPageLayout
+      active="repos"
+      pageClassName="ui-repos-page"
+      mainClassName="ui-repos-page__main"
+      shellClassName="ui-repos-shell"
+    >
         <div className="page-title-block">
           <h1>Choose a repository</h1>
           <p>Pick a repo to open its dashboard.</p>
         </div>
 
+        {needsSignIn ? (
+          <div className="ui-repos-signin">
+            <p>Sign in with GitHub to list and switch between your repositories.</p>
+            <Button href={GITHUB_SIGN_IN_URL} variant="primary" icon={<GithubLogo size={18} weight="fill" />}>
+              Connect GitHub
+            </Button>
+          </div>
+        ) : null}
+
         {error ? <ErrorBanner>{error}</ErrorBanner> : null}
 
-        {loading ? (
+        {!needsSignIn && loading ? (
           <p className="empty-state">Loading your GitHub repositories…</p>
-        ) : repos.length === 0 ? (
+        ) : !needsSignIn && repos.length === 0 ? (
           <p className="empty-state">No repositories found on your GitHub account.</p>
-        ) : (
+        ) : !needsSignIn ? (
           <div className="ui-repos-grid">
             {repos.map((repo) => (
               <RepoCard
@@ -90,9 +115,7 @@ export default function ReposPage() {
               />
             ))}
           </div>
-        )}
-      </div>
-      </main>
-    </div>
+        ) : null}
+    </PublicPageLayout>
   );
 }

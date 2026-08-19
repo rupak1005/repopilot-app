@@ -4,6 +4,7 @@ import { createEmbeddings, localEmbedding } from './embeddingProvider';
 
 const MAX_CHUNK_LINES = 40;
 const CHUNK_OVERLAP_LINES = 8;
+const CHUNK_INSERT_BATCH_SIZE = 50;
 
 type FileRow = {
   id: string;
@@ -77,6 +78,65 @@ function vectorLiteral(values: number[]): string {
   return `[${values.map((value) => Number(value.toFixed(8))).join(',')}]`;
 }
 
+type PendingChunk = {
+  fileId: string;
+  filePath: string;
+  startLine: number;
+  endLine: number;
+  text: string;
+};
+
+type ChunkInsertBatch = {
+  valueClauses: string[];
+  params: unknown[];
+};
+
+/** pgvector is Unsupported in Prisma; batch raw INSERT per docs. */
+function buildChunkInsertBatches(args: {
+  repositoryId: string;
+  revisionId: string;
+  pendingChunks: PendingChunk[];
+  embeddings: number[][];
+}): ChunkInsertBatch[] {
+  const batches: ChunkInsertBatch[] = [];
+
+  for (let batchStart = 0; batchStart < args.pendingChunks.length; batchStart += CHUNK_INSERT_BATCH_SIZE) {
+    const batch = args.pendingChunks.slice(batchStart, batchStart + CHUNK_INSERT_BATCH_SIZE);
+    const params: unknown[] = [];
+    const valueClauses: string[] = [];
+    let paramIndex = 1;
+
+    for (let j = 0; j < batch.length; j += 1) {
+      const chunk = batch[j];
+      const embedding = args.embeddings[batchStart + j] ?? localEmbedding(chunk.text);
+      valueClauses.push(
+        `($${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2}, $${paramIndex + 3}, $${paramIndex + 4}, $${paramIndex + 5}, $${paramIndex + 6}, $${paramIndex + 7}, $${paramIndex + 8}::vector)`
+      );
+      params.push(
+        args.repositoryId,
+        args.revisionId,
+        chunk.fileId,
+        chunk.filePath,
+        chunk.startLine,
+        chunk.endLine,
+        'lines',
+        chunk.text,
+        vectorLiteral(embedding)
+      );
+      paramIndex += 9;
+    }
+
+    batches.push({ valueClauses, params });
+  }
+
+  return batches;
+}
+
+type TxClient = Omit<
+  ReturnType<typeof getPrisma>,
+  '$connect' | '$disconnect' | '$on' | '$transaction' | '$extends'
+>;
+
 export async function indexRepositorySearch(args: {
   repositoryId: string;
   revisionSha?: string;
@@ -109,13 +169,7 @@ export async function indexRepositorySearch(args: {
     filesDiscovered: files.length
   });
 
-  const pendingChunks: Array<{
-    fileId: string;
-    filePath: string;
-    startLine: number;
-    endLine: number;
-    text: string;
-  }> = [];
+  const pendingChunks: PendingChunk[] = [];
 
   for (const file of files) {
     for (const chunk of chunkText(file.content)) {
@@ -130,19 +184,17 @@ export async function indexRepositorySearch(args: {
   }
 
   const embeddingResult = await createEmbeddings(pendingChunks.map((chunk) => chunk.text));
+  const insertBatches = buildChunkInsertBatches({
+    repositoryId: args.repositoryId,
+    revisionId: revision.id,
+    pendingChunks,
+    embeddings: embeddingResult.embeddings
+  });
 
-  await prisma.$transaction(async (tx) => {
-    await tx.$executeRawUnsafe(
-      `
-        DELETE FROM "CodeChunk"
-        WHERE "revisionId" = $1
-      `,
-      revision.id
-    );
+  await prisma.$transaction(async (tx: TxClient) => {
+    await tx.codeChunk.deleteMany({ where: { revisionId: revision.id } });
 
-    for (let idx = 0; idx < pendingChunks.length; idx += 1) {
-      const chunk = pendingChunks[idx];
-      const embedding = embeddingResult.embeddings[idx] ?? localEmbedding(chunk.text);
+    for (const batch of insertBatches) {
       await tx.$executeRawUnsafe(
         `
           INSERT INTO "CodeChunk" (
@@ -156,17 +208,9 @@ export async function indexRepositorySearch(args: {
             "text",
             "embedding"
           )
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::vector)
+          VALUES ${batch.valueClauses.join(', ')}
         `,
-        args.repositoryId,
-        revision.id,
-        chunk.fileId,
-        chunk.filePath,
-        chunk.startLine,
-        chunk.endLine,
-        'lines',
-        chunk.text,
-        vectorLiteral(embedding)
+        ...batch.params
       );
     }
   }, prismaInteractiveTxOptions);

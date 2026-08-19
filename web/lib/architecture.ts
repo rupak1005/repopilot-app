@@ -20,6 +20,10 @@ export type ForceGraphNode = {
   val: number;
   isHotspot: boolean;
   score: number;
+  x?: number;
+  y?: number;
+  fx?: number;
+  fy?: number;
 };
 
 export type ForceGraphLink = {
@@ -34,8 +38,18 @@ export type ForceGraphData = {
 
 function shortLabel(filePath: string): string {
   const parts = filePath.split('/');
-  if (parts.length <= 2) return filePath;
-  return parts.slice(-2).join('/');
+  if (parts.length <= 3) return filePath;
+  return parts.slice(-3).join('/');
+}
+
+/** Canvas box width — keep in sync with ArchitectureGraph paintNode. */
+export function nodeBoxWidth(label: string): number {
+  return Math.max(88, Math.min(168, label.length * 6.2 + 28));
+}
+
+/** Collision radius for d3-force forceCollide (Context7 / react-force-graph pattern). */
+export function nodeCollideRadius(node: ForceGraphNode): number {
+  return nodeBoxWidth(node.label) / 2 + 10;
 }
 
 export type DiagramLayer = 'all' | 'api' | 'web' | 'common' | 'other';

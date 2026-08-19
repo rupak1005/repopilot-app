@@ -13,6 +13,8 @@
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
     "@repopilot/common": "0.0.0",
+    "dagre": "^0.8.5",
+    "mermaid": "^11.17.0",
     "motion": "^13.1.0",
     "next": "*",
     "react": "*",
@@ -20,6 +22,7 @@
     "react-force-graph-2d": "^1.29.1"
   },
   "devDependencies": {
+    "@types/dagre": "^0.7.54",
     "@types/react": "*",
     "@types/react-dom": "*"
   }

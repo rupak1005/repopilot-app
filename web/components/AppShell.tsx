@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import {
   Bell,
   Code,
@@ -5,6 +6,7 @@ import {
   Flame,
   Gear,
   GitPullRequest,
+  GithubLogo,
   Graph,
   Lightning,
   List,
@@ -17,6 +19,7 @@ import type { Icon } from '@phosphor-icons/react';
 import { useRouter } from 'next/router';
 import { useEffect, useState, type ReactNode } from 'react';
 import { indexStatusLabel, useIndexStatus } from '../lib/indexStatus';
+import { GITHUB_SIGN_IN_URL, signOut } from '../lib/auth';
 import { IconButton } from './ui/IconButton';
 import { NavItem } from './ui/NavItem';
 import { RepoPicker } from './ui/RepoPicker';
@@ -32,6 +35,7 @@ type AppShellProps = {
   activeNav: NavKey;
   canvasClass?: string;
   demoMode?: boolean;
+  isPublicGuest?: boolean;
   children: ReactNode;
 };
 
@@ -54,6 +58,7 @@ export function AppShell({
   activeNav,
   canvasClass,
   demoMode = false,
+  isPublicGuest = false,
   children
 }: AppShellProps) {
   const router = useRouter();
@@ -95,8 +100,7 @@ export function AppShell({
   }, [mobileNavOpen]);
 
   async function handleLogout() {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    void router.push('/login');
+    await signOut('/');
   }
 
   return (
@@ -136,8 +140,14 @@ export function AppShell({
           >
             {mobileNavOpen ? <X size={20} weight="light" /> : <List size={20} weight="light" />}
           </IconButton>
-          <RepoPicker repoFullName={repoFullName} />
+          <RepoPicker repoId={repoId} repoFullName={repoFullName} isPublicGuest={isPublicGuest} />
           <div className="topbar-actions">
+            {isPublicGuest ? (
+              <Link href={GITHUB_SIGN_IN_URL} className="topbar-signin">
+                <GithubLogo size={16} weight="fill" aria-hidden />
+                Connect GitHub
+              </Link>
+            ) : null}
             <div className={indexPillClass} title={indexStatus?.job?.lastError ?? undefined}>
               <span className={`pulse-dot${pulseIdle ? ' pulse-dot--idle' : ''}`} />
               <span className="label-caps">{indexLabel}</span>
@@ -149,16 +159,23 @@ export function AppShell({
             <IconButton label="Help">
               <Question size={18} weight="light" />
             </IconButton>
-            <img
-              src={userAvatar || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'}
-              alt=""
-              className="avatar"
-              width={32}
-              height={32}
-            />
-            <button type="button" className="signout-btn" onClick={() => void handleLogout()}>
-              {userLogin}
-            </button>
+            {!isPublicGuest ? (
+              <>
+                <img
+                  src={userAvatar || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'}
+                  alt=""
+                  className="avatar"
+                  width={32}
+                  height={32}
+                />
+                <span className="topbar-user">{userLogin}</span>
+                <button type="button" className="signout-btn" onClick={() => void handleLogout()}>
+                  Log out
+                </button>
+              </>
+            ) : (
+              <span className="topbar-guest label-caps">Guest preview</span>
+            )}
           </div>
         </header>
 

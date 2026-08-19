@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { GitPullRequest, Lightning, MagnifyingGlass } from '@phosphor-icons/react';
 import { BentoPanel } from '../../../components/ui/BentoPanel';
+import { DifferentiatorsStrip } from '../../../components/ui/DifferentiatorsStrip';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { ErrorBanner } from '../../../components/ui/ErrorBanner';
 import { HotspotList } from '../../../components/ui/HotspotList';
@@ -30,6 +31,14 @@ export default function OverviewPage() {
         {error ? <ErrorBanner>{error}</ErrorBanner> : null}
         {needsIndex ? <IndexHint /> : null}
         {loading ? <p className="empty-state">Loading repository data…</p> : null}
+
+        {repoId ? (
+          <DifferentiatorsStrip
+            title="RepoPilot depth"
+            repoBase={base}
+            className="diff-strip--dashboard"
+          />
+        ) : null}
 
         <div className="ui-quick-actions">
           <Button

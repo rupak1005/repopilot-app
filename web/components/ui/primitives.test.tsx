@@ -11,7 +11,7 @@ import { IconButton } from './IconButton';
 import { KpiTile } from './KpiTile';
 import { NavItem } from './NavItem';
 import { RepoCard } from './RepoCard';
-import { RepoPicker, splitRepoFullName } from './RepoPicker';
+import { splitRepoFullName } from './repoPickerUtils';
 import { SearchHitRow } from './SearchHitRow';
 import { SquaresFour } from '@phosphor-icons/react';
 
@@ -97,16 +97,6 @@ describe('IconButton', () => {
     );
     expect(html).toContain('aria-label="Notifications"');
     expect(html).toContain('ui-icon-button');
-  });
-});
-
-describe('RepoPicker', () => {
-  it('links to repos and shows owner/name', () => {
-    const html = renderToStaticMarkup(<RepoPicker repoFullName="acme/app" href="/repos" />);
-    expect(html).toContain('href="/repos"');
-    expect(html).toContain('ui-repo-picker');
-    expect(html).toContain('acme');
-    expect(html).toContain('app');
   });
 });
 

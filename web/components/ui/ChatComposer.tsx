@@ -1,4 +1,4 @@
-import { type FormEvent, type KeyboardEvent } from 'react';
+import { type FormEvent, type KeyboardEvent, useEffect, useRef } from 'react';
 import { MagnifyingGlass, PaperPlaneRight } from '@phosphor-icons/react';
 import { IconButton } from './IconButton';
 import { useTapMotion } from '../../lib/motion';
@@ -24,7 +24,28 @@ export function ChatComposer({
   loading = false,
   placeholder = 'Ask anything about your codebase…'
 }: ChatComposerProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
   const tap = useTapMotion(0.98);
+
+  useEffect(() => {
+    const node = rootRef.current;
+    if (!node) return;
+
+    const syncHeight = () => {
+      document.documentElement.style.setProperty(
+        '--ask-composer-height',
+        `${Math.ceil(node.getBoundingClientRect().height)}px`
+      );
+    };
+
+    syncHeight();
+    const observer = new ResizeObserver(syncHeight);
+    observer.observe(node);
+    return () => {
+      observer.disconnect();
+      document.documentElement.style.removeProperty('--ask-composer-height');
+    };
+  }, []);
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -39,7 +60,7 @@ export function ChatComposer({
   }
 
   return (
-    <div className="ui-chat-composer">
+    <div ref={rootRef} className="ui-chat-composer">
       <form className="ui-chat-composer__inner" onSubmit={handleSubmit}>
         {suggestions.length > 0 ? (
           <div className="ui-chat-composer__suggestions">
@@ -58,7 +79,7 @@ export function ChatComposer({
             ))}
           </div>
         ) : null}
-        <div className="ui-chat-composer__box">
+        <div className={`ui-chat-composer__box${loading ? ' ui-chat-composer__box--loading' : ''}`}>
           <textarea
             value={value}
             onChange={(e) => onChange(e.target.value)}

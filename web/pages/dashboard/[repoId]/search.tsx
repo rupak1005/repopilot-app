@@ -1,10 +1,11 @@
 import { type FormEvent, useState } from 'react';
 import { useRouter } from 'next/router';
-import { MagnifyingGlass } from '@phosphor-icons/react';
+import { CircleNotch, MagnifyingGlass } from '@phosphor-icons/react';
 import { DashboardLayout } from '../../../lib/dashboard';
 import { Button } from '../../../components/ui/Button';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { ErrorBanner } from '../../../components/ui/ErrorBanner';
+import { InlineSpinner } from '../../../components/ui/InlineSpinner';
 import { SearchHitRow } from '../../../components/ui/SearchHitRow';
 import { repoApiPath } from '../../../lib/serverApi';
 import { demoDelay, demoSearchResults } from '../../../lib/demoData';
@@ -63,31 +64,48 @@ export default function SearchPage() {
         {error ? <ErrorBanner onDismiss={() => setError(null)}>{error}</ErrorBanner> : null}
 
         <section className="ui-search-panel">
-          <form onSubmit={handleSubmit} className="ui-search-form">
+          <form
+            onSubmit={handleSubmit}
+            className={`ui-search-form${loading ? ' ui-search-form--loading' : ''}`}
+          >
             <input
               className="ui-search-input ui-input"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="repository sync, auth middleware…"
               aria-label="Search query"
+              disabled={loading}
             />
             <Button
               type="submit"
               variant="primary"
               disabled={loading || !query.trim()}
-              icon={<MagnifyingGlass size={16} weight="light" />}
+              icon={
+                loading ? (
+                  <CircleNotch size={16} weight="bold" className="ui-inline-spinner__icon" aria-hidden />
+                ) : (
+                  <MagnifyingGlass size={16} weight="light" />
+                )
+              }
             >
-              {loading ? '…' : 'Search'}
+              {loading ? 'Searching…' : 'Search'}
             </Button>
           </form>
 
-          {results.length > 0 ? (
-            <ul className="ui-search-hits">
-              {results.map((hit) => (
-                <SearchHitRow key={`${hit.file}:${hit.lines[0]}`} hit={hit} />
-              ))}
-            </ul>
-          ) : !loading ? (
+          {loading ? (
+            <InlineSpinner label="Searching indexed files…" className="ui-search-loading" />
+          ) : results.length > 0 ? (
+            <>
+              <p className="ui-search-meta">
+                {results.length} match{results.length === 1 ? '' : 'es'}
+              </p>
+              <ul className="ui-search-hits">
+                {results.map((hit) => (
+                  <SearchHitRow key={`${hit.file}:${hit.lines[0]}`} hit={hit} />
+                ))}
+              </ul>
+            </>
+          ) : (
             <EmptyState
               compact
               icon={MagnifyingGlass}
@@ -98,7 +116,7 @@ export default function SearchPage() {
                   : 'Semantic search runs against your indexed codebase.'
               }
             />
-          ) : null}
+          )}
         </section>
       </div>
     </DashboardLayout>

@@ -12,12 +12,30 @@
   display: flex;
   justify-content: center;
   padding: var(--space-8) var(--space-6);
+  overflow: visible;
 }
 
 .ui-repos-shell {
-  width: 100%;
   max-width: 640px;
   margin: 0 auto;
+}
+
+.ui-repos-signin {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: var(--border-medium);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-sm);
+}
+
+.ui-repos-signin p {
+  margin: 0;
+  color: var(--color-text-muted);
+  line-height: 1.55;
 }
 
 .ui-repos-brand {

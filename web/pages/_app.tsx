@@ -31,6 +31,8 @@ import '../styles/browse.css';
 import '../styles/demo-banner.css';
 import '../styles/architecture.css';
 import '../styles/pr-detail.css';
+import '../styles/mcp-connect.css';
+import '../styles/differentiators.css';
 import '../styles/globals.css';
 import '../styles/focus-audit.css';
 

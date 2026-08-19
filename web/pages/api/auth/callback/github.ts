@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { exchangeGitHubCode, fetchGitHubUser } from '../../../../lib/github';
 import {
   clearOAuthStateCookie,
+  getSession,
   readOAuthState,
   setSessionCookie
 } from '../../../../lib/session';
@@ -32,13 +33,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const accessToken = await exchangeGitHubCode(code);
     const user = await fetchGitHubUser(accessToken);
+    const existing = getSession(req);
     setSessionCookie(res, {
       githubId: user.id,
       login: user.login,
       name: user.name,
       avatarUrl: user.avatar_url,
-      accessToken
+      accessToken,
+      selectedRepoFullName: existing?.selectedRepoFullName,
+      selectedRepoId: existing?.selectedRepoId
     });
+    if (existing?.selectedRepoId) {
+      res.redirect(302, `/dashboard/${existing.selectedRepoId}`);
+      return;
+    }
     res.redirect(302, '/repos');
   } catch (err) {
     const message = err instanceof Error ? err.message : 'OAuth failed';

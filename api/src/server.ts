@@ -46,8 +46,10 @@ import {
 } from './services/contextGraph';
 import { analyzeFileImpact } from './services/impactAnalysis';
 import { requireInternalApiAuth } from './middleware/internalAuth';
+import { checkRateLimit, clientIp } from './middleware/rateLimit';
 import {
   getRepositoryIndexStatus,
+  rebuildRepositoryGraph,
   startPublicRepositoryIndex,
   startRepositoryIndex
 } from './services/repositoryIndex';
@@ -166,6 +168,7 @@ async function bootstrap() {
       owner?: string;
       name?: string;
       inline?: boolean;
+      background?: boolean;
     };
 
     if (!body.owner?.trim() || !body.name?.trim()) {
@@ -175,6 +178,16 @@ async function bootstrap() {
 
     const owner = body.owner.trim();
     const name = body.name.trim();
+
+    const ip = clientIp(request.headers as Record<string, unknown>, request.ip);
+    const limit = checkRateLimit(`public-open:${ip}`, 12, 60 * 60 * 1000);
+    if (!limit.allowed) {
+      reply.code(429);
+      return {
+        error: `Too many public opens from this address. Try again in ${limit.retryAfterSec}s.`
+      };
+    }
+
     const meta = await fetchPublicRepositoryMeta({ owner, name });
     if (!meta) {
       reply.code(404);
@@ -189,7 +202,8 @@ async function bootstrap() {
         repositoryId,
         owner: meta.owner,
         name: meta.name,
-        inline: body.inline
+        inline: body.inline,
+        background: body.background
       });
       return {
         repositoryId,
@@ -518,6 +532,53 @@ async function bootstrap() {
   server.get('/api/v1/repositories/:repoId/index/status', async (request) => {
     const params = request.params as { repoId: string };
     return getRepositoryIndexStatus(params.repoId);
+  });
+
+  server.get('/api/v1/repositories/:repoId/index/stream', async (request, reply) => {
+    const params = request.params as { repoId: string };
+    reply.hijack();
+    reply.raw.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache, no-transform',
+      Connection: 'keep-alive',
+      'X-Accel-Buffering': 'no'
+    });
+
+    let closed = false;
+    request.raw.on('close', () => {
+      closed = true;
+    });
+
+    const emit = async (): Promise<void> => {
+      if (closed) return;
+      try {
+        const status = await getRepositoryIndexStatus(params.repoId);
+        reply.raw.write(`data: ${JSON.stringify(status)}\n\n`);
+        if (status.state === 'ready' || status.state === 'failed') {
+          reply.raw.end();
+          return;
+        }
+        setTimeout(() => void emit(), 1500);
+      } catch (err) {
+        server.log.error({ err, repoId: params.repoId }, 'Index status stream failed');
+        reply.raw.write(`event: error\ndata: ${JSON.stringify({ error: 'stream_failed' })}\n\n`);
+        reply.raw.end();
+      }
+    };
+
+    await emit();
+  });
+
+  server.post('/api/v1/repositories/:repoId/graph/rebuild', async (request, reply) => {
+    const params = request.params as { repoId: string };
+    try {
+      return await rebuildRepositoryGraph(params.repoId);
+    } catch (err) {
+      reply.code(400);
+      return {
+        error: err instanceof Error ? err.message : 'Failed to rebuild graph'
+      };
+    }
   });
 
   server.post('/api/v1/repositories/:repoId/index', async (request, reply) => {

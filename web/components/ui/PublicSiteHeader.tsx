@@ -1,28 +1,33 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Code, GithubLogo } from '@phosphor-icons/react';
+import { Code, GithubLogo, SignOut } from '@phosphor-icons/react';
 import { useEffect, useState } from 'react';
+import { GITHUB_SIGN_IN_URL, isGitHubUser, signOut } from '../../lib/auth';
+import type { PublicUser } from '../../lib/session';
 import { ThemeToggle } from './ThemeToggle';
 
 type PublicSiteHeaderProps = {
-  active?: 'home' | 'browse' | 'login';
+  active?: 'home' | 'browse' | 'login' | 'repos';
 };
 
 export function PublicSiteHeader({ active }: PublicSiteHeaderProps) {
   const router = useRouter();
-  const [signedIn, setSignedIn] = useState(false);
-  const [repoId, setRepoId] = useState<string | null>(null);
+  const [user, setUser] = useState<PublicUser | null>(null);
 
   useEffect(() => {
     async function load() {
       const response = await fetch('/api/auth/me');
-      if (!response.ok) return;
-      const user = (await response.json()) as { selectedRepoId?: string };
-      setSignedIn(true);
-      setRepoId(user.selectedRepoId ?? null);
+      if (!response.ok) {
+        setUser(null);
+        return;
+      }
+      setUser((await response.json()) as PublicUser);
     }
     void load();
   }, [router.asPath]);
+
+  const signedIn = Boolean(user);
+  const hasGitHub = isGitHubUser(user);
 
   return (
     <header className="public-header">
@@ -42,20 +47,42 @@ export function PublicSiteHeader({ active }: PublicSiteHeaderProps) {
         >
           Browse
         </Link>
-        {signedIn ? (
+        {user?.selectedRepoId ? (
           <Link
-            href={repoId ? `/dashboard/${repoId}` : '/repos'}
+            href={`/dashboard/${user.selectedRepoId}`}
             className="public-header__link public-header__link--cta"
           >
             Dashboard
           </Link>
+        ) : hasGitHub ? (
+          <Link href="/repos" className="public-header__link public-header__link--cta">
+            Repositories
+          </Link>
+        ) : null}
+        {hasGitHub ? (
+          <>
+            <span className="public-header__user">
+              {user?.avatarUrl ? (
+                <img src={user.avatarUrl} alt="" className="public-header__avatar" width={24} height={24} />
+              ) : null}
+              <span>{user?.login}</span>
+            </span>
+            <button
+              type="button"
+              className="public-header__link public-header__link--cta"
+              onClick={() => void signOut('/')}
+            >
+              <SignOut size={16} weight="bold" aria-hidden />
+              Log out
+            </button>
+          </>
         ) : (
           <Link
-            href="/login"
+            href={GITHUB_SIGN_IN_URL}
             className={`public-header__link public-header__link--cta${active === 'login' ? ' public-header__link--active' : ''}`}
           >
             <GithubLogo size={16} weight="fill" aria-hidden />
-            Sign in
+            {signedIn ? 'Connect GitHub' : 'Sign in'}
           </Link>
         )}
         <ThemeToggle variant="pill" />

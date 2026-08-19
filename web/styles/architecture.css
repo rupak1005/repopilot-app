@@ -2,15 +2,15 @@
 
 .canvas--diagram {
   padding: 0;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .ui-diagram-page {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  min-height: calc(100vh - 52px);
-  padding: 20px 20px 24px;
+  padding: 20px 20px 48px;
 }
 
 .ui-diagram-hero {
@@ -50,20 +50,20 @@
   gap: 10px;
   padding: 10px 16px;
   border-radius: 999px;
-  border: 1px solid var(--border-strong);
+  border: var(--border-medium);
   background: var(--bg-surface);
   color: var(--text-primary);
-  font-size: 13px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  font-size: var(--text-ui);
+  box-shadow: var(--shadow-hard-sm);
 }
 
 .ui-diagram-explainer {
   margin: 0;
   padding: 14px 18px;
   border-radius: var(--radius-lg);
-  border: 1px solid var(--border-hairline);
-  background: linear-gradient(180deg, rgba(34, 211, 238, 0.06), transparent);
-  font-size: 14px;
+  border: var(--border-soft-width);
+  background: color-mix(in srgb, var(--diagram-accent) 8%, var(--color-surface));
+  font-size: var(--text-body);
   line-height: 1.6;
   color: var(--text-secondary);
 }
@@ -76,6 +76,109 @@
   min-height: 0;
 }
 
+.ui-diagram__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.ui-diagram__controls-right {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.ui-diagram__layout {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-1);
+  border-radius: var(--radius-md);
+  border: var(--border-medium);
+  background: var(--color-surface-muted);
+  box-shadow: var(--shadow-hard-sm);
+}
+
+.ui-diagram__layout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: var(--text-ui);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out-expo);
+}
+
+.ui-diagram__layout-btn:hover {
+  color: var(--color-text);
+  background: var(--color-surface);
+}
+
+.ui-diagram__layout-btn--active {
+  color: var(--color-text);
+  background: var(--color-primary);
+  border: var(--border-medium);
+  box-shadow: var(--shadow-hard-sm);
+}
+
+.ui-diagram__workspace {
+  flex: 1;
+  min-height: min(560px, calc(100vh - 280px));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.ui-diagram__workspace--split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 400px);
+  gap: var(--space-3);
+}
+
+.ui-diagram__workspace--focus {
+  display: grid;
+  grid-template-columns: minmax(0, 0.42fr) minmax(320px, 0.58fr);
+  gap: var(--space-3);
+}
+
+.ui-diagram__workspace--focus .ui-diagram__stage {
+  min-height: 280px;
+}
+
+.ui-diagram__panel-empty {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  border-radius: var(--radius-xl);
+  border: var(--border-heavy);
+  background: var(--color-surface-muted);
+  box-shadow: var(--shadow-hard-md);
+}
+
+.ui-diagram__panel-empty-title {
+  margin: 0;
+  font-size: var(--text-h2);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.ui-diagram__panel-empty-body {
+  margin: 0;
+  font-size: var(--text-body);
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}
+
 .ui-diagram__chips {
   display: flex;
   flex-wrap: wrap;
@@ -85,11 +188,11 @@
 .ui-diagram__chip {
   padding: 6px 14px;
   border-radius: 999px;
-  border: 1px solid var(--border-hairline);
+  border: var(--border-medium);
   background: var(--bg-surface);
   color: var(--text-secondary);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-ui);
   cursor: pointer;
   transition:
     border-color 160ms var(--ease-out-expo),
@@ -103,9 +206,9 @@
 }
 
 .ui-diagram__chip--active {
-  border-color: rgba(34, 211, 238, 0.45);
-  background: rgba(34, 211, 238, 0.08);
-  color: var(--accent);
+  border-color: var(--diagram-accent);
+  background: color-mix(in srgb, var(--diagram-accent) 12%, var(--color-surface));
+  color: var(--color-link);
 }
 
 .ui-diagram__stage {
@@ -113,14 +216,63 @@
   flex: 1;
   min-height: min(560px, calc(100vh - 280px));
   border-radius: var(--radius-xl);
-  border: 1px solid var(--border-strong);
-  background-color: #0c0c0e;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  border: var(--border-heavy);
+  background-color: var(--diagram-canvas-bg);
+  background-image: radial-gradient(var(--diagram-canvas-dot) 1px, transparent 1px);
   background-size: 20px 20px;
   overflow: hidden;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 24px 48px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--shadow-hard-md);
+}
+
+.ui-diagram__mermaid-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+  overscroll-behavior: contain;
+}
+
+.ui-diagram__mermaid-viewport:active {
+  cursor: grabbing;
+}
+
+.ui-diagram__mermaid-canvas {
+  will-change: transform;
+}
+
+.ui-diagram__mermaid {
+  padding: var(--space-4);
+}
+
+.ui-diagram__mermaid svg {
+  display: block;
+  height: auto;
+  margin: 0 auto;
+}
+
+.ui-diagram__mermaid svg g.node {
+  cursor: pointer;
+  pointer-events: all;
+}
+
+.ui-diagram__mermaid svg g.node rect,
+.ui-diagram__mermaid svg g.node polygon,
+.ui-diagram__mermaid svg g.node path,
+.ui-diagram__mermaid svg g.node .label,
+.ui-diagram__mermaid svg g.node text {
+  pointer-events: all;
+}
+.ui-diagram__mermaid-node--selected rect,
+.ui-diagram__mermaid-node--selected polygon,
+.ui-diagram__mermaid-node--selected path {
+  stroke: var(--diagram-accent) !important;
+  stroke-width: 2.5px !important;
+}
+
+.ui-diagram__mermaid-node--selected .nodeLabel,
+.ui-diagram__mermaid-node--selected span {
+  font-weight: 700;
 }
 
 .ui-diagram__stage--solo {
@@ -132,6 +284,8 @@
   top: 12px;
   right: 12px;
   z-index: 2;
+  display: flex;
+  gap: var(--space-2);
 }
 
 .ui-diagram__stats {
@@ -163,7 +317,7 @@
   justify-content: center;
   gap: 12px;
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: var(--text-body);
 }
 
 .ui-diagram__spinner {
@@ -180,7 +334,7 @@
 .ui-diagram__hint {
   margin: 0;
   text-align: center;
-  font-size: 12px;
+  font-size: var(--text-ui);
   color: var(--text-tertiary);
 }
 
@@ -189,9 +343,19 @@
   margin-top: -4px;
   padding: 16px 18px;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(34, 211, 238, 0.25);
+  border: var(--border-medium);
+  border-color: color-mix(in srgb, var(--diagram-accent) 35%, var(--color-border));
   background: var(--bg-elevated);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-hard-md);
+}
+
+.ui-diagram__inspector--panel {
+  margin-top: 0;
+  height: 100%;
+  min-height: 280px;
+  overflow: auto;
+  border: var(--border-heavy);
+  background: var(--color-surface-muted);
 }
 
 .ui-diagram__inspector-close {
@@ -212,16 +376,16 @@
 .ui-diagram__inspector-label {
   margin: 0 0 4px;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-micro);
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--diagram-accent);
 }
 
 .ui-diagram__inspector-path {
   margin: 0 0 12px;
   padding-right: 24px;
-  font-size: 12px;
+  font-size: var(--text-ui);
   line-height: 1.5;
   word-break: break-all;
   color: var(--text-primary);
@@ -233,13 +397,13 @@
   gap: 12px;
   margin-bottom: 14px;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-ui);
   color: var(--text-secondary);
 }
 
 .ui-diagram__inspector-note {
   margin: 0 0 14px;
-  font-size: 12px;
+  font-size: var(--text-ui);
   color: var(--text-secondary);
 }
 
@@ -255,7 +419,8 @@
   color: var(--text-secondary);
 }
 
-.ui-diagram__inspector-deps ul {
+.ui-diagram__inspector-deps ul,
+.ui-diagram__inspector-deps-list {
   margin: 0;
   padding: 0;
   list-style: none;
@@ -264,11 +429,26 @@
   gap: 4px;
 }
 
-.ui-diagram__inspector-deps li {
-  font-size: 11px;
+.ui-diagram__inspector-dep button {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-soft-width);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  text-align: left;
+  font-size: var(--text-ui);
   line-height: 1.45;
   color: var(--text-primary);
   word-break: break-all;
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-out-expo),
+    background var(--duration-fast) var(--ease-out-expo);
+}
+
+.ui-diagram__inspector-dep button:hover {
+  border-color: var(--diagram-accent);
+  background: color-mix(in srgb, var(--diagram-accent) 10%, var(--color-surface));
 }
 
 .ui-diagram__inspector-actions {
@@ -283,11 +463,11 @@
   gap: 6px;
   padding: 8px 14px;
   border-radius: 999px;
-  border: 1px solid var(--border-hairline);
+  border: var(--border-medium);
   background: var(--bg-surface);
   color: var(--text-primary);
-  font-size: 12px;
-  font-weight: 500;
+  font-size: var(--text-ui);
+  font-weight: 600;
   text-decoration: none;
   transition: border-color 160ms var(--ease-out-expo);
 }
@@ -297,9 +477,20 @@
 }
 
 .ui-diagram__action--primary {
-  border-color: rgba(34, 211, 238, 0.35);
-  background: rgba(34, 211, 238, 0.1);
-  color: var(--accent);
+  border-color: color-mix(in srgb, var(--diagram-accent) 40%, var(--color-border));
+  background: color-mix(in srgb, var(--diagram-accent) 12%, var(--color-surface));
+  color: var(--color-link);
+}
+
+@media (max-width: 960px) {
+  .ui-diagram__workspace--split,
+  .ui-diagram__workspace--focus {
+    grid-template-columns: 1fr;
+  }
+
+  .ui-diagram__inspector--panel {
+    min-height: 240px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

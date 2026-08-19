@@ -15,6 +15,7 @@ export type IndexJobStatus = 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'DE
 export type RepositoryIndexStatus = {
   repositoryId: string;
   state: 'not_indexed' | 'indexing' | 'ready' | 'failed';
+  stage: 'clone' | 'parse' | 'graph' | 'history' | 'ready' | 'failed';
   revisionSha: string | null;
   fileCount: number;
   symbolCount: number;
@@ -95,6 +96,79 @@ async function latestIndexJob(repositoryId: string) {
   };
 }
 
+async function beginIndexJob(args: {
+  repositoryId: string;
+  revisionSha: string;
+}): Promise<string | null> {
+  const deliveryId = randomUUID();
+  const dedupeKey = `repo:${args.repositoryId}:index:${args.revisionSha}`;
+  const rows = (await getPrisma().$queryRawUnsafe(
+    `
+      INSERT INTO "QueuedJob" (
+        "type",
+        "repositoryId",
+        "deliveryId",
+        "dedupeKey",
+        "payload",
+        "status"
+      )
+      VALUES ('repo-sync', $1, $2, $3, $4::jsonb, 'RUNNING')
+      ON CONFLICT ("dedupeKey") DO UPDATE
+        SET "status" = 'RUNNING',
+            "lastError" = NULL,
+            "updatedAt" = NOW()
+      RETURNING "id"
+    `,
+    args.repositoryId,
+    deliveryId,
+    dedupeKey,
+    JSON.stringify({
+      repositoryId: args.repositoryId,
+      revisionSha: args.revisionSha
+    })
+  )) as Array<{ id: string }>;
+
+  return rows[0]?.id ?? null;
+}
+
+async function finishIndexJob(args: {
+  repositoryId: string;
+  revisionSha: string;
+  status: 'COMPLETED' | 'FAILED';
+  lastError?: string | null;
+}): Promise<void> {
+  await getPrisma().$queryRawUnsafe(
+    `
+      UPDATE "QueuedJob"
+      SET "status" = $3,
+          "lastError" = $4,
+          "updatedAt" = NOW()
+      WHERE "repositoryId" = $1
+        AND "type" = 'repo-sync'
+        AND "payload"->>'revisionSha' = $2
+    `,
+    args.repositoryId,
+    args.revisionSha,
+    args.status,
+    args.lastError ?? null
+  );
+}
+
+function deriveIndexStage(args: {
+  state: RepositoryIndexStatus['state'];
+  fileCount: number;
+  symbolCount: number;
+  moduleDependencyCount: number;
+}): RepositoryIndexStatus['stage'] {
+  if (args.state === 'failed') return 'failed';
+  if (args.state === 'ready') return 'ready';
+  if (args.fileCount === 0) return 'clone';
+  if (args.moduleDependencyCount === 0) {
+    return args.symbolCount > 0 ? 'graph' : 'parse';
+  }
+  return 'history';
+}
+
 /** Full on-disk index: sync → graph → history (used by worker and inline fallback). */
 export async function runFullRepositoryIndex(args: {
   repositoryId: string;
@@ -139,6 +213,58 @@ export async function runFullRepositoryIndex(args: {
   });
 }
 
+async function runFullRepositoryIndexWithJob(args: {
+  repositoryId: string;
+  repoPath: string;
+  owner: string;
+  name: string;
+  revisionSha: string;
+}): Promise<void> {
+  await beginIndexJob({
+    repositoryId: args.repositoryId,
+    revisionSha: args.revisionSha
+  });
+
+  try {
+    await runFullRepositoryIndex(args);
+    await finishIndexJob({
+      repositoryId: args.repositoryId,
+      revisionSha: args.revisionSha,
+      status: 'COMPLETED'
+    });
+  } catch (err) {
+    await finishIndexJob({
+      repositoryId: args.repositoryId,
+      revisionSha: args.revisionSha,
+      status: 'FAILED',
+      lastError: err instanceof Error ? err.message : String(err)
+    });
+    throw err;
+  }
+}
+
+export async function rebuildRepositoryGraph(
+  repositoryId: string
+): Promise<{ revisionSha: string }> {
+  const revisions = await listRepositoryRevisions(repositoryId);
+  const latest = revisions[0];
+  if (!latest) {
+    throw new Error('Repository is not indexed yet');
+  }
+
+  await buildDependencyGraph({
+    repositoryId,
+    revisionSha: latest.revisionSha
+  });
+
+  logEvent('repo.graph.rebuilt', {
+    repositoryId,
+    revisionSha: latest.revisionSha
+  });
+
+  return { revisionSha: latest.revisionSha };
+}
+
 export async function startRepositoryIndex(args: {
   repositoryId: string;
   owner: string;
@@ -161,7 +287,7 @@ export async function startRepositoryIndex(args: {
   const inline = args.inline ?? process.env.INDEX_INLINE === 'true';
 
   if (inline) {
-    await runFullRepositoryIndex({
+    await runFullRepositoryIndexWithJob({
       repositoryId: args.repositoryId,
       repoPath,
       owner: args.owner,
@@ -190,7 +316,8 @@ export async function startPublicRepositoryIndex(args: {
   owner: string;
   name: string;
   inline?: boolean;
-}): Promise<{ queuedJobId: string | null; revisionSha: string }> {
+  background?: boolean;
+}): Promise<{ queuedJobId: string | null; revisionSha: string; indexing?: boolean }> {
   await ensureRepository({
     repositoryId: args.repositoryId,
     name: args.name,
@@ -202,16 +329,29 @@ export async function startPublicRepositoryIndex(args: {
     name: args.name
   });
 
-  const inline = args.inline ?? process.env.INDEX_INLINE === 'true';
+  const background = args.background ?? false;
+  const inline = !background && (args.inline ?? process.env.INDEX_INLINE === 'true');
+  const pipelineArgs = {
+    repositoryId: args.repositoryId,
+    repoPath,
+    owner: args.owner,
+    name: args.name,
+    revisionSha
+  };
+
+  if (background) {
+    void runFullRepositoryIndexWithJob(pipelineArgs).catch((err) => {
+      logEvent('repo.index.public.background.failed', {
+        repositoryId: args.repositoryId,
+        revisionSha,
+        error: err instanceof Error ? err.message : String(err)
+      });
+    });
+    return { queuedJobId: null, revisionSha, indexing: true };
+  }
 
   if (inline) {
-    await runFullRepositoryIndex({
-      repositoryId: args.repositoryId,
-      repoPath,
-      owner: args.owner,
-      name: args.name,
-      revisionSha
-    });
+    await runFullRepositoryIndexWithJob(pipelineArgs);
     return { queuedJobId: null, revisionSha };
   }
 
@@ -261,9 +401,12 @@ export async function getRepositoryIndexStatus(
     state = 'ready';
   }
 
+  const stage = deriveIndexStage({ state, fileCount, symbolCount, moduleDependencyCount });
+
   return {
     repositoryId,
     state,
+    stage,
     revisionSha: latestRevision?.revisionSha ?? null,
     fileCount,
     symbolCount,

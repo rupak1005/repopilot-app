@@ -12,7 +12,38 @@
   width: 100%;
   max-width: var(--container-max);
   margin: 0 auto;
-  padding: var(--space-8) var(--space-6) var(--space-12);
+  padding: var(--space-10) var(--space-6) var(--space-12);
+  overflow: visible;
+}
+
+/* Sparkles sit outside content — browse hero needs extra top air */
+.browse-main .landing-decor__pos--tl-lg {
+  top: -48px;
+  left: -32px;
+}
+
+.browse-main .landing-decor__pos--tl-md {
+  top: -36px;
+  left: 12px;
+}
+
+.browse-main .landing-decor__pos--tl-sm {
+  top: -16px;
+  left: 48px;
+}
+
+.browse-main .landing-decor__pos--tr-lg {
+  top: -42px;
+  right: 4px;
+}
+
+.browse-main .landing-decor__pos--tr-sm {
+  top: -14px;
+  right: -24px;
+}
+
+.browse-hero {
+  padding-top: var(--space-2);
 }
 
 .browse-hero h1 {
@@ -29,6 +60,10 @@
   font-size: var(--text-body);
   line-height: 1.65;
   color: var(--color-text-muted);
+}
+
+.browse-main .diff-strip {
+  margin-bottom: var(--space-8);
 }
 
 .browse-filters {
@@ -135,6 +170,68 @@
   text-align: center;
   color: var(--color-text-muted);
   font-size: var(--text-body);
+}
+
+.browse-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  margin: var(--space-5) 0;
+}
+
+.browse-pagination__btn {
+  padding: var(--space-2) var(--space-4);
+  border: var(--border-medium);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-sm);
+  font-size: var(--text-ui);
+  font-weight: 700;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.browse-pagination__btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.browse-pagination__pages {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.browse-pagination__page {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 var(--space-2);
+  border: var(--border-medium);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-sm);
+  font-size: var(--text-ui);
+  font-weight: 700;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.browse-pagination__page--active {
+  background: var(--color-primary);
+  color: hsl(0 0% 8%);
+  border-color: var(--color-border-strong);
+}
+
+.browse-pagination__gap {
+  padding: 0 var(--space-1);
+  font-weight: 700;
+  color: var(--color-text-subtle);
 }
 
 @media (max-width: 768px) {

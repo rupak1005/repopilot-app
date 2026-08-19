@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { deriveRepositoryId, parseGithubRepoUrl } from '@repopilot/common';
 import { isDemoMode } from '../../../lib/demoMode';
+import { checkRateLimit } from '../../../lib/rateLimit';
 import { proxyApiRequest } from '../../../lib/serverApi';
 import { createPublicGuestSession, getSession, setSessionCookie } from '../../../lib/session';
 
@@ -25,6 +26,20 @@ export default async function handler(
     return;
   }
 
+  const ip =
+    (typeof req.headers['x-forwarded-for'] === 'string'
+      ? req.headers['x-forwarded-for'].split(',')[0]?.trim()
+      : null) ||
+    req.socket.remoteAddress ||
+    'unknown';
+  const limit = checkRateLimit(`public-open:${ip}`, 12, 60 * 60 * 1000);
+  if (!limit.allowed) {
+    res.status(429).json({
+      error: `Too many repositories opened from this address. Try again in ${limit.retryAfterSec}s.`
+    });
+    return;
+  }
+
   const body = req.body as { url?: string };
   const parsed = parseGithubRepoUrl(body.url ?? '');
   if (!parsed) {
@@ -44,7 +59,7 @@ export default async function handler(
     body: JSON.stringify({
       owner: parsed.owner,
       name: parsed.name,
-      inline: process.env.INDEX_INLINE === 'true'
+      background: true
     })
   });
 
@@ -53,6 +68,7 @@ export default async function handler(
     repositoryId?: string;
     fullName?: string;
     revisionSha?: string;
+    indexing?: boolean;
   };
 
   if (!response.ok || !payload.repositoryId || !payload.fullName) {
@@ -73,6 +89,7 @@ export default async function handler(
   res.status(200).json({
     repositoryId: payload.repositoryId,
     fullName: payload.fullName,
-    revisionSha: payload.revisionSha
+    revisionSha: payload.revisionSha,
+    indexing: payload.indexing ?? false
   });
 }

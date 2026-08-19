@@ -3,9 +3,15 @@ import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
 import { ArrowSquareOut, Graph } from '@phosphor-icons/react';
 import { Button } from '../components/ui/Button';
+import { DifferentiatorsStrip } from '../components/ui/DifferentiatorsStrip';
 import { ErrorBanner } from '../components/ui/ErrorBanner';
-import { PublicSiteHeader } from '../components/ui/PublicSiteHeader';
+import { PublicPageLayout } from '../components/ui/PublicPageLayout';
 import { githubUrl } from '../lib/exampleRepos';
+import {
+  browseResultRange,
+  browseTotalPages,
+  browseVisiblePages
+} from '../lib/browsePagination';
 
 type BrowseItem = {
   fullName: string;
@@ -41,12 +47,17 @@ export default function BrowsePage() {
   const [loading, setLoading] = useState(true);
   const [opening, setOpening] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    setPage(1);
+  }, [query, sort, minStars]);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const params = new URLSearchParams({ sort });
+      const params = new URLSearchParams({ sort, page: String(page) });
       if (query.trim()) params.set('q', query.trim());
       if (minStars) params.set('minStars', minStars);
       const response = await fetch(`/api/public/browse?${params}`);
@@ -61,7 +72,10 @@ export default function BrowsePage() {
     } finally {
       setLoading(false);
     }
-  }, [query, sort, minStars]);
+  }, [query, sort, minStars, page]);
+
+  const totalPages = browseTotalPages(totalCount);
+  const pageItems = browseVisiblePages(page, totalPages);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void load(), 300);
@@ -89,16 +103,22 @@ export default function BrowsePage() {
   }
 
   return (
-    <div className="browse-page">
-      <PublicSiteHeader active="browse" />
-      <main className="browse-main">
+    <PublicPageLayout
+      active="browse"
+      pageClassName="browse-page"
+      mainClassName="browse-main"
+      decorVariant="top"
+    >
         <header className="browse-hero">
           <h1>Browse public repositories</h1>
           <p>
             Search GitHub by name, filter by stars, and open an interactive architecture diagram
-            powered by real dependency analysis — not AI guesses.
+            built from real imports — then explore impact, hotspots, Ask, and PR review in the
+            dashboard.
           </p>
         </header>
+
+        <DifferentiatorsStrip title="Why RepoPilot" showTagline />
 
         <div className="browse-filters">
           <label>
@@ -134,7 +154,7 @@ export default function BrowsePage() {
         <p className="browse-meta">
           {loading
             ? 'Loading…'
-            : `Showing ${items.length} of ${totalCount.toLocaleString()} public repositories`}
+            : `Showing ${browseResultRange(page, totalCount, items.length)} public repositories`}
         </p>
 
         <div className="browse-table-wrap">
@@ -189,10 +209,50 @@ export default function BrowsePage() {
           )}
         </div>
 
+        {totalPages > 1 && !loading ? (
+          <nav className="browse-pagination" aria-label="Browse pages">
+            <button
+              type="button"
+              className="browse-pagination__btn"
+              disabled={page <= 1}
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+            >
+              Previous
+            </button>
+            <ol className="browse-pagination__pages">
+              {pageItems.map((item, index) =>
+                item === '…' ? (
+                  <li key={`gap-${index}`} className="browse-pagination__gap" aria-hidden>
+                    …
+                  </li>
+                ) : (
+                  <li key={item}>
+                    <button
+                      type="button"
+                      className={`browse-pagination__page${item === page ? ' browse-pagination__page--active' : ''}`}
+                      aria-current={item === page ? 'page' : undefined}
+                      onClick={() => setPage(item)}
+                    >
+                      {item}
+                    </button>
+                  </li>
+                )
+              )}
+            </ol>
+            <button
+              type="button"
+              className="browse-pagination__btn"
+              disabled={page >= totalPages}
+              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+            >
+              Next
+            </button>
+          </nav>
+        ) : null}
+
         <p className="browse-meta">
           <Link href="/">← Back to home</Link>
         </p>
-      </main>
-    </div>
+    </PublicPageLayout>
   );
 }

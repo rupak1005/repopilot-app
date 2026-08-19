@@ -73,6 +73,7 @@ export function DashboardLayout({ activeNav, canvasClass, children }: DashboardL
       activeNav={activeNav}
       canvasClass={canvasClass}
       demoMode={isDemoMode()}
+      isPublicGuest={ctx.user.isPublicGuest}
     >
       {isDemoMode() ? <DemoBanner /> : null}
       {ctx.user.isPublicGuest && !isDemoMode() ? <PublicGuestBanner /> : null}

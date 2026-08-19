@@ -88,6 +88,28 @@
   color: var(--color-text);
 }
 
+.public-header__user {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-ui);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.public-header__avatar {
+  border-radius: 50%;
+  border: var(--border-medium);
+}
+
+button.public-header__link {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+
 .public-theme-toggle {
   display: inline-flex;
   align-items: center;
@@ -110,6 +132,116 @@
 .public-theme-toggle:active {
   transform: translate(1px, 1px);
   box-shadow: none;
+}
+
+/* Sparkle decor — all public pages */
+.public-page-shell {
+  position: relative;
+  width: 100%;
+  overflow: visible;
+}
+
+.landing-decor {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  color: var(--color-border-strong);
+  z-index: 2;
+}
+
+.landing-decor__star {
+  position: absolute;
+}
+
+.landing-decor__star path {
+  stroke-width: 1.25;
+}
+
+.landing-decor__star--purple path {
+  fill: #c4b5fd;
+}
+
+.landing-decor__star--cyan path {
+  fill: #67e8f9;
+}
+
+.landing-decor__star--light path {
+  fill: var(--color-surface);
+}
+
+.landing-decor__pos--tl-lg {
+  top: -28px;
+  left: -8px;
+  transform: rotate(-8deg);
+}
+
+.landing-decor__pos--tl-md {
+  top: -18px;
+  left: 42px;
+  transform: rotate(12deg);
+}
+
+.landing-decor__pos--tl-sm {
+  top: 8px;
+  left: 68px;
+  transform: rotate(-18deg);
+}
+
+.landing-decor__pos--tr-lg {
+  top: -22px;
+  right: 24px;
+  transform: rotate(14deg);
+}
+
+.landing-decor__pos--tr-sm {
+  top: 6px;
+  right: -6px;
+  transform: rotate(-10deg);
+}
+
+.landing-decor__pos--bl-lg {
+  bottom: 48px;
+  left: -22px;
+  transform: rotate(-6deg);
+}
+
+.landing-decor__plus {
+  position: absolute;
+  bottom: 92px;
+  left: 28px;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--color-border-strong);
+}
+
+.landing-decor__dot {
+  position: absolute;
+  bottom: 72px;
+  left: 52px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #67e8f9;
+  border: 1.5px solid var(--color-border-strong);
+}
+
+@media (max-width: 640px) {
+  .landing-decor__pos--tl-lg {
+    top: -20px;
+    left: -4px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .landing-decor__pos--tr-lg {
+    right: 8px;
+  }
+
+  .landing-decor__pos--bl-lg {
+    left: -12px;
+    bottom: 32px;
+  }
 }
 
 @media (max-width: 640px) {

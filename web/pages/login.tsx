@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { Code, Sparkle } from '@phosphor-icons/react';
+import { Code } from '@phosphor-icons/react';
 import { Button, GitHubIcon } from '../components/ui/Button';
 import { ErrorBanner } from '../components/ui/ErrorBanner';
-import { PublicSiteHeader } from '../components/ui/PublicSiteHeader';
+import { PublicPageLayout } from '../components/ui/PublicPageLayout';
 import { MARKETING_URL } from '../lib/types';
+import { isGitHubUser } from '../lib/auth';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,13 +17,18 @@ export default function LoginPage() {
     async function check() {
       const response = await fetch('/api/auth/me');
       if (response.ok) {
-        const user = (await response.json()) as { selectedRepoId?: string };
-        if (user.selectedRepoId) {
-          void router.replace(`/dashboard/${user.selectedRepoId}`);
-        } else {
-          void router.replace('/repos');
+        const user = (await response.json()) as {
+          selectedRepoId?: string;
+          isPublicGuest?: boolean;
+        };
+        if (isGitHubUser(user)) {
+          if (user.selectedRepoId) {
+            void router.replace(`/dashboard/${user.selectedRepoId}`);
+          } else {
+            void router.replace('/repos');
+          }
+          return;
         }
-        return;
       }
       setChecking(false);
     }
@@ -31,22 +37,24 @@ export default function LoginPage() {
 
   if (checking) {
     return (
-      <div className="login-page">
-        <PublicSiteHeader active="login" />
-        <main className="login-page__main">
-          <p className="empty-state">Loading…</p>
-        </main>
-      </div>
+      <PublicPageLayout
+        active="login"
+        pageClassName="login-page"
+        mainClassName="login-page__main"
+        shellClassName="login-shell"
+      >
+        <p className="empty-state">Loading…</p>
+      </PublicPageLayout>
     );
   }
 
   return (
-    <div className="login-page">
-      <PublicSiteHeader active="login" />
-      <main className="login-page__main">
-        <div className="login-shell">
-          <Sparkle className="neo-sparkle" size={22} weight="fill" aria-hidden />
-          <Sparkle className="neo-sparkle neo-sparkle--alt" size={16} weight="fill" aria-hidden />
+    <PublicPageLayout
+      active="login"
+      pageClassName="login-page"
+      mainClassName="login-page__main"
+      shellClassName="login-shell"
+    >
           <div className="login-card">
             <span className="login-eyebrow">Mission control</span>
             <div className="login-mark" aria-hidden>
@@ -72,8 +80,6 @@ export default function LoginPage() {
               <Link href={MARKETING_URL}>Marketing site</Link>
             </p>
           </div>
-        </div>
-      </main>
-    </div>
+    </PublicPageLayout>
   );
 }
