@@ -1,9 +1,19 @@
-import { Bell, Question } from '@phosphor-icons/react';
-import Link from 'next/link';
+import {
+  Bell,
+  Code,
+  Flame,
+  Gear,
+  GitPullRequest,
+  Lightning,
+  MagnifyingGlass,
+  Question,
+  SquaresFour
+} from '@phosphor-icons/react';
+import type { Icon } from '@phosphor-icons/react';
 import { useRouter } from 'next/router';
 import type { ReactNode } from 'react';
-import { Icon } from './Icon';
 import { IconButton } from './ui/IconButton';
+import { NavItem } from './ui/NavItem';
 import { RepoPicker } from './ui/RepoPicker';
 
 export type NavKey = 'overview' | 'search' | 'ask' | 'pulls' | 'hotspots' | 'settings';
@@ -18,13 +28,13 @@ type AppShellProps = {
   children: ReactNode;
 };
 
-const NAV: Array<{ key: NavKey; href: string; label: string; icon: string }> = [
-  { key: 'overview', href: '', label: 'Overview', icon: 'dashboard' },
-  { key: 'search', href: '/search', label: 'Search', icon: 'search' },
-  { key: 'ask', href: '/ask', label: 'Ask RepoPilot', icon: 'bolt' },
-  { key: 'pulls', href: '/pulls', label: 'Pull Requests', icon: 'merge_type' },
-  { key: 'hotspots', href: '/hotspots', label: 'Hotspots', icon: 'local_fire_department' },
-  { key: 'settings', href: '/settings', label: 'Settings', icon: 'settings' }
+const NAV: Array<{ key: NavKey; href: string; label: string; icon: Icon }> = [
+  { key: 'overview', href: '', label: 'Overview', icon: SquaresFour },
+  { key: 'search', href: '/search', label: 'Search', icon: MagnifyingGlass },
+  { key: 'ask', href: '/ask', label: 'Ask RepoPilot', icon: Lightning },
+  { key: 'pulls', href: '/pulls', label: 'Pull Requests', icon: GitPullRequest },
+  { key: 'hotspots', href: '/hotspots', label: 'Hotspots', icon: Flame },
+  { key: 'settings', href: '/settings', label: 'Settings', icon: Gear }
 ];
 
 export function AppShell({
@@ -49,7 +59,7 @@ export function AppShell({
       <aside className="sidebar">
         <div className="sidebar-brand">
           <div className="brand-mark">
-            <Icon name="code" size={18} />
+            <Code size={18} weight="light" aria-hidden />
           </div>
           <div>
             <div className="brand-title">RepoPilot</div>
@@ -58,20 +68,15 @@ export function AppShell({
         </div>
 
         <nav className="sidebar-nav">
-          {NAV.map((item) => {
-            const href = `${base}${item.href}`;
-            const active = item.key === activeNav;
-            return (
-              <Link
-                key={item.key}
-                href={href}
-                className={`nav-link${active ? ' nav-link--active' : ''}`}
-              >
-                <Icon name={item.icon} size={20} filled={active && item.key === 'ask'} />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
+          {NAV.map((item) => (
+            <NavItem
+              key={item.key}
+              href={`${base}${item.href}`}
+              label={item.label}
+              icon={item.icon}
+              active={item.key === activeNav}
+            />
+          ))}
         </nav>
       </aside>
 

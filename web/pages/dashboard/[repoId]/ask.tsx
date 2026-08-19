@@ -1,7 +1,9 @@
 import { type FormEvent, useState } from 'react';
 import { useRouter } from 'next/router';
 import { DashboardLayout } from '../../../lib/dashboard';
-import { Icon } from '../../../components/Icon';
+import { ChatBubble } from '../../../components/ui/ChatBubble';
+import { ChatComposer } from '../../../components/ui/ChatComposer';
+import { CitationChip } from '../../../components/ui/CitationChip';
 import { API_BASE, type AskResponse } from '../../../lib/types';
 
 const SUGGESTIONS = [
@@ -39,8 +41,8 @@ export default function AskPage() {
     }
   }
 
-  function handleSubmit(event: FormEvent) {
-    event.preventDefault();
+  function handleSubmit(event?: FormEvent) {
+    event?.preventDefault();
     void runAsk(query);
   }
 
@@ -48,40 +50,33 @@ export default function AskPage() {
     <DashboardLayout activeNav="ask" canvasClass="canvas--ask">
       {error ? <div className="error-banner">{error}</div> : null}
 
-      <div className="ask-wrap">
-        {lastQuery ? (
-          <div className="ask-user-bubble">{lastQuery}</div>
-        ) : null}
+      <div className="ui-ask-thread">
+        {lastQuery ? <ChatBubble role="user">{lastQuery}</ChatBubble> : null}
 
         {result ? (
-          <div>
-            <div className="confidence-row" style={{ marginBottom: 12 }}>
-              <Icon name="bolt" size={20} filled />
-              <span className="label-caps">RepoPilot</span>
-              <span className="confidence-badge">
-                <span className="pulse-dot" style={{ width: 6, height: 6 }} />
+          <ChatBubble
+            role="assistant"
+            meta={
+              <span className="ui-confidence-badge">
+                <span className="ui-confidence-badge__dot" />
                 {result.confidence} confidence
               </span>
-            </div>
-            <div className="answer-card">
-              <p style={{ margin: 0, lineHeight: 1.6 }}>{result.answer}</p>
-              {result.citations.length > 0 ? (
-                <div>
-                  <span className="label-caps" style={{ color: 'var(--on-surface-variant)' }}>
-                    Citations & Evidence
-                  </span>
-                  <div className="citation-chips" style={{ marginTop: 8 }}>
-                    {result.citations.map((c) => (
-                      <span key={`${c.file}:${c.lines[0]}`} className="citation-chip">
-                        <Icon name="description" size={14} />
-                        {c.file}:{c.lines[0]}–{c.lines[1]}
-                      </span>
-                    ))}
-                  </div>
+            }
+          >
+            <p style={{ margin: 0 }}>{result.answer}</p>
+            {result.citations.length > 0 ? (
+              <div className="ui-chat-bubble__citations">
+                <span className="ui-chat-bubble__citations-label label-caps">
+                  Citations & Evidence
+                </span>
+                <div className="ui-chat-bubble__citation-row">
+                  {result.citations.map((c) => (
+                    <CitationChip key={`${c.file}:${c.lines[0]}`} file={c.file} lines={c.lines} />
+                  ))}
                 </div>
-              ) : null}
-            </div>
-          </div>
+              </div>
+            ) : null}
+          </ChatBubble>
         ) : !loading && !lastQuery ? (
           <p className="empty-state">Ask anything about your codebase.</p>
         ) : null}
@@ -89,40 +84,14 @@ export default function AskPage() {
         {loading ? <p className="empty-state">Thinking…</p> : null}
       </div>
 
-      <div className="ask-composer">
-        <form className="ask-composer-inner" onSubmit={handleSubmit}>
-          <div className="suggestion-row">
-            {SUGGESTIONS.map((s) => (
-              <button
-                key={s}
-                type="button"
-                className="suggestion-chip"
-                onClick={() => void runAsk(s)}
-              >
-                <Icon name="search" size={14} />
-                {s}
-              </button>
-            ))}
-          </div>
-          <div className="composer-box">
-            <textarea
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Ask anything about your codebase..."
-              rows={3}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  void runAsk(query);
-                }
-              }}
-            />
-            <button type="submit" className="composer-send" disabled={loading || !query.trim()}>
-              <Icon name="send" size={20} filled />
-            </button>
-          </div>
-        </form>
-      </div>
+      <ChatComposer
+        value={query}
+        onChange={setQuery}
+        onSubmit={() => handleSubmit()}
+        suggestions={SUGGESTIONS}
+        onSuggestion={(s) => void runAsk(s)}
+        loading={loading}
+      />
     </DashboardLayout>
   );
 }

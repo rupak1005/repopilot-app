@@ -1,0 +1,86 @@
+/* Phase 5 — KpiTile primitive */
+
+.ui-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.ui-kpi-tile {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  transition:
+    background 160ms var(--ease-out-expo),
+    border-color 160ms var(--ease-out-expo);
+}
+
+.ui-kpi-tile:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--border-strong);
+}
+
+.ui-kpi-tile__label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text-tertiary);
+}
+
+.ui-kpi-tile__row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ui-kpi-tile__value {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.ui-kpi-tile__meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--text-secondary);
+}
+
+.ui-kpi-tile--success .ui-kpi-tile__value {
+  color: var(--success);
+}
+
+.ui-kpi-tile--warn .ui-kpi-tile__value {
+  color: var(--warn);
+}
+
+.ui-kpi-tile--danger .ui-kpi-tile__value {
+  color: var(--danger);
+}
+
+.ui-kpi-tile--accent .ui-kpi-tile__value {
+  color: var(--accent);
+}
+
+.ui-kpi-tile--danger .ui-kpi-tile__meta {
+  color: var(--danger);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-kpi-tile {
+    transition: background 120ms ease, border-color 120ms ease;
+  }
+}
+
+@media (min-width: 900px) {
+  .ui-kpi-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

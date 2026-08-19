@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import { Code } from '@phosphor-icons/react';
 import { Button, GitHubIcon } from '../components/ui/Button';
 import { MARKETING_URL } from '../lib/types';
 
@@ -35,9 +36,7 @@ export default function LoginPage() {
         <div className="login-card">
           <span className="login-eyebrow">Mission control</span>
           <div className="login-mark" aria-hidden>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <Code size={22} weight="light" />
           </div>
           <h1>RepoPilot</h1>
           <p>Sign in with GitHub to pick a repository and open your codebase dashboard.</p>

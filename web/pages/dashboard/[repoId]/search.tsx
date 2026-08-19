@@ -1,7 +1,9 @@
 import { type FormEvent, useState } from 'react';
 import { useRouter } from 'next/router';
+import { MagnifyingGlass } from '@phosphor-icons/react';
 import { DashboardLayout } from '../../../lib/dashboard';
-import { Icon } from '../../../components/Icon';
+import { Button } from '../../../components/ui/Button';
+import { SearchHitRow } from '../../../components/ui/SearchHitRow';
 import { API_BASE, type SearchHit } from '../../../lib/types';
 
 export default function SearchPage() {
@@ -35,7 +37,7 @@ export default function SearchPage() {
 
   return (
     <DashboardLayout activeNav="search">
-      <div className="canvas-inner search-panel">
+      <div className="canvas-inner ui-search-page">
         <div className="page-title-block">
           <h1>Search</h1>
           <p>Semantic search across indexed files.</p>
@@ -43,30 +45,29 @@ export default function SearchPage() {
 
         {error ? <div className="error-banner">{error}</div> : null}
 
-        <section className="panel" style={{ padding: 16 }}>
-          <form onSubmit={handleSubmit} className="search-form">
+        <section className="ui-search-panel">
+          <form onSubmit={handleSubmit} className="ui-search-form">
             <input
-              className="input"
+              className="ui-search-input"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="repository sync, auth middleware…"
+              aria-label="Search query"
             />
-            <button type="submit" className="btn-primary" disabled={loading}>
-              <Icon name="search" size={16} />
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={loading || !query.trim()}
+              icon={<MagnifyingGlass size={16} weight="light" />}
+            >
               {loading ? '…' : 'Search'}
-            </button>
+            </Button>
           </form>
 
           {results.length > 0 ? (
-            <ul className="hit-list">
+            <ul className="ui-search-hits">
               {results.map((hit) => (
-                <li key={`${hit.file}:${hit.lines[0]}`}>
-                  <strong className="mono">{hit.file}</strong>
-                  <div className="hit-meta">
-                    Lines {hit.lines[0]}–{hit.lines[1]} · score {hit.score.toFixed(2)}
-                  </div>
-                  <pre className="hit-snippet">{hit.text.slice(0, 280)}</pre>
-                </li>
+                <SearchHitRow key={`${hit.file}:${hit.lines[0]}`} hit={hit} />
               ))}
             </ul>
           ) : (

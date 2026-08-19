@@ -1,0 +1,125 @@
+/* Phase 8 — Repo picker cards + repos page shell */
+
+.ui-repos-page {
+  min-height: 100dvh;
+  padding: 48px 24px;
+  max-width: 640px;
+  margin: 0 auto;
+  background: var(--bg-base);
+}
+
+.ui-repos-page .page-title-block h1 {
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.ui-repos-page .page-title-block p {
+  color: var(--text-secondary);
+}
+
+.ui-repos-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.ui-repo-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  text-align: left;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-hairline);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  transition:
+    background 160ms var(--ease-out-expo),
+    border-color 160ms var(--ease-out-expo);
+}
+
+.ui-repo-card:hover:not(:disabled) {
+  background: var(--bg-surface-hover);
+  border-color: var(--border-strong);
+}
+
+.ui-repo-card:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.ui-repo-card:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.ui-repo-card__glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  background: rgba(34, 211, 238, 0.08);
+  color: var(--accent);
+}
+
+.ui-repo-card__body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ui-repo-card__title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ui-repo-card__owner {
+  color: var(--text-secondary);
+}
+
+.ui-repo-card__sep {
+  color: var(--text-tertiary);
+}
+
+.ui-repo-card__name {
+  color: var(--text-primary);
+}
+
+.ui-repo-card__private {
+  display: inline-flex;
+  margin-left: 6px;
+  color: var(--text-tertiary);
+}
+
+.ui-repo-card__desc {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ui-repo-card__meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-repo-card {
+    transition: background 120ms ease, border-color 120ms ease;
+  }
+}

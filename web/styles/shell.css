@@ -1,0 +1,72 @@
+/* Phase 3 — App shell spacing + premium tokens (sidebar / topbar only) */
+
+.app-shell {
+  background: var(--bg-base);
+}
+
+.sidebar {
+  background: var(--bg-elevated);
+  border-right-color: var(--border-hairline);
+  padding: 16px 12px;
+}
+
+.sidebar-brand {
+  gap: 10px;
+  margin-bottom: 24px;
+  padding: 0 4px;
+}
+
+.brand-mark {
+  border-radius: var(--radius-md);
+  background: rgba(34, 211, 238, 0.1);
+  color: var(--accent);
+}
+
+.brand-title {
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.brand-version {
+  color: var(--text-tertiary);
+}
+
+.sidebar-nav {
+  gap: 2px;
+}
+
+.shell-main {
+  background: var(--bg-base);
+}
+
+.topbar {
+  height: 52px;
+  padding: 0 16px;
+  background: var(--bg-base);
+  border-bottom-color: var(--border-hairline);
+}
+
+.topbar-actions {
+  gap: 12px;
+}
+
+.indexing-pill {
+  background: var(--bg-surface);
+  border-color: var(--border-hairline);
+}
+
+.pulse-dot {
+  background: var(--accent);
+}
+
+.avatar {
+  border-color: var(--border-hairline);
+}
+
+.signout-btn {
+  color: var(--text-secondary);
+}
+
+.signout-btn:hover {
+  color: var(--text-primary);
+}

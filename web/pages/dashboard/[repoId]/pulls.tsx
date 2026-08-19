@@ -1,14 +1,7 @@
 import { useRouter } from 'next/router';
 import { DashboardLayout, useRepoData } from '../../../lib/dashboard';
 import { Icon } from '../../../components/Icon';
-
-function reviewStatusClass(status: string | null): string {
-  const s = (status ?? '').toLowerCase();
-  if (s.includes('fail') || s.includes('error')) return 'status-badge--fail';
-  if (s.includes('warn') || s.includes('review')) return 'status-badge--warn';
-  if (s.includes('pass') || s.includes('complete') || s.includes('merge')) return 'status-badge--success';
-  return 'status-badge--muted';
-}
+import { StatusBadge, reviewStatusVariant } from '../../../components/ui/StatusBadge';
 
 function outcomeIconName(outcome: string | null): string {
   switch (outcome) {
@@ -49,7 +42,7 @@ export default function PullsPage() {
             </p>
           ) : (
             <div style={{ overflowX: 'auto' }}>
-              <table className="data-table">
+              <table className="ui-data-table">
                 <thead>
                   <tr>
                     <th>PR</th>
@@ -66,12 +59,9 @@ export default function PullsPage() {
                       <td>{pull.title}</td>
                       <td>{pull.status}</td>
                       <td>
-                        <span
-                          className={`status-badge ${reviewStatusClass(pull.latestReviewStatus)}`}
-                        >
-                          <span className="status-dot" />
+                        <StatusBadge variant={reviewStatusVariant(pull.latestReviewStatus)}>
                           {(pull.latestReviewStatus ?? 'none').toUpperCase()}
-                        </span>
+                        </StatusBadge>
                       </td>
                       <td>
                         <Icon name={outcomeIconName(pull.latestReviewOutcome)} size={16} />

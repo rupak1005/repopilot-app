@@ -1,5 +1,6 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import { RepoCard } from '../components/ui/RepoCard';
 
 type RepoRow = {
   id: string;
@@ -55,7 +56,7 @@ export default function ReposPage() {
   }
 
   return (
-    <main className="standalone-page">
+    <main className="ui-repos-page">
       <div className="page-title-block">
         <h1>Choose a repository</h1>
         <p>Pick a repo to open its dashboard.</p>
@@ -68,21 +69,19 @@ export default function ReposPage() {
       ) : repos.length === 0 ? (
         <p className="empty-state">No repositories found on your GitHub account.</p>
       ) : (
-        <div className="repo-grid">
+        <div className="ui-repos-grid">
           {repos.map((repo) => (
-            <button
+            <RepoCard
               key={repo.id}
-              type="button"
-              className="repo-item"
-              disabled={selecting === repo.fullName}
-              onClick={() => void selectRepo(repo.fullName, repo.id)}
-            >
-              <strong>{repo.fullName}</strong>
-              <span>
-                {repo.private ? 'Private · ' : ''}
-                {repo.description ?? 'No description'}
-              </span>
-            </button>
+              fullName={repo.fullName}
+              owner={repo.owner}
+              name={repo.name}
+              description={repo.description}
+              isPrivate={repo.private}
+              updatedAt={repo.updatedAt}
+              selecting={selecting === repo.fullName}
+              onSelect={() => void selectRepo(repo.fullName, repo.id)}
+            />
           ))}
         </div>
       )}
