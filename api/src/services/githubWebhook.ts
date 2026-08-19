@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import { deriveRepositoryId as deriveRepositoryIdFromFullName } from '@repopilot/common';
 import { getPrisma } from '../db/prisma';
 import { ensureRepository } from '../repo/persistence';
 import { markStaleQueuedJobsForPullRequest } from './jobLifecycle';
@@ -47,13 +48,8 @@ export type WebhookHandleResult = {
   event: string;
 };
 
-function deterministicUuid(input: string): string {
-  const hash = crypto.createHash('sha256').update(input).digest('hex');
-  return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-${hash.slice(12, 16)}-${hash.slice(16, 20)}-${hash.slice(20, 32)}`;
-}
-
 export function deriveRepositoryId(repository: GitHubRepositoryPayload): string {
-  return deterministicUuid(repository.full_name.toLowerCase());
+  return deriveRepositoryIdFromFullName(repository.full_name);
 }
 
 export function verifyGitHubSignature(args: {
