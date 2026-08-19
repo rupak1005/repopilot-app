@@ -6,9 +6,28 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import {
+  handleGitHubWebhook,
+  verifyGitHubSignature
+} from './services/githubWebhook';
+import {
   getModuleDependencyTraversal,
   getSymbolDependencyTraversal
 } from './services/dependencyGraphQueries';
+import {
+  getRepositoryRevisionStatus,
+  listRepositoryRevisions
+} from './services/repositoryRevisions';
+import { askCodebaseQuestion } from './services/codebaseQa';
+import { searchRepository } from './services/searchIndex';
+import {
+  getPullRequestDetails,
+  listPullRequests,
+  triggerPullRequestReview
+} from './services/prReview';
+import {
+  getRepositoryAnalytics,
+  listReviewHistory
+} from './services/repositoryAnalytics';
 
 async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -32,6 +51,11 @@ async function withRetries<T>(
 }
 
 async function bootstrap() {
+  type ParsedJsonBody = {
+    rawBody: string;
+    json: unknown;
+  };
+
   const server = Fastify({
     logger: {
       level: 'info'
@@ -40,6 +64,19 @@ async function bootstrap() {
 
   // Keep Phase 1 intentionally small: wire CORS and validate required env upfront.
   await server.register(cors, { origin: true });
+  server.addContentTypeParser(
+    'application/json',
+    { parseAs: 'string' },
+    (request, body, done) => {
+      try {
+        const rawBody = typeof body === 'string' ? body : body.toString('utf8');
+        const json = rawBody ? JSON.parse(rawBody) : null;
+        done(null, { rawBody, json });
+      } catch (err) {
+        done(err as Error, undefined);
+      }
+    }
+  );
 
   await server.register(fastifyEnv, {
     dotenv: true,
@@ -50,7 +87,8 @@ async function bootstrap() {
         PORT: { type: 'string', default: '3001' },
         DATABASE_URL: { type: 'string' },
         REDIS_HOST: { type: 'string' },
-        REDIS_PORT: { type: 'string' }
+        REDIS_PORT: { type: 'string' },
+        GITHUB_WEBHOOK_SECRET: { type: 'string' }
       }
     }
   });
@@ -62,6 +100,7 @@ async function bootstrap() {
     const query = request.query as {
       symbolId?: string;
       filePath?: string;
+      revisionSha?: string;
       depth?: string;
     };
     const depth = query.depth ? Number(query.depth) : undefined;
@@ -77,6 +116,7 @@ async function bootstrap() {
       const result = await getSymbolDependencyTraversal({
         repositoryId: params.repoId,
         symbolId: query.symbolId,
+        revisionSha: query.revisionSha,
         depthLimit: depth
       });
       if (!result) {
@@ -90,6 +130,7 @@ async function bootstrap() {
       const result = await getModuleDependencyTraversal({
         repositoryId: params.repoId,
         filePath: query.filePath,
+        revisionSha: query.revisionSha,
         depthLimit: depth
       });
       if (!result) {
@@ -103,6 +144,196 @@ async function bootstrap() {
     return {
       error: 'one of symbolId or filePath is required'
     };
+  });
+
+  server.get('/api/v1/repositories/:repoId/revisions', async (request) => {
+    const params = request.params as { repoId: string };
+    return listRepositoryRevisions(params.repoId);
+  });
+
+  server.get('/api/v1/repositories/:repoId/revisions/:sha', async (request, reply) => {
+    const params = request.params as { repoId: string; sha: string };
+    const result = await getRepositoryRevisionStatus({
+      repositoryId: params.repoId,
+      revisionSha: params.sha
+    });
+
+    if (!result) {
+      reply.code(404);
+      return { error: 'revision not found for repository' };
+    }
+
+    return result;
+  });
+
+  server.post('/api/v1/repositories/:repoId/search', async (request, reply) => {
+    const params = request.params as { repoId: string };
+    const body = ((request.body as ParsedJsonBody | undefined)?.json ?? {}) as {
+      query?: string;
+      topK?: number;
+      revisionSha?: string;
+    };
+
+    if (!body.query || !body.query.trim()) {
+      reply.code(400);
+      return { error: 'query is required' };
+    }
+
+    const topK = body.topK ? Number(body.topK) : undefined;
+    if (topK !== undefined && (!Number.isFinite(topK) || topK < 1)) {
+      reply.code(400);
+      return { error: 'topK must be a positive integer' };
+    }
+
+    return searchRepository({
+      repositoryId: params.repoId,
+      query: body.query,
+      topK,
+      revisionSha: body.revisionSha
+    });
+  });
+
+  server.post('/api/v1/repositories/:repoId/ask', async (request, reply) => {
+    const params = request.params as { repoId: string };
+    const body = ((request.body as ParsedJsonBody | undefined)?.json ?? {}) as {
+      query?: string;
+      revisionSha?: string;
+    };
+
+    if (!body.query || !body.query.trim()) {
+      reply.code(400);
+      return { error: 'query is required' };
+    }
+
+    return askCodebaseQuestion({
+      repositoryId: params.repoId,
+      query: body.query,
+      revisionSha: body.revisionSha
+    });
+  });
+
+  server.get('/api/v1/repositories/:repoId/pulls', async (request) => {
+    const params = request.params as { repoId: string };
+    return listPullRequests(params.repoId);
+  });
+
+  server.get('/api/v1/repositories/:repoId/pulls/:number', async (request, reply) => {
+    const params = request.params as { repoId: string; number: string };
+    const pullNumber = Number(params.number);
+    if (!Number.isFinite(pullNumber) || pullNumber < 1) {
+      reply.code(400);
+      return { error: 'pull number must be a positive integer' };
+    }
+
+    const result = await getPullRequestDetails({
+      repositoryId: params.repoId,
+      pullNumber
+    });
+    if (!result) {
+      reply.code(404);
+      return { error: 'pull request not found' };
+    }
+
+    return result;
+  });
+
+  server.post('/api/v1/repositories/:repoId/pulls/:number/review', async (request, reply) => {
+    const params = request.params as { repoId: string; number: string };
+    const body = ((request.body as ParsedJsonBody | undefined)?.json ?? {}) as {
+      force?: boolean;
+      sync?: boolean;
+    };
+    const pullNumber = Number(params.number);
+    if (!Number.isFinite(pullNumber) || pullNumber < 1) {
+      reply.code(400);
+      return { error: 'pull number must be a positive integer' };
+    }
+
+    try {
+      return await triggerPullRequestReview({
+        repositoryId: params.repoId,
+        pullNumber,
+        force: body.force === true,
+        sync: body.sync === true
+      });
+    } catch (err) {
+      if (err instanceof Error && err.message === 'pull request not found') {
+        reply.code(404);
+        return { error: 'pull request not found' };
+      }
+      throw err;
+    }
+  });
+
+  server.get('/api/v1/repositories/:repoId/reviews/history', async (request) => {
+    const params = request.params as { repoId: string };
+    const query = request.query as { pullNumber?: string };
+    const pullNumber = query.pullNumber ? Number(query.pullNumber) : undefined;
+
+    return listReviewHistory({
+      repositoryId: params.repoId,
+      pullNumber: Number.isFinite(pullNumber) ? pullNumber : undefined
+    });
+  });
+
+  server.get('/api/v1/repositories/:repoId/analytics', async (request) => {
+    const params = request.params as { repoId: string };
+    return getRepositoryAnalytics(params.repoId);
+  });
+
+  server.post('/webhook', async (request, reply) => {
+    const body = request.body as ParsedJsonBody | undefined;
+    const rawBody = body?.rawBody ?? '';
+    const signature = request.headers['x-hub-signature-256'];
+    const event = request.headers['x-github-event'];
+    const deliveryId = request.headers['x-github-delivery'];
+    const secret = process.env.GITHUB_WEBHOOK_SECRET;
+
+    if (!secret) {
+      reply.code(500);
+      return { error: 'GITHUB_WEBHOOK_SECRET is not configured' };
+    }
+
+    if (typeof signature !== 'string' || !verifyGitHubSignature({ rawBody, signatureHeader: signature, secret })) {
+      server.log.warn({ event: 'webhook.invalid_signature' }, 'Invalid webhook signature');
+      reply.code(401);
+      return { error: 'invalid signature' };
+    }
+
+    if (typeof event !== 'string' || typeof deliveryId !== 'string') {
+      reply.code(400);
+      return { error: 'missing required webhook headers' };
+    }
+
+    try {
+      const result = await handleGitHubWebhook({
+        event,
+        deliveryId,
+        rawBody
+      });
+
+      server.log.info(
+        {
+          event: event === 'pull_request' ? 'pr.received' : 'repo.push',
+          githubEvent: event,
+          deliveryId,
+          duplicate: result.duplicate,
+          repositoryId: result.repositoryId,
+          queuedJobId: result.queuedJobId
+        },
+        'Webhook received'
+      );
+
+      return {
+        ok: true,
+        duplicate: result.duplicate,
+        queuedJobId: result.queuedJobId
+      };
+    } catch (err) {
+      server.log.error({ err, deliveryId, githubEvent: event }, 'Webhook processing failed');
+      reply.code(500);
+      return { error: 'webhook processing failed' };
+    }
   });
 
   // Connectivity checks (so `docker compose up` can validate infrastructure quickly).

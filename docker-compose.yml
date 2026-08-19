@@ -38,12 +38,30 @@ services:
       context: .
       dockerfile: web/Dockerfile
     environment:
-      NEXT_PUBLIC_API_URL: "http://api:3001"
+      NEXT_PUBLIC_API_URL: "http://localhost:3001"
     depends_on:
       - api
     ports:
       - "3000:3000"
 
+  worker:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    command: ["sh", "-c", "yarn --cwd api prisma generate && yarn --cwd api build && yarn --cwd api worker"]
+    environment:
+      DATABASE_URL: "postgresql://rp:secret@db:5432/repopilot?schema=public"
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+      REPO_CLONE_ROOT: "/data/repos"
+      GITHUB_TOKEN: "${GITHUB_TOKEN:-}"
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - repo-clones:/data/repos
+
 volumes:
   db-data:
+  repo-clones:
 

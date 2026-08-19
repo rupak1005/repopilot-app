@@ -1,12 +1,23 @@
 import path from 'node:path';
 import fs from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { discoverSourceFiles } from '../repo/fileDiscovery';
 import { parseCodeToRecords } from '../repo/treeSitterParser';
-import { ensureRepository, upsertFileAndReplaceParsedData } from '../repo/persistence';
+import {
+  clearRevisionData,
+  ensureRepository,
+  ensureRepositoryRevision,
+  insertFileParsedData
+} from '../repo/persistence';
+import { indexRepositorySearch } from './searchIndex';
+
+const execFileAsync = promisify(execFile);
 
 export type SyncRepositoryArgs = {
   repositoryId: string;
   repoPath: string;
+  revisionSha?: string;
   repositoryName?: string;
   owner?: string;
   concurrency?: number;
@@ -14,11 +25,14 @@ export type SyncRepositoryArgs = {
 
 export type SyncRepositoryResult = {
   repositoryId: string;
+  revisionId: string;
+  revisionSha: string;
   filesScanned: number;
   filesParsed: number;
   symbolsExtracted: number;
   importsExtracted: number;
   exportsExtracted: number;
+  chunksIndexed: number;
 };
 
 function logEvent(event: string, fields: Record<string, unknown>) {
@@ -30,10 +44,33 @@ function logEvent(event: string, fields: Record<string, unknown>) {
   );
 }
 
+async function resolveRevisionSha(args: {
+  repoPath: string;
+  revisionSha?: string;
+}): Promise<string> {
+  if (args.revisionSha) return args.revisionSha;
+
+  try {
+    const result = await execFileAsync('git', ['rev-parse', 'HEAD'], {
+      cwd: args.repoPath
+    });
+    const sha = result.stdout.trim();
+    if (sha) return sha;
+  } catch {
+    // Fall through to a stable manual label when syncing non-git fixtures.
+  }
+
+  return `manual-${Date.now()}`;
+}
+
 export async function syncRepository(
   args: SyncRepositoryArgs
 ): Promise<SyncRepositoryResult> {
   const files = await discoverSourceFiles(args.repoPath);
+  const revisionSha = await resolveRevisionSha({
+    repoPath: args.repoPath,
+    revisionSha: args.revisionSha
+  });
 
   const repositoryName =
     args.repositoryName ?? path.basename(path.resolve(args.repoPath));
@@ -44,9 +81,16 @@ export async function syncRepository(
     name: repositoryName,
     owner
   });
+  const revision = await ensureRepositoryRevision({
+    repositoryId: args.repositoryId,
+    revisionSha
+  });
+  await clearRevisionData({ revisionId: revision.id });
 
   logEvent('repo.sync.started', {
     repositoryId: args.repositoryId,
+    revisionId: revision.id,
+    revisionSha,
     repoPath: args.repoPath,
     filesDiscovered: files.length,
     concurrency: args.concurrency ?? 8
@@ -74,8 +118,9 @@ export async function syncRepository(
       try {
         const code = await fs.readFile(file.absPath, 'utf8');
         const parsed = parseCodeToRecords(file.path, code);
-        await upsertFileAndReplaceParsedData({
+        await insertFileParsedData({
           repositoryId: args.repositoryId,
+          revisionId: revision.id,
           path: file.path,
           content: code,
           parsed
@@ -88,6 +133,8 @@ export async function syncRepository(
 
         logEvent('repo.sync.fileParsed', {
           repositoryId: args.repositoryId,
+          revisionId: revision.id,
+          revisionSha,
           filePath: file.path,
           symbols: parsed.symbols.length,
           imports: parsed.imports.length,
@@ -96,6 +143,8 @@ export async function syncRepository(
       } catch (err) {
         logEvent('repo.sync.fileParseFailed', {
           repositoryId: args.repositoryId,
+          revisionId: revision.id,
+          revisionSha,
           filePath: file.path,
           error: err instanceof Error ? err.message : String(err)
         });
@@ -107,6 +156,8 @@ export async function syncRepository(
 
   logEvent('repo.sync.completed', {
     repositoryId: args.repositoryId,
+    revisionId: revision.id,
+    revisionSha,
     filesScanned,
     filesParsed,
     symbolsExtracted,
@@ -114,13 +165,21 @@ export async function syncRepository(
     exportsExtracted
   });
 
+  const searchIndex = await indexRepositorySearch({
+    repositoryId: args.repositoryId,
+    revisionSha
+  });
+
   return {
     repositoryId: args.repositoryId,
+    revisionId: revision.id,
+    revisionSha,
     filesScanned,
     filesParsed,
     symbolsExtracted,
     importsExtracted,
-    exportsExtracted
+    exportsExtracted,
+    chunksIndexed: searchIndex.chunksIndexed
   };
 }
 

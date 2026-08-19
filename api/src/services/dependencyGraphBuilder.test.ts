@@ -7,61 +7,41 @@ import { getPrisma } from '../db/prisma';
 import { syncRepository } from './repositorySync';
 import { buildDependencyGraph } from './dependencyGraphBuilder';
 import { getSymbolDependencyTraversal } from './dependencyGraphQueries';
+import { getRepositoryRevisionStatus } from './repositoryRevisions';
 
 type SymbolIdRow = {
   id: string;
 };
 
-async function ensurePhase3Tables() {
+async function ensurePhase5Tables() {
   const prisma = getPrisma();
 
+  await prisma.$executeRawUnsafe(`CREATE EXTENSION IF NOT EXISTS vector`);
   await prisma.$executeRawUnsafe(`
-    CREATE TABLE IF NOT EXISTS "SymbolDependency" (
-      "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-      "fromSymbolId" UUID NOT NULL,
-      "toSymbolId" UUID NOT NULL,
-      CONSTRAINT "SymbolDependency_pkey" PRIMARY KEY ("id"),
-      CONSTRAINT "SymbolDependency_fromSymbolId_fkey"
-        FOREIGN KEY ("fromSymbolId") REFERENCES "Symbol"("id") ON DELETE CASCADE,
-      CONSTRAINT "SymbolDependency_toSymbolId_fkey"
-        FOREIGN KEY ("toSymbolId") REFERENCES "Symbol"("id") ON DELETE CASCADE
-    )
-  `);
-  await prisma.$executeRawUnsafe(`
-    CREATE UNIQUE INDEX IF NOT EXISTS "SymbolDependency_fromSymbolId_toSymbolId_key"
-      ON "SymbolDependency"("fromSymbolId", "toSymbolId")
-  `);
-  await prisma.$executeRawUnsafe(`
-    CREATE INDEX IF NOT EXISTS "SymbolDependency_fromSymbolId_idx"
-      ON "SymbolDependency"("fromSymbolId")
-  `);
-  await prisma.$executeRawUnsafe(`
-    CREATE INDEX IF NOT EXISTS "SymbolDependency_toSymbolId_idx"
-      ON "SymbolDependency"("toSymbolId")
-  `);
-
-  await prisma.$executeRawUnsafe(`
-    CREATE TABLE IF NOT EXISTS "ModuleDependency" (
+    CREATE TABLE IF NOT EXISTS "CodeChunk" (
       "id" UUID NOT NULL DEFAULT gen_random_uuid(),
       "repositoryId" UUID NOT NULL,
-      "fromModule" TEXT NOT NULL,
-      "toModule" TEXT NOT NULL,
-      CONSTRAINT "ModuleDependency_pkey" PRIMARY KEY ("id"),
-      CONSTRAINT "ModuleDependency_repositoryId_fkey"
-        FOREIGN KEY ("repositoryId") REFERENCES "Repository"("id") ON DELETE CASCADE
+      "revisionId" UUID NOT NULL,
+      "fileId" UUID NOT NULL,
+      "filePath" TEXT NOT NULL,
+      "startLine" INTEGER NOT NULL,
+      "endLine" INTEGER NOT NULL,
+      "chunkType" TEXT NOT NULL DEFAULT 'lines',
+      "text" TEXT NOT NULL,
+      "embedding" vector(1536),
+      "searchVector" tsvector GENERATED ALWAYS AS (to_tsvector('english', "text")) STORED,
+      CONSTRAINT "CodeChunk_pkey" PRIMARY KEY ("id"),
+      CONSTRAINT "CodeChunk_repositoryId_fkey"
+        FOREIGN KEY ("repositoryId") REFERENCES "Repository"("id") ON DELETE CASCADE,
+      CONSTRAINT "CodeChunk_revisionId_fkey"
+        FOREIGN KEY ("revisionId") REFERENCES "RepositoryRevision"("id") ON DELETE CASCADE,
+      CONSTRAINT "CodeChunk_fileId_fkey"
+        FOREIGN KEY ("fileId") REFERENCES "File"("id") ON DELETE CASCADE
     )
   `);
   await prisma.$executeRawUnsafe(`
-    CREATE UNIQUE INDEX IF NOT EXISTS "ModuleDependency_repositoryId_fromModule_toModule_key"
-      ON "ModuleDependency"("repositoryId", "fromModule", "toModule")
-  `);
-  await prisma.$executeRawUnsafe(`
-    CREATE INDEX IF NOT EXISTS "ModuleDependency_repositoryId_idx"
-      ON "ModuleDependency"("repositoryId")
-  `);
-  await prisma.$executeRawUnsafe(`
-    CREATE INDEX IF NOT EXISTS "ModuleDependency_toModule_idx"
-      ON "ModuleDependency"("toModule")
+    CREATE UNIQUE INDEX IF NOT EXISTS "CodeChunk_revisionId_filePath_startLine_endLine_key"
+      ON "CodeChunk"("revisionId", "filePath", "startLine", "endLine")
   `);
 }
 
@@ -74,11 +54,12 @@ describe('dependencyGraphBuilder (integration, optional)', () => {
     }
 
     process.env.DATABASE_URL = testDbUrl;
-    await ensurePhase3Tables();
+    await ensurePhase5Tables();
 
     const prisma = getPrisma();
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'repopilot-phase3-'));
     const repoId = randomUUID();
+    const revisionSha = 'phase4-graph-sha';
 
     const files = [
       {
@@ -117,11 +98,15 @@ describe('dependencyGraphBuilder (integration, optional)', () => {
     await syncRepository({
       repositoryId: repoId,
       repoPath: tmpDir,
+      revisionSha,
       repositoryName: 'phase3-fixture',
       owner: 'test'
     });
 
-    const buildResult = await buildDependencyGraph({ repositoryId: repoId });
+    const buildResult = await buildDependencyGraph({
+      repositoryId: repoId,
+      revisionSha
+    });
     expect(buildResult.symbolEdgesAdded).toBeGreaterThan(0);
     expect(buildResult.moduleEdgesAdded).toBeGreaterThan(0);
     expect(buildResult.cyclesDetected).toBeGreaterThan(0);
@@ -134,8 +119,10 @@ describe('dependencyGraphBuilder (integration, optional)', () => {
         JOIN "Symbol" ts ON ts.id = sd."toSymbolId"
         JOIN "File" f ON f.id = fs."fileId"
         WHERE f."repositoryId" = $1
+          AND sd."revisionId" = $2
       `,
-      repoId
+      repoId,
+      buildResult.revisionId
     )) as Array<{ fromName: string; toName: string }>;
 
     expect(symbolEdges).toEqual(
@@ -147,15 +134,19 @@ describe('dependencyGraphBuilder (integration, optional)', () => {
         SELECT s.id
         FROM "Symbol" s
         JOIN "File" f ON f.id = s."fileId"
-        WHERE f."repositoryId" = $1 AND s.name = 'B'
+        WHERE f."repositoryId" = $1
+          AND f."revisionId" = $2
+          AND s.name = 'B'
         LIMIT 1
       `,
-      repoId
+      repoId,
+      buildResult.revisionId
     )) as SymbolIdRow[];
 
     const traversal = await getSymbolDependencyTraversal({
       repositoryId: repoId,
       symbolId: bSymbolRows[0].id,
+      revisionSha,
       depthLimit: 2
     });
 
@@ -165,13 +156,39 @@ describe('dependencyGraphBuilder (integration, optional)', () => {
       `
         SELECT "fromModule", "toModule"
         FROM "ModuleDependency"
-        WHERE "repositoryId" = $1
+        WHERE "revisionId" = $1
       `,
-      repoId
+      buildResult.revisionId
     )) as Array<{ fromModule: string; toModule: string }>;
 
     expect(moduleEdges).toEqual(
       expect.arrayContaining([{ fromModule: 'src/A.ts', toModule: 'src/B.ts' }])
     );
+
+    await syncRepository({
+      repositoryId: repoId,
+      repoPath: tmpDir,
+      revisionSha,
+      repositoryName: 'phase3-fixture',
+      owner: 'test'
+    });
+
+    const revisionRows = (await prisma.$queryRawUnsafe(
+      `
+        SELECT COUNT(*)::int AS count
+        FROM "RepositoryRevision"
+        WHERE "repositoryId" = $1
+          AND "revisionSha" = $2
+      `,
+      repoId,
+      revisionSha
+    )) as Array<{ count: number }>;
+    expect(revisionRows[0]?.count).toBe(1);
+
+    const revisionStatus = await getRepositoryRevisionStatus({
+      repositoryId: repoId,
+      revisionSha
+    });
+    expect(revisionStatus?.fileCount).toBe(files.length);
   });
 });

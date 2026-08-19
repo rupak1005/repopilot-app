@@ -7,6 +7,42 @@ import os from 'node:os';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 
+type FileRow = {
+  id: string;
+};
+
+async function ensurePhase5Tables() {
+  const prisma = getPrisma();
+
+  await prisma.$executeRawUnsafe(`CREATE EXTENSION IF NOT EXISTS vector`);
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "CodeChunk" (
+      "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+      "repositoryId" UUID NOT NULL,
+      "revisionId" UUID NOT NULL,
+      "fileId" UUID NOT NULL,
+      "filePath" TEXT NOT NULL,
+      "startLine" INTEGER NOT NULL,
+      "endLine" INTEGER NOT NULL,
+      "chunkType" TEXT NOT NULL DEFAULT 'lines',
+      "text" TEXT NOT NULL,
+      "embedding" vector(1536),
+      "searchVector" tsvector GENERATED ALWAYS AS (to_tsvector('english', "text")) STORED,
+      CONSTRAINT "CodeChunk_pkey" PRIMARY KEY ("id"),
+      CONSTRAINT "CodeChunk_repositoryId_fkey"
+        FOREIGN KEY ("repositoryId") REFERENCES "Repository"("id") ON DELETE CASCADE,
+      CONSTRAINT "CodeChunk_revisionId_fkey"
+        FOREIGN KEY ("revisionId") REFERENCES "RepositoryRevision"("id") ON DELETE CASCADE,
+      CONSTRAINT "CodeChunk_fileId_fkey"
+        FOREIGN KEY ("fileId") REFERENCES "File"("id") ON DELETE CASCADE
+    )
+  `);
+  await prisma.$executeRawUnsafe(`
+    CREATE UNIQUE INDEX IF NOT EXISTS "CodeChunk_revisionId_filePath_startLine_endLine_key"
+      ON "CodeChunk"("revisionId", "filePath", "startLine", "endLine")
+  `);
+}
+
 describe('treeSitterParser (unit)', () => {
   it('extracts imports and top-level TS symbols + exports', () => {
     const code = `
@@ -52,10 +88,12 @@ describe('Phase 2 persistence (integration, optional)', () => {
 
     process.env.DATABASE_URL = testDbUrl;
     const prisma = getPrisma();
+    await ensurePhase5Tables();
 
     // NOTE: migrations/seeding are expected to be in place when this env var is set.
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'repopilot-phase2-'));
     const repoId = randomUUID();
+    const revisionSha = 'phase2-test-sha';
 
     const fileRelPath = 'src/example.ts';
     const fileAbsPath = path.join(tmpDir, fileRelPath);
@@ -72,13 +110,26 @@ describe('Phase 2 persistence (integration, optional)', () => {
     await syncRepository({
       repositoryId: repoId,
       repoPath: tmpDir,
+      revisionSha,
       repositoryName: 'tmp-fixture',
       owner: 'test'
     });
 
-    const file = await prisma.file.findUnique({
-      where: { repositoryId_path: { repositoryId: repoId, path: fileRelPath } }
-    });
+    const fileRows = (await prisma.$queryRawUnsafe(
+      `
+        SELECT f.id
+        FROM "File" f
+        JOIN "RepositoryRevision" rr ON rr.id = f."revisionId"
+        WHERE f."repositoryId" = $1
+          AND rr."revisionSha" = $2
+          AND f."path" = $3
+        LIMIT 1
+      `,
+      repoId,
+      revisionSha,
+      fileRelPath
+    )) as FileRow[];
+    const file = fileRows[0];
     expect(file).toBeTruthy();
     if (!file) return;
 

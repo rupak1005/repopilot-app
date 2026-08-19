@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { getPrisma } from '../db/prisma';
 import { createTreeSitterParser } from '../repo/treeSitterParser';
+import { resolveRepositoryRevision } from './repositoryRevisions';
 
 type TreeSitterSyntaxNode = {
   type: string;
@@ -14,6 +15,7 @@ type TreeSitterSyntaxNode = {
 
 type FileWithRecords = {
   id: string;
+  revisionId: string;
   path: string;
   content: string;
   symbols: Array<{
@@ -45,6 +47,8 @@ type ModuleEdge = {
 
 export type BuildDependencyGraphResult = {
   repositoryId: string;
+  revisionId: string;
+  revisionSha: string;
   filesProcessed: number;
   symbolEdgesAdded: number;
   moduleEdgesAdded: number;
@@ -345,6 +349,7 @@ function extractEdgesForSymbol(args: {
 
 async function replaceDependenciesForFile(args: {
   repositoryId: string;
+  revisionId: string;
   file: FileWithRecords;
   symbolEdges: SymbolEdge[];
   moduleEdges: ModuleEdge[];
@@ -355,29 +360,32 @@ async function replaceDependenciesForFile(args: {
     await tx.$executeRawUnsafe(
       `
         DELETE FROM "SymbolDependency"
-        WHERE "fromSymbolId" IN (
-          SELECT id FROM "Symbol" WHERE "fileId" = $1
+        WHERE "revisionId" = $1
+          AND "fromSymbolId" IN (
+          SELECT id FROM "Symbol" WHERE "fileId" = $2
         )
       `,
+      args.revisionId,
       args.file.id
     );
 
     await tx.$executeRawUnsafe(
       `
         DELETE FROM "ModuleDependency"
-        WHERE "repositoryId" = $1 AND "fromModule" = $2
+        WHERE "revisionId" = $1 AND "fromModule" = $2
       `,
-      args.repositoryId,
+      args.revisionId,
       args.file.path
     );
 
     for (const edge of args.symbolEdges) {
       await tx.$executeRawUnsafe(
         `
-          INSERT INTO "SymbolDependency" ("fromSymbolId", "toSymbolId")
-          VALUES ($1, $2)
-          ON CONFLICT ("fromSymbolId", "toSymbolId") DO NOTHING
+          INSERT INTO "SymbolDependency" ("revisionId", "fromSymbolId", "toSymbolId")
+          VALUES ($1, $2, $3)
+          ON CONFLICT ("revisionId", "fromSymbolId", "toSymbolId") DO NOTHING
         `,
+        args.revisionId,
         edge.fromSymbolId,
         edge.toSymbolId
       );
@@ -386,11 +394,12 @@ async function replaceDependenciesForFile(args: {
     for (const edge of args.moduleEdges) {
       await tx.$executeRawUnsafe(
         `
-          INSERT INTO "ModuleDependency" ("repositoryId", "fromModule", "toModule")
-          VALUES ($1, $2, $3)
-          ON CONFLICT ("repositoryId", "fromModule", "toModule") DO NOTHING
+          INSERT INTO "ModuleDependency" ("repositoryId", "revisionId", "fromModule", "toModule")
+          VALUES ($1, $2, $3, $4)
+          ON CONFLICT ("revisionId", "fromModule", "toModule") DO NOTHING
         `,
         args.repositoryId,
+        args.revisionId,
         edge.fromModule,
         edge.toModule
       );
@@ -458,7 +467,16 @@ function countCycles(adjacency: Map<string, Set<string>>): number {
 
 export async function buildDependencyGraph(args: {
   repositoryId: string;
+  revisionSha?: string;
 }): Promise<BuildDependencyGraphResult> {
+  const revision = await resolveRepositoryRevision({
+    repositoryId: args.repositoryId,
+    revisionSha: args.revisionSha
+  });
+  if (!revision) {
+    throw new Error(`No repository revision found for repository ${args.repositoryId}`);
+  }
+
   const prisma = getPrisma();
   const fileDelegate = prisma as unknown as {
     file: {
@@ -466,7 +484,10 @@ export async function buildDependencyGraph(args: {
     };
   };
   const files = await fileDelegate.file.findMany({
-    where: { repositoryId: args.repositoryId },
+    where: {
+      repositoryId: args.repositoryId,
+      revisionId: revision.id
+    },
     include: {
       symbols: true,
       exports: true
@@ -476,6 +497,8 @@ export async function buildDependencyGraph(args: {
 
   logEvent('graph.build.started', {
     repositoryId: args.repositoryId,
+    revisionId: revision.id,
+    revisionSha: revision.revisionSha,
     filesDiscovered: files.length
   });
 
@@ -553,6 +576,7 @@ export async function buildDependencyGraph(args: {
 
     await replaceDependenciesForFile({
       repositoryId: args.repositoryId,
+      revisionId: revision.id,
       file,
       symbolEdges: Array.from(symbolEdges.values()),
       moduleEdges: Array.from(moduleEdges.values())
@@ -564,6 +588,8 @@ export async function buildDependencyGraph(args: {
 
     logEvent('graph.fileProcessed', {
       repositoryId: args.repositoryId,
+      revisionId: revision.id,
+      revisionSha: revision.revisionSha,
       filePath: file.path,
       symbolEdges: symbolEdges.size,
       moduleEdges: moduleEdges.size
@@ -574,12 +600,16 @@ export async function buildDependencyGraph(args: {
   if (cyclesDetected > 0) {
     logEvent('graph.cycleDetected', {
       repositoryId: args.repositoryId,
+      revisionId: revision.id,
+      revisionSha: revision.revisionSha,
       cyclesDetected
     });
   }
 
   logEvent('graph.build.completed', {
     repositoryId: args.repositoryId,
+    revisionId: revision.id,
+    revisionSha: revision.revisionSha,
     filesProcessed,
     symbolEdgesAdded,
     moduleEdgesAdded,
@@ -589,6 +619,8 @@ export async function buildDependencyGraph(args: {
 
   return {
     repositoryId: args.repositoryId,
+    revisionId: revision.id,
+    revisionSha: revision.revisionSha,
     filesProcessed,
     symbolEdgesAdded,
     moduleEdgesAdded,

@@ -1,4 +1,5 @@
 import { getPrisma } from '../db/prisma';
+import { resolveRepositoryRevision } from './repositoryRevisions';
 
 type AdjacencyMap = Map<string, Set<string>>;
 
@@ -114,7 +115,10 @@ function findStronglyConnectedComponents(adjacency: AdjacencyMap): string[][] {
   return components;
 }
 
-async function loadSymbolLookup(repositoryId: string): Promise<Map<string, DependencySymbolNode>> {
+async function loadSymbolLookup(args: {
+  repositoryId: string;
+  revisionId: string;
+}): Promise<Map<string, DependencySymbolNode>> {
   const prisma = getPrisma();
   const rows = (await prisma.$queryRawUnsafe(
     `
@@ -122,8 +126,10 @@ async function loadSymbolLookup(repositoryId: string): Promise<Map<string, Depen
       FROM "Symbol" s
       JOIN "File" f ON f.id = s."fileId"
       WHERE f."repositoryId" = $1
+        AND f."revisionId" = $2
     `,
-    repositoryId
+    args.repositoryId,
+    args.revisionId
   )) as SymbolRow[];
 
   return new Map(
@@ -139,7 +145,7 @@ async function loadSymbolLookup(repositoryId: string): Promise<Map<string, Depen
 }
 
 async function loadSymbolAdjacency(args: {
-  repositoryId: string;
+  revisionId: string;
   reverse?: boolean;
 }): Promise<AdjacencyMap> {
   const prisma = getPrisma();
@@ -147,11 +153,9 @@ async function loadSymbolAdjacency(args: {
     `
       SELECT sd."fromSymbolId", sd."toSymbolId"
       FROM "SymbolDependency" sd
-      JOIN "Symbol" s ON s.id = sd."fromSymbolId"
-      JOIN "File" f ON f.id = s."fileId"
-      WHERE f."repositoryId" = $1
+      WHERE sd."revisionId" = $1
     `,
-    args.repositoryId
+    args.revisionId
   )) as Array<{ fromSymbolId: string; toSymbolId: string }>;
 
   const adjacency: AdjacencyMap = new Map();
@@ -168,19 +172,29 @@ async function loadSymbolAdjacency(args: {
 export async function getSymbolDependencyTraversal(args: {
   repositoryId: string;
   symbolId: string;
+  revisionSha?: string;
   depthLimit?: number;
 }): Promise<SymbolDependencyTraversalResponse | null> {
   const depthLimit = Math.max(1, args.depthLimit ?? 2);
-  const symbolLookup = await loadSymbolLookup(args.repositoryId);
+  const revision = await resolveRepositoryRevision({
+    repositoryId: args.repositoryId,
+    revisionSha: args.revisionSha
+  });
+  if (!revision) return null;
+
+  const symbolLookup = await loadSymbolLookup({
+    repositoryId: args.repositoryId,
+    revisionId: revision.id
+  });
   const symbol = symbolLookup.get(args.symbolId);
   if (!symbol) return null;
 
   const reverseAdjacency = await loadSymbolAdjacency({
-    repositoryId: args.repositoryId,
+    revisionId: revision.id,
     reverse: true
   });
   const forwardAdjacency = await loadSymbolAdjacency({
-    repositoryId: args.repositoryId,
+    revisionId: revision.id,
     reverse: false
   });
 
@@ -220,27 +234,40 @@ export async function getSymbolDependencyTraversal(args: {
 export async function getModuleDependencyTraversal(args: {
   repositoryId: string;
   filePath: string;
+  revisionSha?: string;
   depthLimit?: number;
 }): Promise<ModuleDependencyTraversalResponse | null> {
   const depthLimit = Math.max(1, args.depthLimit ?? 2);
-  const prisma = getPrisma();
-  const file = await prisma.file.findUnique({
-    where: {
-      repositoryId_path: {
-        repositoryId: args.repositoryId,
-        path: args.filePath
-      }
-    }
+  const revision = await resolveRepositoryRevision({
+    repositoryId: args.repositoryId,
+    revisionSha: args.revisionSha
   });
+  if (!revision) return null;
+
+  const prisma = getPrisma();
+  const fileRows = (await prisma.$queryRawUnsafe(
+    `
+      SELECT "id"
+      FROM "File"
+      WHERE "repositoryId" = $1
+        AND "revisionId" = $2
+        AND "path" = $3
+      LIMIT 1
+    `,
+    args.repositoryId,
+    revision.id,
+    args.filePath
+  )) as Array<{ id: string }>;
+  const file = fileRows[0];
   if (!file) return null;
 
   const rows = (await prisma.$queryRawUnsafe(
     `
       SELECT "fromModule", "toModule"
       FROM "ModuleDependency"
-      WHERE "repositoryId" = $1
+      WHERE "revisionId" = $1
     `,
-    args.repositoryId
+    revision.id
   )) as ModuleDependencyEdge[];
 
   const adjacency: Map<string, Set<string>> = new Map();

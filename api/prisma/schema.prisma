@@ -20,14 +20,37 @@ model Repository {
   owner     String
   createdAt DateTime @default(now())
 
+  revisions          RepositoryRevision[]
   files              File[]
+  codeChunks         CodeChunk[]
   moduleDependencies ModuleDependency[]
+  pullRequests       PullRequest[]
+  webhookDeliveries  WebhookDelivery[]
+  queuedJobs         QueuedJob[]
+}
+
+model RepositoryRevision {
+  id           String   @id @default(uuid())
+  repositoryId String
+  repository   Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  revisionSha  String
+  indexedAt    DateTime @default(now())
+
+  files              File[]
+  codeChunks         CodeChunk[]
+  symbolDependencies SymbolDependency[]
+  moduleDependencies ModuleDependency[]
+
+  @@unique([repositoryId, revisionSha])
+  @@index([repositoryId])
 }
 
 model File {
   id           String        @id @default(uuid())
   repositoryId String
   repository   Repository    @relation(fields: [repositoryId], references: [id])
+  revisionId   String
+  revision     RepositoryRevision @relation(fields: [revisionId], references: [id], onDelete: Cascade)
 
   path       String
   content    String
@@ -36,9 +59,11 @@ model File {
   symbols    Symbol[]
   imports    FileImport[]
   exports    FileExport[]
+  codeChunks CodeChunk[]
 
-  @@unique([repositoryId, path])
+  @@unique([revisionId, path])
   @@index([repositoryId])
+  @@index([revisionId])
 }
 
 model Symbol {
@@ -83,26 +108,177 @@ model FileExport {
 
 model SymbolDependency {
   id           String @id @default(uuid())
+  revisionId   String
   fromSymbolId String
   toSymbolId   String
 
+  revision   RepositoryRevision @relation(fields: [revisionId], references: [id], onDelete: Cascade)
   fromSymbol Symbol @relation("SymbolDependencyFrom", fields: [fromSymbolId], references: [id], onDelete: Cascade)
   toSymbol   Symbol @relation("SymbolDependencyTo", fields: [toSymbolId], references: [id], onDelete: Cascade)
 
-  @@unique([fromSymbolId, toSymbolId])
-  @@index([fromSymbolId])
-  @@index([toSymbolId])
+  @@unique([revisionId, fromSymbolId, toSymbolId])
+  @@index([revisionId])
+  @@index([revisionId, fromSymbolId])
+  @@index([revisionId, toSymbolId])
 }
 
 model ModuleDependency {
   id           String @id @default(uuid())
   repositoryId String
   repository   Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  revisionId   String
+  revision     RepositoryRevision @relation(fields: [revisionId], references: [id], onDelete: Cascade)
   fromModule   String
   toModule     String
 
-  @@unique([repositoryId, fromModule, toModule])
+  @@unique([revisionId, fromModule, toModule])
   @@index([repositoryId])
+  @@index([revisionId])
   @@index([toModule])
+}
+
+model CodeChunk {
+  id           String @id @default(uuid())
+  repositoryId String
+  repository   Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  revisionId   String
+  revision     RepositoryRevision @relation(fields: [revisionId], references: [id], onDelete: Cascade)
+  fileId       String
+  file         File @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  filePath     String
+  startLine    Int
+  endLine      Int
+  chunkType    String @default("lines")
+  text         String
+  embedding    Unsupported("vector(1536)")?
+  searchVector Unsupported("tsvector")?
+
+  @@unique([revisionId, filePath, startLine, endLine])
+  @@index([repositoryId])
+  @@index([revisionId])
+  @@index([fileId])
+}
+
+model WebhookDelivery {
+  id           String   @id @default(uuid())
+  deliveryId   String   @unique
+  event        String
+  action       String?
+  repositoryId String?
+  repository   Repository? @relation(fields: [repositoryId], references: [id], onDelete: SetNull)
+  payload      Json
+  receivedAt   DateTime @default(now())
+
+  @@index([repositoryId])
+}
+
+model PullRequest {
+  id           String   @id @default(uuid())
+  repositoryId String
+  repository   Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  number       Int
+  title        String
+  body         String?
+  authorLogin  String?
+  baseBranch   String
+  headBranch   String
+  baseRevision String
+  headRevision String
+  status       String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now())
+
+  revisions PullRequestRevision[]
+  reviews   PullRequestReview[]
+  queuedJobs QueuedJob[]
+
+  @@unique([repositoryId, number])
+  @@index([repositoryId])
+}
+
+model PullRequestReview {
+  id            String   @id @default(uuid())
+  pullRequestId String
+  pullRequest   PullRequest @relation(fields: [pullRequestId], references: [id], onDelete: Cascade)
+  headRevision  String
+  baseRevision  String
+  status        String
+  outcome       String?
+  checkRunId    String?
+  summary       Json?
+  startedAt     DateTime @default(now())
+  completedAt   DateTime?
+
+  findings ReviewFinding[]
+
+  @@unique([pullRequestId, headRevision])
+  @@index([pullRequestId])
+}
+
+model ReviewFinding {
+  id              String @id @default(uuid())
+  reviewId        String
+  review          PullRequestReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  title           String
+  severity        String
+  category        String
+  confidence      String
+  description     String
+  suggestedAction String?
+  fingerprint     String?
+
+  evidence ReviewEvidence[]
+
+  @@index([reviewId])
+  @@index([fingerprint])
+}
+
+model ReviewEvidence {
+  id         String @id @default(uuid())
+  findingId  String
+  finding    ReviewFinding @relation(fields: [findingId], references: [id], onDelete: Cascade)
+  type       String
+  filePath   String
+  startLine  Int
+  endLine    Int
+  revisionId String?
+
+  @@index([findingId])
+}
+
+model PullRequestRevision {
+  id            String @id @default(uuid())
+  pullRequestId String
+  pullRequest   PullRequest @relation(fields: [pullRequestId], references: [id], onDelete: Cascade)
+  deliveryId    String
+  action        String
+  baseRevision  String
+  headRevision  String
+  status        String
+  createdAt     DateTime @default(now())
+
+  @@unique([pullRequestId, headRevision])
+  @@index([pullRequestId])
+}
+
+model QueuedJob {
+  id            String @id @default(uuid())
+  type          String
+  repositoryId  String
+  repository    Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  pullRequestId String?
+  pullRequest   PullRequest? @relation(fields: [pullRequestId], references: [id], onDelete: Cascade)
+  deliveryId    String
+  dedupeKey     String @unique
+  payload       Json
+  status        String @default("QUEUED")
+  attempts      Int    @default(0)
+  lastError     String?
+  bullJobId     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now())
+
+  @@index([repositoryId])
+  @@index([pullRequestId])
 }
 
