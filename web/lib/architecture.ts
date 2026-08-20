@@ -109,6 +109,13 @@ export function diagramStats(data: ForceGraphData) {
   };
 }
 
+/** zoomToFit padding — fixed 80px eats most of a phone viewport after layer expand. */
+export function diagramFitPadding(width: number, height: number): number {
+  const shortSide = Math.min(width, height);
+  if (shortSide < 480) return Math.max(16, Math.round(shortSide * 0.06));
+  return 80;
+}
+
 export function clusterIdForPrefix(prefix: string): string {
   return `cluster:${prefix}`;
 }

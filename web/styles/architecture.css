@@ -699,11 +699,15 @@
     grid-template-columns: 1fr;
   }
 
-  /* ponytail: CSS-only bottom sheet until a shared Sheet primitive exists. */
-  .ui-diagram__workspace--split .ui-diagram__inspector--panel,
-  .ui-diagram__workspace--focus .ui-diagram__inspector--panel,
+  /* Empty split sheet covers the canvas after layer expand — only show inspector when selected. */
   .ui-diagram__workspace--split .ui-diagram__panel-empty,
   .ui-diagram__workspace--focus .ui-diagram__panel-empty {
+    display: none;
+  }
+
+  /* ponytail: CSS-only bottom sheet until a shared Sheet primitive exists. */
+  .ui-diagram__workspace--split .ui-diagram__inspector--panel,
+  .ui-diagram__workspace--focus .ui-diagram__inspector--panel {
     position: fixed;
     left: max(var(--space-2), env(safe-area-inset-left));
     right: max(var(--space-2), env(safe-area-inset-right));
@@ -722,9 +726,7 @@
   }
 
   .ui-diagram__workspace--split .ui-diagram__inspector--panel::before,
-  .ui-diagram__workspace--focus .ui-diagram__inspector--panel::before,
-  .ui-diagram__workspace--split .ui-diagram__panel-empty::before,
-  .ui-diagram__workspace--focus .ui-diagram__panel-empty::before {
+  .ui-diagram__workspace--focus .ui-diagram__inspector--panel::before {
     content: '';
     display: block;
     width: 44px;

@@ -24,6 +24,7 @@ import type { ForceGraphMethods, LinkObject, NodeObject } from 'react-force-grap
 import {
   LAYER_META,
   clusterIdForPrefix,
+  diagramFitPadding,
   diagramStats,
   directoryClusterKey,
   filterForceGraphData,
@@ -329,6 +330,17 @@ export function ArchitectureGraphView({
   const layer = layerProp ?? layerInternal;
   const setLayer = onLayerChange ?? setLayerInternal;
   const [dims, setDims] = useState({ width: 800, height: 560 });
+  // ponytail: match CSS 960px breakpoint — upgrade path: shared useMediaQuery hook
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(max-width: 960px)');
+    const preferDiagram = () => {
+      if (mq.matches) setLayoutMode((mode) => (mode === 'split' ? 'diagram' : mode));
+    };
+    preferDiagram();
+    mq.addEventListener('change', preferDiagram);
+    return () => mq.removeEventListener('change', preferDiagram);
+  }, []);
   const [neighborTraversal, setNeighborTraversal] = useState<ModuleDependencyTraversal | null>(null);
   const [neighborsLoading, setNeighborsLoading] = useState(false);
   const [pulseId, setPulseId] = useState<string | null>(null);
@@ -403,20 +415,21 @@ export function ArchitectureGraphView({
     if (!fg) return;
     const nodes = layoutData.nodes;
     if (nodes.length === 0) return;
+    const ms = reduceMotion ? 0 : 400;
     // zoomToFit on 1–2 nodes often zooms past the viewport; pin a readable scale.
     if (nodes.length <= 2 && typeof fg.centerAt === 'function' && typeof fg.zoom === 'function') {
       const n = nodes[0]!;
-      const ms = reduceMotion ? 0 : 300;
-      fg.centerAt(n.x ?? 0, n.y ?? 0, ms);
-      fg.zoom(1.15, ms);
-      window.setTimeout(syncMinimapCamera, ms + 50);
+      const pinMs = reduceMotion ? 0 : 300;
+      fg.centerAt(n.x ?? 0, n.y ?? 0, pinMs);
+      fg.zoom(1.15, pinMs);
+      window.setTimeout(syncMinimapCamera, pinMs + 50);
       return;
     }
     if (typeof fg.zoomToFit === 'function') {
-      fg.zoomToFit(400, 80);
-      window.setTimeout(syncMinimapCamera, 450);
+      fg.zoomToFit(ms, diagramFitPadding(dims.width, dims.height));
+      window.setTimeout(syncMinimapCamera, ms + 50);
     }
-  }, [layoutData.nodes, reduceMotion, syncMinimapCamera]);
+  }, [dims.height, dims.width, layoutData.nodes, reduceMotion, syncMinimapCamera]);
 
   const trackMinimapDuring = useCallback(
     (ms: number) => {

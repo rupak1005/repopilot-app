@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { nodeBoxWidth, nodeCollideRadius } from './architecture';
+import { diagramFitPadding, nodeBoxWidth, nodeCollideRadius } from './architecture';
+
+describe('diagramFitPadding', () => {
+  it('shrinks padding on phone-sized canvases', () => {
+    expect(diagramFitPadding(360, 520)).toBeLessThan(40);
+    expect(diagramFitPadding(360, 520)).toBeGreaterThanOrEqual(16);
+    expect(diagramFitPadding(900, 600)).toBe(80);
+  });
+});
 
 describe('nodeCollideRadius', () => {
   it('scales with label width for forceCollide', () => {
