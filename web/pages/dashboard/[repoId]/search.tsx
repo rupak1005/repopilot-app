@@ -1,4 +1,4 @@
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import { CircleNotch, MagnifyingGlass } from '@phosphor-icons/react';
 import { DashboardLayout } from '../../../lib/dashboard';
@@ -15,29 +15,30 @@ import { type SearchHit } from '../../../lib/types';
 export default function SearchPage() {
   const router = useRouter();
   const repoId = typeof router.query.repoId === 'string' ? router.query.repoId : null;
-  const [query, setQuery] = useState('');
+  const queryFromUrl = typeof router.query.q === 'string' ? router.query.q : '';
+  const [query, setQuery] = useState(queryFromUrl);
   const [results, setResults] = useState<SearchHit[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const autoSearchedKey = useRef<string | null>(null);
 
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault();
-    if (!repoId || !query.trim()) return;
+  async function runSearch(nextQuery: string) {
+    if (!repoId || !nextQuery.trim()) return;
     setLoading(true);
     setError(null);
     setHasSearched(true);
     try {
       if (isDemoMode()) {
         await demoDelay();
-        setResults(demoSearchResults(query));
+        setResults(demoSearchResults(nextQuery));
         return;
       }
 
       const response = await fetch(repoApiPath(repoId, 'search'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query, topK: 10 })
+        body: JSON.stringify({ query: nextQuery, topK: 10 })
       });
       if (!response.ok) {
         throw new Error(
@@ -51,6 +52,35 @@ export default function SearchPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  useEffect(() => {
+    if (!router.isReady) return;
+    if (typeof router.query.q === 'string') {
+      setQuery(router.query.q);
+    }
+  }, [router.isReady, router.query.q]);
+
+  useEffect(() => {
+    if (!router.isReady || !repoId) return;
+    const q = typeof router.query.q === 'string' ? router.query.q.trim() : '';
+    if (!q) return;
+    const key = `${repoId}:${q}`;
+    if (autoSearchedKey.current === key) return;
+    autoSearchedKey.current = key;
+    void runSearch(q);
+  }, [router.isReady, repoId, router.query.q]);
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    if (!repoId || !query.trim()) return;
+    void router.replace(
+      { pathname: `/dashboard/${repoId}/search`, query: { q: query.trim() } },
+      undefined,
+      { shallow: true }
+    );
+    autoSearchedKey.current = `${repoId}:${query.trim()}`;
+    await runSearch(query.trim());
   }
 
   return (
