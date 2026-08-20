@@ -10,6 +10,8 @@ export type NavKey =
   | 'architecture'
   | 'impact'
   | 'history'
+  | 'planning'
+  | 'wiki'
   | 'settings'
   | 'mcp';
 
@@ -86,6 +88,22 @@ const HELP_BY_NAV: Record<NavKey, HelpTip> = {
     docLabel: 'History API',
     secondaryHref: '/docs/getting-started',
     secondaryLabel: 'Getting started'
+  },
+  planning: {
+    title: 'Plan before you PR',
+    body: 'Planning will stitch Impact and Topography into a change brief. Until then, jump to those surfaces from the stub.',
+    docHref: '/docs/getting-started',
+    docLabel: 'Getting started',
+    secondaryHref: '/docs/architecture',
+    secondaryLabel: 'Graph model'
+  },
+  wiki: {
+    title: 'Repo knowledge, indexed',
+    body: 'Wiki will host ADRs and ownership notes linked to modules. Ask and the graph cover you for now.',
+    docHref: '/docs/getting-started',
+    docLabel: 'Getting started',
+    secondaryHref: '/docs',
+    secondaryLabel: 'Product docs'
   },
   settings: {
     title: 'Repo + session controls',

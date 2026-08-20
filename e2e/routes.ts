@@ -8,13 +8,16 @@ export const PUBLIC_PAGES = [
 
 /** Every dashboard nav route covered after opening demo mode. */
 export const DASHBOARD_PAGES = [
-  { nav: 'Overview', path: '', expect: /Ask a question|Total Reviews/i },
-  { nav: 'Search', path: '/search', expect: /Search/i },
+  { nav: 'Overview', path: '', expect: /Ask a question|Total Reviews|pulse/i },
+  { nav: 'Dependency Graph', path: '/architecture', expect: /See how your codebase fits together/i },
+  { nav: 'Topography', path: '/hotspots', expect: /Topography|Hotspot/i },
+  { nav: 'Code Search', path: '/search', expect: /Search/i },
+  { nav: 'Wiki', path: '/wiki', expect: /Wiki|coming soon/i },
+  { nav: 'Impact Analysis', path: '/impact', expect: /Impact/i },
   { nav: 'Ask RepoPilot', path: '/ask', expect: /Ask RepoPilot/i },
+  { nav: 'History', path: '/history', expect: /History/i },
+  { nav: 'Planning', path: '/planning', expect: /Planning|coming soon/i },
   { nav: 'Pull Requests', path: '/pulls', expect: /Pull Requests/i },
-  { nav: 'Hotspots', path: '/hotspots', expect: /Hotspots/i },
-  { nav: 'Architecture', path: '/architecture', expect: /See how your codebase fits together/i },
-  { nav: 'Impact', path: '/impact', expect: /Impact/i },
   { nav: 'Settings', path: '/settings', expect: /Settings/i }
 ] as const;
 

@@ -23,7 +23,8 @@
 | 16 | Revision-scoped graph | **Done foundation** — `?rev=` + History deep links |
 | 17 | Universal search | **Done foundation** — code + history scopes |
 | 18 | Impact revision deep links | **Done foundation** — `?rev=` on Impact + citations |
-| 19–35 | Remaining | Not started / partial |
+| 19 | Planning / Wiki stubs | **Done foundation** — nav + roadmap stubs |
+| 20–35 | Remaining | Not started / partial |
 
 ## Phase 5
 
@@ -127,6 +128,13 @@
 - [x] History revision row: Graph + Impact deep links
 - [x] Blast map / graph handoff keep the selected SHA
 
+## Phase 19
+
+- [x] Planning stub under Change (roadmap + Impact / Topography / PRs exits)
+- [x] Wiki stub under Understand (roadmap + Ask / Graph / Docs exits)
+- [x] Nav + Cmd+K + help tips for both surfaces
+- [x] Shared `surfaceStubs` helpers + tests
+
 ## Next action
 
-Phase 19 (Planning / Wiki stubs) or deferred ELK / 3D topography.
+Phase 20 (Findings surface) or deferred ELK / 3D topography.

@@ -34,8 +34,7 @@ Integrate → MCP
 System → Indexing, Settings
 ```
 
-Missing surfaces: History time machine, Planning, Wiki, Command Palette, Universal Search, Revision context bar.
-
+Missing surfaces: Planning / Wiki stubs shipped (Phase 19); Findings still deferred.
 ## Progressive disclosure
 
 - Graph starts with capped overview — good instinct, bad hard cap

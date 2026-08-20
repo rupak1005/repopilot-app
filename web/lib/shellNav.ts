@@ -9,6 +9,8 @@ import {
   Graph,
   Lightning,
   MagnifyingGlass,
+  Notebook,
+  Path,
   Plugs,
   SquaresFour,
   Terminal
@@ -43,7 +45,8 @@ export const NAV_GROUPS: NavGroupDef[] = [
     items: [
       { key: 'architecture', href: '/architecture', label: 'Dependency Graph', icon: Graph },
       { key: 'hotspots', href: '/hotspots', label: 'Topography', icon: Flame },
-      { key: 'search', href: '/search', label: 'Code Search', icon: MagnifyingGlass }
+      { key: 'search', href: '/search', label: 'Code Search', icon: MagnifyingGlass },
+      { key: 'wiki', href: '/wiki', label: 'Wiki', icon: Notebook }
     ]
   },
   {
@@ -58,7 +61,10 @@ export const NAV_GROUPS: NavGroupDef[] = [
   {
     id: 'change',
     label: 'Change',
-    items: [{ key: 'pulls', href: '/pulls', label: 'Pull Requests', icon: GitPullRequest }]
+    items: [
+      { key: 'planning', href: '/planning', label: 'Planning', icon: Path },
+      { key: 'pulls', href: '/pulls', label: 'Pull Requests', icon: GitPullRequest }
+    ]
   },
   {
     id: 'integrate',
@@ -122,6 +128,18 @@ export function dashboardCommands(repoId: string): CommandDef[] {
       keywords: ['commit', 'revision', 'timeline', 'past']
     },
     {
+      id: 'planning',
+      label: 'Open planning',
+      path: `${base}/planning`,
+      keywords: ['plan', 'change', 'roadmap']
+    },
+    {
+      id: 'wiki',
+      label: 'Open wiki',
+      path: `${base}/wiki`,
+      keywords: ['docs', 'adr', 'notes', 'knowledge']
+    },
+    {
       id: 'pulls',
       label: 'Open pull requests',
       path: `${base}/pulls`,
@@ -174,6 +192,8 @@ export const COMMAND_ICONS: Record<string, Icon> = {
   impact: Crosshair,
   ask: Lightning,
   history: ClockCounterClockwise,
+  planning: Path,
+  wiki: Notebook,
   pulls: GitPullRequest,
   mcp: Terminal,
   settings: Gear,

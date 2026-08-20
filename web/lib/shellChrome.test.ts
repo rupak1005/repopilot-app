@@ -12,6 +12,8 @@ describe('shellChrome', () => {
     expect(helpTipForNav('architecture').docHref).toBe('/docs/architecture');
     expect(helpTipForNav('impact').secondaryHref).toBeTruthy();
     expect(helpTipForNav('history').title.toLowerCase()).toContain('time');
+    expect(helpTipForNav('planning').title.toLowerCase()).toContain('plan');
+    expect(helpTipForNav('wiki').docHref).toBe('/docs/getting-started');
   });
 
   it('marks a newly ready index as unread until seen', () => {
