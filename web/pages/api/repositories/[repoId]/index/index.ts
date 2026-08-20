@@ -1,9 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { isDemoMode } from '../../../../lib/demoMode';
-import { assertRepoSession, proxyApiRequest } from '../../../../lib/serverApi';
-import { getSession } from '../../../../lib/session';
-import { parseRepoSlug } from '../../../../lib/types';
+import { isDemoMode } from '../../../../../lib/demoMode';
+import { assertRepoSession, proxyApiRequest } from '../../../../../lib/serverApi';
+import { getSession } from '../../../../../lib/session';
+import { parseRepoSlug } from '../../../../../lib/types';
 
+/**
+ * Lives at `index/index.ts` (not sibling `index.ts`) so Next maps this to
+ * `/api/repositories/:repoId/index`. A sibling `index.ts` would bind `:repoId` itself
+ * and leave `/index` to the catch-all → `{ error: 'Not found' }`.
+ */
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
