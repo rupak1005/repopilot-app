@@ -9,6 +9,7 @@ import {
   Columns,
   Crosshair,
   DownloadSimple,
+  FlowArrow,
   MagnifyingGlass,
   MagnifyingGlassMinus,
   MagnifyingGlassPlus,
@@ -36,6 +37,7 @@ import {
 } from '../../lib/architecture';
 import { blastHighlightSet, blastRole, type BlastOverlay } from '../../lib/blastOverlay';
 import { layoutWithDagre } from '../../lib/dagreLayout';
+import { layoutWithElk, type GraphLayoutAlgo } from '../../lib/elkLayout';
 import {
   directDependentModules,
   dependentModules,
@@ -68,6 +70,11 @@ const LAYOUT_OPTIONS: Array<{ id: LayoutMode; label: string; icon: typeof Square
   { id: 'diagram', label: 'Diagram', icon: Square },
   { id: 'split', label: 'Split', icon: Columns },
   { id: 'focus', label: 'Focus', icon: SquareHalf }
+];
+
+const ALGO_OPTIONS: Array<{ id: GraphLayoutAlgo; label: string; icon: typeof ShareNetwork }> = [
+  { id: 'dagre', label: 'Flow', icon: ShareNetwork },
+  { id: 'elk', label: 'System', icon: FlowArrow }
 ];
 
 type ArchitectureGraphProps = {
@@ -302,6 +309,9 @@ export function ArchitectureGraphView({
   const [pulseId, setPulseId] = useState<string | null>(null);
   const [rebuilding, setRebuilding] = useState(false);
   const [renderer, setRenderer] = useState<DiagramRenderer>('interactive');
+  const [layoutAlgo, setLayoutAlgo] = useState<GraphLayoutAlgo>('dagre');
+  const [layoutData, setLayoutData] = useState<ForceGraphData>({ nodes: [], links: [] });
+  const [layoutBusy, setLayoutBusy] = useState(false);
   const [pathStartId, setPathStartId] = useState<string | null>(null);
   const [pathNodeIds, setPathNodeIds] = useState<Set<string> | null>(null);
   const [pathHint, setPathHint] = useState<string | null>(null);
@@ -317,9 +327,38 @@ export function ArchitectureGraphView({
       ),
     [filtered.nodes]
   );
-  const layoutData = useMemo(() => layoutWithDagre(filtered), [filtered]);
   const mermaidChart = useMemo(() => toMermaidFlowchart(filtered), [filtered]);
   const stats = useMemo(() => diagramStats(filtered), [filtered]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function runLayout() {
+      if (filtered.nodes.length === 0) {
+        setLayoutData({ nodes: [], links: [] });
+        setLayoutBusy(false);
+        return;
+      }
+      if (layoutAlgo === 'dagre') {
+        setLayoutData(layoutWithDagre(filtered));
+        setLayoutBusy(false);
+        return;
+      }
+      setLayoutBusy(true);
+      try {
+        const next = await layoutWithElk(filtered);
+        if (!cancelled) setLayoutData(next);
+      } catch {
+        // ponytail: ELK can fail on exotic graphs — fall back to dagre rather than blank canvas.
+        if (!cancelled) setLayoutData(layoutWithDagre(filtered));
+      } finally {
+        if (!cancelled) setLayoutBusy(false);
+      }
+    }
+    void runLayout();
+    return () => {
+      cancelled = true;
+    };
+  }, [filtered, layoutAlgo]);
 
   const fitGraph = useCallback(() => {
     const fg = fgRef.current;
@@ -757,10 +796,10 @@ export function ArchitectureGraphView({
 
   const graphStage = (
     <div ref={containerRef} className="ui-diagram__stage">
-      {loading ? (
+      {loading || layoutBusy ? (
         <div className="ui-diagram__loading">
           <CircleNotch size={28} weight="bold" className="ui-diagram__spinner" aria-hidden />
-          <p>Building diagram…</p>
+          <p>{layoutBusy ? 'Computing System View layout…' : 'Building diagram…'}</p>
         </div>
       ) : filtered.nodes.length === 0 ? (
         <p className="ui-diagram__empty">No modules in this layer.</p>
@@ -1013,6 +1052,23 @@ export function ArchitectureGraphView({
               ))}
             </select>
           </label>
+
+          <div className="ui-diagram__layout" role="tablist" aria-label="Graph layout algorithm">
+            {ALGO_OPTIONS.map(({ id, label, icon: AlgoIcon }) => (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                aria-selected={layoutAlgo === id}
+                className={`ui-diagram__layout-btn${layoutAlgo === id ? ' ui-diagram__layout-btn--active' : ''}`}
+                onClick={() => setLayoutAlgo(id)}
+                title={id === 'elk' ? 'ELK layered System View' : 'Dagre flow layout'}
+              >
+                <AlgoIcon size={16} weight="bold" aria-hidden />
+                {label}
+              </button>
+            ))}
+          </div>
 
           <div className="ui-diagram__layout" role="tablist" aria-label="Diagram renderer">
             {RENDERER_OPTIONS.map(({ id, label, icon: RendererIcon }) => (

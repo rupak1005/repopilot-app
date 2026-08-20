@@ -38,8 +38,8 @@
 | Edge provenance with line/confidence | Partial — no DB columns |
 | Progressive neighborhood | Partial — full architecture capped at 80 nodes client-side |
 | Path tracing A→B | Done (`op=shortestPath` + Shift-click) |
-| Minimap / ELK layouts | Missing (dagre + force; ELK deferred) |
-| Deep links (view/selection/zoom) | Partial (`?file=`, `?blast=1`) |
+| Minimap / ELK layouts | ELK layered System View done; minimap still missing |
+| Deep links (view/selection/zoom) | Partial (`?file=`, `?blast=1`, `?rev=`) |
 | Cycle inspector | Done (`op=cycles` + architecture panel) |
 
 ## Technical debt
@@ -47,14 +47,14 @@
 1. Unresolved `@/` aliases pollute graph IDs
 2. Transitive neighbor expand draws star edges to seed (not true paths)
 3. Symbol “calls” not type-aware
-4. No ELK hierarchical System View (dagre LR is the current hierarchical layout)
+4. ~~No ELK hierarchical System View~~ → **done** (Flow/System toggle; dagre remains default)
 
 ## Migration plan
 
 1. **Phase 3 (done):** Persist edge `kind` + provenance on write; introduce stable node URNs (`file:…`, `symbol:…`); bounded `shortestPath` query
 2. **Phase 4 (done foundation):** Directory clustering; `GET …/graph?op=neighborhood`; path-trace UI; module cycle inspector
 3. Resolve TS path aliases at index time (`@/` → file) — **done** (heuristic package-root resolve; full tsconfig paths deferred)
-4. Optional ELK hierarchical System View
+4. Optional ELK hierarchical System View — **done** (Phase 21)
 5. Evaluate server-only overview for 10k+ node repos
 
 ## Risk

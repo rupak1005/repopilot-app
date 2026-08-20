@@ -25,7 +25,8 @@
 | 18 | Impact revision deep links | **Done foundation** — `?rev=` on Impact + citations |
 | 19 | Planning / Wiki stubs | **Done foundation** — nav + roadmap stubs |
 | 20 | Findings surface | **Done foundation** — repo-wide severity board |
-| 21–35 | Remaining | Not started / partial |
+| 21 | ELK System View | **Done foundation** — Flow / System layout toggle |
+| 22–35 | Remaining | Not started / partial |
 
 ## Phase 5
 
@@ -143,6 +144,13 @@
 - [x] Demo flatten of PR findings; nav under Change
 - [x] Shared `findings` helpers + API/web tests
 
+## Phase 21
+
+- [x] `elkjs` layered layout (`layoutWithElk`) for hierarchical System View
+- [x] Architecture Flow (dagre) / System (ELK) toggle; dagre fallback on ELK failure
+- [x] Loading state while System View computes
+- [x] Unit test for pinned ELK positions
+
 ## Next action
 
-Phase 21 (ELK hierarchical System View) or deferred 3D topography.
+Phase 22 (graph minimap) or deferred 3D topography.

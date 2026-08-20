@@ -33,7 +33,7 @@ export default function DocsArchitecturePage() {
             ['Queue', 'Redis + QueuedJob table', 'Background repo-sync jobs'],
             ['Parsing', 'tree-sitter (JS/TS)', 'AST symbols, imports, exports'],
             ['Search', 'tsvector + pgvector', 'Lexical + semantic hybrid search'],
-            ['Graph viz', 'Mermaid, dagre, react-force-graph-2d', 'Architecture views'],
+            ['Graph viz', 'Mermaid, dagre, elkjs, react-force-graph-2d', 'Architecture views'],
             ['AI', 'Groq / Gemini / Ollama (pluggable)', 'Ask + optional embeddings'],
             ['Agents', 'MCP SDK (stdio)', 'Cursor / Claude Desktop integration']
           ]}

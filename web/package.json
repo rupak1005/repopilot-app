@@ -14,6 +14,7 @@
     "@phosphor-icons/react": "^2.1.10",
     "@repopilot/common": "0.0.0",
     "dagre": "^0.8.5",
+    "elkjs": "^0.10.0",
     "mermaid": "^11.17.0",
     "motion": "^13.1.0",
     "next": "16.3.1",
