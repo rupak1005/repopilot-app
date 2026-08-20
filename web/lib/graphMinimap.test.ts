@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   boundsFromPoints,
   cameraFromZoomTransform,
+  clampMinimapFrame,
   minimapToWorld,
   viewportInWorld,
   worldToMinimap
@@ -42,5 +43,14 @@ describe('graphMinimap', () => {
     expect(camera.k).toBe(2);
     expect(camera.x).toBe(50);
     expect(camera.y).toBe(25);
+  });
+
+  it('clamps viewport frame inside the mini canvas', () => {
+    expect(clampMinimapFrame({ x: -20, y: -10, width: 400, height: 5 }, 160, 100)).toEqual({
+      x: 0,
+      y: 0,
+      width: 160,
+      height: 10
+    });
   });
 });

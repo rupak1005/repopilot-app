@@ -47,8 +47,14 @@ export function boundsFromPoints(points: Array<GraphPoint | null | undefined>): 
     minY -= 80;
     maxY += 80;
   }
-  const padX = (maxX - minX) * 0.08;
-  const padY = (maxY - minY) * 0.08;
+  // Include typical node half-box so chips aren’t clipped at the edge.
+  const nodePad = 48;
+  minX -= nodePad;
+  maxX += nodePad;
+  minY -= nodePad;
+  maxY += nodePad;
+  const padX = (maxX - minX) * 0.06;
+  const padY = (maxY - minY) * 0.06;
   minX -= padX;
   maxX += padX;
   minY -= padY;
@@ -126,4 +132,25 @@ export function cameraFromZoomTransform(
     x: (viewWidth / 2 - transform.x) / k,
     y: (viewHeight / 2 - transform.y) / k
   };
+}
+
+export type MinimapFrame = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+/** Keep the viewport rectangle inside the mini canvas with a usable minimum size. */
+export function clampMinimapFrame(
+  frame: MinimapFrame,
+  miniWidth: number,
+  miniHeight: number,
+  minSize = 10
+): MinimapFrame {
+  const width = Math.min(miniWidth, Math.max(minSize, frame.width));
+  const height = Math.min(miniHeight, Math.max(minSize, frame.height));
+  const x = Math.min(Math.max(0, frame.x), miniWidth - width);
+  const y = Math.min(Math.max(0, frame.y), miniHeight - height);
+  return { x, y, width, height };
 }

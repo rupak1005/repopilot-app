@@ -312,6 +312,7 @@
   z-index: 3;
   cursor: crosshair;
   outline: none;
+  border-radius: 10px;
   box-shadow: var(--shadow-hard-sm, 0 2px 8px rgb(0 0 0 / 18%));
 }
 
@@ -321,25 +322,35 @@
 }
 
 .ui-diagram-minimap__bg {
-  fill: color-mix(in srgb, var(--color-surface) 88%, transparent);
+  fill: color-mix(in srgb, var(--color-surface) 92%, transparent);
   stroke: var(--color-border);
-  stroke-width: 1;
+  stroke-width: 1.5;
+}
+
+.ui-diagram-minimap__edge {
+  stroke: color-mix(in srgb, var(--diagram-link, #a78bfa) 55%, transparent);
+  stroke-width: 0.9;
+  pointer-events: none;
 }
 
 .ui-diagram-minimap__node {
-  fill: color-mix(in srgb, var(--color-text) 45%, transparent);
+  fill: var(--color-surface);
+  stroke-width: 1.5;
+  pointer-events: none;
 }
 
 .ui-diagram-minimap__node--hotspot {
-  fill: var(--diagram-hotspot, #d97706);
+  fill: color-mix(in srgb, var(--diagram-hotspot, #d97706) 18%, var(--color-surface));
 }
 
 .ui-diagram-minimap__node--selected {
-  fill: var(--diagram-accent);
+  fill: color-mix(in srgb, var(--diagram-accent) 22%, var(--color-surface));
+  stroke: var(--diagram-accent) !important;
+  stroke-width: 2;
 }
 
 .ui-diagram-minimap__frame {
-  fill: color-mix(in srgb, var(--diagram-accent) 14%, transparent);
+  fill: color-mix(in srgb, var(--diagram-accent) 12%, transparent);
   stroke: var(--diagram-accent);
   stroke-width: 1.5;
   pointer-events: none;

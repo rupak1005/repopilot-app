@@ -922,6 +922,7 @@ export function ArchitectureGraphView({
       {renderer === 'interactive' && layoutData.nodes.length > 0 && !loading && !layoutBusy ? (
         <GraphMinimap
           nodes={layoutData.nodes}
+          links={layoutData.links}
           selectedId={selectedId}
           camera={minimapCamera}
           viewWidth={dims.width}
