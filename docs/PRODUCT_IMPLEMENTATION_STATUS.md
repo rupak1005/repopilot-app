@@ -17,7 +17,8 @@
 | 10 | History / revisions | **Done foundation** — revisions list + history search |
 | 11 | Settings / indexing | **Done foundation** — index health + re-index |
 | 12 | Overview polish | **Done foundation** — pulse + quick actions |
-| 13–35 | Remaining | Not started / partial |
+| 13 | Docs / onboarding | **Done foundation** — checklist + tour refresh |
+| 14–35 | Remaining | Not started / partial |
 
 ## Phase 5
 
@@ -79,6 +80,13 @@
 - [x] Hotspots panel link to Topography; Settings deep link
 - [x] Differentiator MCP copy de-branded to agents
 
+## Phase 13
+
+- [x] First-run onboarding checklist on Getting started
+- [x] Dashboard tour updated for Graph / Topography / History / Settings / citations
+- [x] Docs nav + MCP page titled for agents; API reference covers new query ops
+- [x] Introduction links to MCP docs
+
 ## Next action
 
-Phase 13 (Docs / onboarding polish) or revision-scoped graph viewing.
+Phase 14 (Landing / marketing polish) or revision-scoped graph viewing.

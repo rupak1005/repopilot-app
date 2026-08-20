@@ -51,14 +51,16 @@ export default function DocsIntroductionPage() {
       <DocsSection title="Where to go next">
         <ul>
           <li>
-            <Link href="/docs/getting-started">Getting started</Link> — analyze your first repo and explore the
-            dashboard
+            <Link href="/docs/getting-started">Getting started</Link> — checklist, first repo, and dashboard tour
           </li>
           <li>
             <Link href="/docs/development">Development</Link> — run the stack locally
           </li>
           <li>
             <Link href="/docs/architecture">Architecture</Link> — indexing pipeline and design trade-offs
+          </li>
+          <li>
+            <Link href="/docs/mcp">MCP for agents</Link> — connect IDE agents to the same index
           </li>
         </ul>
       </DocsSection>

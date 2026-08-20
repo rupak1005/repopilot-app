@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { DocsCode, DocsLayout, DocsSection } from '../../components/ui/DocsLayout';
 import { GITHUB_SIGN_IN_URL } from '../../lib/auth';
+import { ONBOARDING_STEPS } from '../../lib/docsOnboarding';
 import { EXAMPLE_REPOS } from '../../lib/exampleRepos';
 
 export default function DocsGettingStartedPage() {
@@ -8,8 +9,24 @@ export default function DocsGettingStartedPage() {
     <DocsLayout
       slug="getting-started"
       title="Getting started"
-      lede="Open a repository, wait for indexing to finish, then use search, Ask, architecture, and impact views."
+      lede="Open a repository, wait for indexing to finish, then use Overview, Search, Ask, Architecture, Impact, Topography, History, and Settings."
     >
+      <DocsSection title="First-run checklist">
+        <ol className="docs-onboarding-list">
+          {ONBOARDING_STEPS.map((step, index) => (
+            <li key={step.id}>
+              <strong>
+                {index + 1}. {step.title}
+              </strong>
+              <p>{step.detail}</p>
+              <p>
+                <Link href={step.href}>Continue →</Link>
+              </p>
+            </li>
+          ))}
+        </ol>
+      </DocsSection>
+
       <DocsSection title="Analyze a public repository">
         <ol>
           <li>
@@ -45,41 +62,63 @@ export default function DocsGettingStartedPage() {
           </li>
           <li>
             <Link href={GITHUB_SIGN_IN_URL}>Sign in with GitHub</Link>, pick a repository from{' '}
-            <Link href="/repos">Repositories</Link>, and trigger indexing from Settings.
+            <Link href="/repos">Repositories</Link>, then open <strong>Settings</strong> and click{' '}
+            <strong>Re-index repository</strong> if needed.
           </li>
         </ol>
       </DocsSection>
 
       <DocsSection title="Dashboard tour">
         <h3>Overview</h3>
-        <p>KPI tiles for files, symbols, dependencies, and index status. Jump to any feature from the sidebar.</p>
+        <p>
+          Index-aware pulse board with file counts, open PRs, and hotspots. Quick actions jump to Ask, Search,
+          Dependency Graph, Impact, and History. Use <strong>Index settings</strong> to re-index.
+        </p>
+
+        <h3>Dependency Graph</h3>
+        <p>
+          Real import edges with directory clustering, path tracing, neighborhood expand, import-cycle inspector,
+          and blast overlay from Impact (<code>?file=&amp;blast=1</code>).
+        </p>
+
+        <h3>Topography</h3>
+        <p>
+          2D directory landscape sized by hotspot score, churn, dependents, or findings — with 7d / 30d / 90d / 1y
+          lookbacks.
+        </p>
 
         <h3>Search</h3>
         <p>
-          Hybrid lexical + semantic search over indexed code chunks. Results include file paths, line ranges, and
-          relevance scores.
+          Hybrid lexical + semantic search. Each hit has Graph / Impact / GitHub citation actions when a repo is
+          selected.
         </p>
 
         <h3>Ask RepoPilot</h3>
         <p>
-          Natural-language questions answered with citations (file + line evidence). Requires an LLM provider
-          (<code>GROQ_API_KEY</code>, <code>GEMINI_API_KEY</code>, or local Ollama) in <code>api/.env</code>.
-        </p>
-
-        <h3>Architecture</h3>
-        <p>
-          Module dependency graph rendered with Mermaid or force-directed layout. Built from real import edges, not
-          LLM guesses.
+          Natural-language answers with file:line citations. Open Graph, Impact, or GitHub from any citation chip.
+          Requires an LLM provider (<code>GROQ_API_KEY</code>, <code>GEMINI_API_KEY</code>, or local Ollama) in{' '}
+          <code>api/.env</code>.
         </p>
 
         <h3>Impact</h3>
-        <p>Pick a file and see downstream modules and symbols that depend on it — useful before refactors or merges.</p>
+        <p>
+          File, symbol, or PR blast radius with risk factors, confidence, and a map. Deep-link into the architecture
+          canvas with blast highlighting.
+        </p>
 
-        <h3>Hotspots</h3>
-        <p>Modules ranked by commit churn from ingested git history.</p>
+        <h3>History</h3>
+        <p>Indexed revision SHAs plus commit / PR history search from ingested git data.</p>
 
         <h3>Pull Requests</h3>
-        <p>Review findings with evidence links when GitHub webhooks and tokens are configured.</p>
+        <p>
+          Review findings with severity filters; changed files link to Impact and Graph. Similar PRs link through to
+          other pull details.
+        </p>
+
+        <h3>Settings &amp; MCP</h3>
+        <p>
+          Live index health, re-index controls, and MCP setup with repo-scoped tool examples for agent clients.
+        </p>
       </DocsSection>
 
       <DocsSection title="Indexing stages">
@@ -99,7 +138,7 @@ export default function DocsGettingStartedPage() {
           </li>
         </ol>
         <p>
-          Progress appears in the floating index pill and on the Overview page. Demo mode (
+          Progress appears in the floating index pill and on Overview / Settings. Demo mode (
           <code>NEXT_PUBLIC_DEMO_MODE=true</code>) skips live indexing and shows seeded UI data.
         </p>
       </DocsSection>

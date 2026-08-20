@@ -6,7 +6,7 @@ export default function DocsMcpPage() {
   return (
     <DocsLayout
       slug="mcp"
-      title="MCP & Cursor"
+      title="MCP for agents"
       lede="Expose RepoPilot tools to Cursor, Claude Desktop, or any MCP client over stdio."
     >
       <DocsSection title="What MCP provides">

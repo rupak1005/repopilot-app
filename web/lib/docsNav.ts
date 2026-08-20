@@ -54,8 +54,8 @@ export const DOCS_NAV: DocNavItem[] = [
   {
     slug: 'mcp',
     href: '/docs/mcp',
-    title: 'MCP & Cursor',
-    summary: 'Connect RepoPilot to Cursor, Claude Desktop, or other MCP clients.'
+    title: 'MCP for agents',
+    summary: 'Connect RepoPilot tools to Cursor, Claude Desktop, or other MCP clients.'
   }
 ];
 
