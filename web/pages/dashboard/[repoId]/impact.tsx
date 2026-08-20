@@ -422,10 +422,7 @@ export default function ImpactPage() {
       <div className="canvas-inner ui-impact-page">
         <div className="page-title-block">
           <h1>Impact</h1>
-          <p>
-            What breaks if you change a module or merge a PR? Deterministic graph traversal plus
-            test and history signals.
-          </p>
+          <p>What breaks if this module or PR changes — graph traversal plus tests and history.</p>
         </div>
 
         {repoError ? <ErrorBanner>{repoError}</ErrorBanner> : null}
@@ -644,7 +641,7 @@ function FileImpactView({
   }
 
   return (
-    <>
+    <div className="ui-impact-result">
       <p className="ui-impact-page__summary">{result.summary}</p>
       <ImpactKpis
         direct={result.directDependents.length}
@@ -654,75 +651,107 @@ function FileImpactView({
         confidence={result.confidence}
       />
       <RiskFactors factors={result.riskFactors} />
+
       {ownership && (ownership.owners.length > 0 || ownership.sourcePath) ? (
-        <BentoPanel title="Ownership">
-          <div className="ui-impact-ownership">
-            <p className="ui-finding-card__desc">
+        <div className="ui-impact-ownership-bar">
+          <div className="ui-impact-ownership-bar__copy">
+            <span className="label-caps">Owners</span>
+            <p>
               {ownership.owners.length > 0
-                ? `CODEOWNERS match for ${result.target.filePath}`
+                ? `CODEOWNERS for ${shortPath(result.target.filePath)}`
                 : `No path match in ${ownership.sourcePath ?? 'CODEOWNERS'}`}
             </p>
-            {ownership.owners.length > 0 ? (
-              <ul className="ui-impact-ownership__list">
-                {ownership.owners.map((owner) => {
-                  const href = githubOwnerHref(owner, repoFullName);
-                  return (
-                    <li key={owner}>
-                      {href ? (
-                        <a href={href} target="_blank" rel="noreferrer" className="ui-diagram__action">
-                          {owner}
-                        </a>
-                      ) : (
-                        <span className="mono">{owner}</span>
-                      )}
-                    </li>
-                  );
+          </div>
+          {ownership.owners.length > 0 ? (
+            <ul className="ui-impact-ownership__list">
+              {ownership.owners.map((owner) => {
+                const href = githubOwnerHref(owner, repoFullName);
+                return (
+                  <li key={owner}>
+                    {href ? (
+                      <a href={href} target="_blank" rel="noreferrer" className="ui-impact-owner-chip">
+                        {owner}
+                      </a>
+                    ) : (
+                      <span className="ui-impact-owner-chip mono">{owner}</span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p className="ui-impact-ownership__empty mono">{formatOwnershipLabel([])}</p>
+          )}
+          {ownership.sourcePath ? (
+            <p className="ui-impact-ownership__source mono">{ownership.sourcePath}</p>
+          ) : null}
+        </div>
+      ) : null}
+
+      <div className="ui-impact-result__main ui-bento-grid">
+        <BentoPanel
+          title="Blast radius"
+          action={
+            repoId ? (
+              <Link
+                href={architectureHref(repoId, {
+                  file: result.target.filePath,
+                  blast: true,
+                  revisionSha
                 })}
-              </ul>
-            ) : (
-              <p className="ui-impact-ownership__empty mono">{formatOwnershipLabel([])}</p>
-            )}
-            {ownership.sourcePath ? (
-              <p className="ui-impact-ownership__source mono">Source · {ownership.sourcePath}</p>
-            ) : null}
+              >
+                Open graph →
+              </Link>
+            ) : undefined
+          }
+        >
+          <div className="ui-impact-blast-wrap">
+            <p className={`ui-impact-panel__risk ui-impact-panel__risk--${result.risk.toLowerCase()}`}>
+              <Warning size={18} weight="fill" aria-hidden />
+              Risk: {result.risk}
+            </p>
+            <ImpactBlastMap
+              target={result.target.filePath}
+              directDependents={result.directDependents}
+              transitiveDependents={result.transitiveDependents}
+              outboundImports={result.outboundImports}
+              baseHref={base}
+              repoId={repoId}
+              revisionSha={revisionSha}
+            />
           </div>
         </BentoPanel>
-      ) : null}
-      <BentoPanel title="Blast radius map">
-        <ImpactBlastMap
-          target={result.target.filePath}
-          directDependents={result.directDependents}
-          transitiveDependents={result.transitiveDependents}
-          outboundImports={result.outboundImports}
-          baseHref={base}
-          repoId={repoId}
-          revisionSha={revisionSha}
-        />
-        {repoId ? (
-          <p className="ui-impact-blast__link">
-            <Link
-              href={architectureHref(repoId, {
-                file: result.target.filePath,
-                blast: true,
-                revisionSha
-              })}
-            >
-              Open in dependency graph →
-            </Link>
-          </p>
-        ) : null}
-      </BentoPanel>
-      <ImpactLists
-        base={base}
-        repoId={repoId}
-        revisionSha={revisionSha}
-        risk={result.risk}
-        directDependents={result.directDependents}
-        transitiveDependents={result.transitiveDependents}
-        outboundImports={result.outboundImports}
-        checklist={result.checklist}
-        tests={result.relevantTests}
-      />
+
+        <div className="ui-impact-result__aside">
+          <BentoPanel title="Safe-change checklist">
+            <ul className="ui-impact-checklist">
+              {result.checklist.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </BentoPanel>
+          <BentoPanel title={`Tests to run (${result.relevantTests.length})`}>
+            {result.relevantTests.length > 0 ? (
+              <ul className="ui-impact-tests">
+                {result.relevantTests.map((test) => (
+                  <li key={test.filePath} className="ui-impact-test">
+                    <p className="mono ui-impact-test__path">{test.filePath}</p>
+                    <p className="ui-impact-test__reason">{test.reason}</p>
+                    <span className="label-caps">{test.confidence} confidence</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <EmptyState
+                compact
+                title="No related tests found"
+                description="No test files import these modules in the dependency graph."
+              />
+            )}
+          </BentoPanel>
+        </div>
+      </div>
+
       {result.coChanges.length > 0 ? (
         <BentoPanel title="Co-change history">
           <ul className="ui-similar-list">
@@ -780,8 +809,13 @@ function FileImpactView({
           </div>
         </BentoPanel>
       ) : null}
-    </>
+    </div>
   );
+}
+
+function shortPath(path: string): string {
+  const parts = path.split('/');
+  return parts.length <= 2 ? path : parts.slice(-2).join('/');
 }
 
 function SymbolImpactView({
