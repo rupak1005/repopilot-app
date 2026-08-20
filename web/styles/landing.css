@@ -16,8 +16,8 @@
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
-  gap: var(--space-8);
-  padding: var(--space-6) var(--space-5) var(--space-8);
+  gap: var(--space-12);
+  padding: var(--space-6) var(--space-5) var(--space-12);
   overflow: visible;
 }
 
@@ -37,7 +37,7 @@
   background: var(--color-surface-muted);
   border: var(--border-heavy);
   border-radius: var(--radius-xl);
-  padding: var(--space-6) var(--space-8);
+  padding: var(--space-8) var(--space-8) var(--space-10);
   box-shadow: var(--shadow-hard-lg);
 }
 
@@ -60,7 +60,7 @@
 }
 
 .landing-lede {
-  margin: 0 0 var(--space-5);
+  margin: 0 0 var(--space-8);
   font-size: var(--text-body);
   line-height: 1.55;
   color: var(--color-text-muted);
@@ -96,13 +96,13 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
-  margin-top: var(--space-4);
+  margin-top: var(--space-5);
   font-size: var(--text-ui);
   color: var(--color-text-muted);
 }
 
 .landing-examples {
-  margin-top: var(--space-5);
+  margin-top: var(--space-8);
 }
 
 .landing-examples__label {
@@ -139,7 +139,7 @@
 }
 
 .landing-note {
-  margin: var(--space-4) 0 0;
+  margin: var(--space-6) 0 0;
   font-size: var(--text-caption);
   line-height: 1.45;
   color: var(--color-text-muted);
@@ -216,7 +216,7 @@
 }
 
 .diff-strip--landing {
-  gap: var(--space-3);
+  gap: var(--space-5);
 }
 
 .diff-strip--landing .diff-strip__tagline {
@@ -226,7 +226,7 @@
 
 .diff-strip--landing .diff-strip__grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-2);
+  gap: var(--space-3);
 }
 
 .diff-strip--landing .diff-card {
@@ -258,8 +258,8 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  margin: 0;
-  padding-bottom: var(--space-2);
+  margin: var(--space-4) 0 0;
+  padding-bottom: var(--space-6);
   font-size: var(--text-caption);
   line-height: 1.45;
   color: var(--color-text-muted);
