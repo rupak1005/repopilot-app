@@ -22,7 +22,8 @@
 | 15 | Accessibility / motion | **Done foundation** — skip link, landmarks, keyboard rows |
 | 16 | Revision-scoped graph | **Done foundation** — `?rev=` + History deep links |
 | 17 | Universal search | **Done foundation** — code + history scopes |
-| 18–35 | Remaining | Not started / partial |
+| 18 | Impact revision deep links | **Done foundation** — `?rev=` on Impact + citations |
+| 19–35 | Remaining | Not started / partial |
 
 ## Phase 5
 
@@ -119,6 +120,13 @@
 - [x] All / Code / History scope tabs with counts (`?scope=`)
 - [x] Shared `universalSearch` helpers + tests
 
+## Phase 18
+
+- [x] Impact page revision picker + `revisionSha` on file / symbol / PR analyze
+- [x] `impactHref` / citation Graph+Impact preserve `?rev=`
+- [x] History revision row: Graph + Impact deep links
+- [x] Blast map / graph handoff keep the selected SHA
+
 ## Next action
 
-Phase 18 (impact revision deep links) or deferred Planning / Wiki surfaces.
+Phase 19 (Planning / Wiki stubs) or deferred ELK / 3D topography.

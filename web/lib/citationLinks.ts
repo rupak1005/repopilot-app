@@ -1,11 +1,20 @@
 import { githubModuleUrl, looksLikeRepoFilePath } from './modulePaths';
+import { architectureHref, impactHref } from './revisionScope';
 
-export function citationArchitectureHref(repoId: string, file: string): string {
-  return `/dashboard/${repoId}/architecture?file=${encodeURIComponent(file)}`;
+export function citationArchitectureHref(
+  repoId: string,
+  file: string,
+  revisionSha?: string | null
+): string {
+  return architectureHref(repoId, { file, revisionSha });
 }
 
-export function citationImpactHref(repoId: string, file: string): string {
-  return `/dashboard/${repoId}/impact?file=${encodeURIComponent(file)}`;
+export function citationImpactHref(
+  repoId: string,
+  file: string,
+  revisionSha?: string | null
+): string {
+  return impactHref(repoId, { file, revisionSha });
 }
 
 /** GitHub blob URL with #Lstart-Lend when the path looks like a real file. */

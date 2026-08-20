@@ -41,10 +41,10 @@ export function CitationChip({
       </span>
       {repoId ? (
         <span className="ui-citation__actions" role="group" aria-label={`Open ${file}`}>
-          <Link className="ui-citation__action" href={citationArchitectureHref(repoId, file)}>
+          <Link className="ui-citation__action" href={citationArchitectureHref(repoId, file, revisionSha)}>
             Graph
           </Link>
-          <Link className="ui-citation__action" href={citationImpactHref(repoId, file)}>
+          <Link className="ui-citation__action" href={citationImpactHref(repoId, file, revisionSha)}>
             Impact
           </Link>
           {repoFullName?.includes('/') ? (

@@ -9,7 +9,7 @@ import { ErrorBanner } from '../../../components/ui/ErrorBanner';
 import { ImpactBlastMap } from '../../../components/ui/ImpactBlastMap';
 import { IndexHint } from '../../../components/ui/IndexHint';
 import { KpiTile } from '../../../components/ui/KpiTile';
-import { demoDelay, demoFileImpact, demoPullImpact } from '../../../lib/demoData';
+import { DEMO_REVISIONS, demoDelay, demoFileImpact, demoPullImpact } from '../../../lib/demoData';
 import {
   DashboardLayout,
   shouldShowIndexHint,
@@ -18,6 +18,17 @@ import {
   useRepoIndexStatus
 } from '../../../lib/dashboard';
 import { isDemoMode } from '../../../lib/demoMode';
+import { type RevisionRow } from '../../../lib/history';
+import {
+  REVISION_QUERY_KEY,
+  architectureHref,
+  impactHref,
+  impactRouteQuery,
+  matchRevisionValue,
+  parseRevisionQuery,
+  revisionSelectLabel,
+  withRevisionSha
+} from '../../../lib/revisionScope';
 import { repoApiPath } from '../../../lib/serverApi';
 import type { FileImpactAnalysis, PullImpactAnalysis, SymbolImpactAnalysis } from '../../../lib/types';
 
@@ -75,6 +86,38 @@ export default function ImpactPage() {
   const [symbolResult, setSymbolResult] = useState<SymbolImpactAnalysis | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [revisions, setRevisions] = useState<RevisionRow[]>([]);
+  const revisionSha = parseRevisionQuery(router.query[REVISION_QUERY_KEY]);
+
+  useEffect(() => {
+    if (!repoId) return;
+    if (isDemoMode()) {
+      setRevisions(DEMO_REVISIONS);
+      return;
+    }
+    let cancelled = false;
+    async function loadRevisions() {
+      try {
+        const response = await fetch(repoApiPath(repoId!, 'revisions'));
+        if (!response.ok) return;
+        const data = (await response.json()) as Array<{ revisionSha: string; indexedAt: string }>;
+        if (!cancelled) {
+          setRevisions(
+            data.map((row) => ({
+              revisionSha: row.revisionSha,
+              indexedAt: typeof row.indexedAt === 'string' ? row.indexedAt : String(row.indexedAt)
+            }))
+          );
+        }
+      } catch {
+        if (!cancelled) setRevisions([]);
+      }
+    }
+    void loadRevisions();
+    return () => {
+      cancelled = true;
+    };
+  }, [repoId]);
 
   useEffect(() => {
     setMode(queryMode);
@@ -109,7 +152,13 @@ export default function ImpactPage() {
         return;
       }
       const response = await fetch(
-        repoApiPath(repoId, `impact?filePath=${encodeURIComponent(path.trim())}&depth=2`)
+        repoApiPath(
+          repoId,
+          withRevisionSha(
+            `impact?filePath=${encodeURIComponent(path.trim())}&depth=2`,
+            revisionSha
+          )
+        )
       );
       if (!response.ok) throw new Error('File not found — index the repo or check the path.');
       setFileResult((await response.json()) as FileImpactAnalysis);
@@ -175,7 +224,9 @@ export default function ImpactPage() {
         });
         return;
       }
-      const response = await fetch(repoApiPath(repoId, `impact?pullNumber=${n}&depth=2`));
+      const response = await fetch(
+        repoApiPath(repoId, withRevisionSha(`impact?pullNumber=${n}&depth=2`, revisionSha))
+      );
       if (!response.ok) throw new Error('Pull request not found or not indexed.');
       setPullResult((await response.json()) as PullImpactAnalysis);
     } catch (err) {
@@ -246,7 +297,13 @@ export default function ImpactPage() {
         return;
       }
       const response = await fetch(
-        repoApiPath(repoId, `impact?symbolName=${encodeURIComponent(name.trim())}&depth=2`)
+        repoApiPath(
+          repoId,
+          withRevisionSha(
+            `impact?symbolName=${encodeURIComponent(name.trim())}&depth=2`,
+            revisionSha
+          )
+        )
       );
       if (!response.ok) throw new Error('Symbol not found — check the name or index the repo.');
       setSymbolResult((await response.json()) as SymbolImpactAnalysis);
@@ -288,6 +345,7 @@ export default function ImpactPage() {
   }, [
     repoId,
     queryMode,
+    revisionSha,
     router.query.file,
     router.query.pull,
     router.query.pullNumber,
@@ -298,59 +356,63 @@ export default function ImpactPage() {
   function switchMode(next: ImpactMode) {
     if (!repoId) return;
     setMode(next);
-    if (next === 'file') {
-      void router.replace(
-        { pathname: `/dashboard/${repoId}/impact`, query: { file: filePath.trim() } },
-        undefined,
-        { shallow: true }
-      );
-    } else if (next === 'pull') {
-      void router.replace(
-        { pathname: `/dashboard/${repoId}/impact`, query: { pull: pullNumber.trim() } },
-        undefined,
-        { shallow: true }
-      );
-    } else {
-      void router.replace(
-        { pathname: `/dashboard/${repoId}/impact`, query: { symbol: symbolName.trim() } },
-        undefined,
-        { shallow: true }
-      );
-    }
+    const values = {
+      file: filePath.trim(),
+      pull: pullNumber.trim(),
+      symbol: symbolName.trim()
+    };
+    void router.replace(
+      { pathname: `/dashboard/${repoId}/impact`, query: impactRouteQuery(next, values, revisionSha) },
+      undefined,
+      { shallow: true }
+    );
   }
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (!repoId) return;
+    const values = {
+      file: filePath.trim(),
+      pull: pullNumber.trim(),
+      symbol: symbolName.trim()
+    };
+    void router.replace(
+      { pathname: `/dashboard/${repoId}/impact`, query: impactRouteQuery(mode, values, revisionSha) },
+      undefined,
+      { shallow: true }
+    );
     if (mode === 'file') {
-      void router.replace(
-        { pathname: `/dashboard/${repoId}/impact`, query: { file: filePath.trim() } },
-        undefined,
-        { shallow: true }
-      );
       void analyzeFile(filePath.trim());
       return;
     }
     if (mode === 'pull') {
-      void router.replace(
-        { pathname: `/dashboard/${repoId}/impact`, query: { pull: pullNumber.trim() } },
-        undefined,
-        { shallow: true }
-      );
       void analyzePull(pullNumber.trim());
       return;
     }
+    void analyzeSymbol(symbolName.trim());
+  }
+
+  function onRevisionChange(next: string) {
+    if (!repoId) return;
+    const values = {
+      file: filePath.trim(),
+      pull: pullNumber.trim(),
+      symbol: symbolName.trim()
+    };
     void router.replace(
-      { pathname: `/dashboard/${repoId}/impact`, query: { symbol: symbolName.trim() } },
+      {
+        pathname: `/dashboard/${repoId}/impact`,
+        query: impactRouteQuery(mode, values, next || null)
+      },
       undefined,
       { shallow: true }
     );
-    void analyzeSymbol(symbolName.trim());
   }
 
   const base = repoId ? `/dashboard/${repoId}` : '';
   const result =
     mode === 'file' ? fileResult : mode === 'pull' ? pullResult : symbolResult;
+  const selectedRevisionValue = matchRevisionValue(revisions, revisionSha);
 
   return (
     <DashboardLayout activeNav="impact">
@@ -365,6 +427,25 @@ export default function ImpactPage() {
 
         {repoError ? <ErrorBanner>{repoError}</ErrorBanner> : null}
         {needsIndex ? <IndexHint /> : null}
+
+        {revisions.length > 0 ? (
+          <label className="ui-diagram-rev ui-impact-rev">
+            <span className="label-caps">Revision</span>
+            <select
+              className="ui-diagram-rev__select"
+              value={selectedRevisionValue}
+              onChange={(event) => onRevisionChange(event.target.value)}
+              aria-label="Indexed revision for impact analysis"
+            >
+              <option value="">Latest indexed</option>
+              {revisions.map((row, index) => (
+                <option key={row.revisionSha} value={row.revisionSha}>
+                  {revisionSelectLabel(row, index)}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
 
         <div className="ui-impact-modes" role="tablist" aria-label="Impact mode">
           <button
@@ -443,15 +524,20 @@ export default function ImpactPage() {
         {repoLoading && !result ? <p className="empty-state">Loading repository…</p> : null}
 
         {fileResult && mode === 'file' && !loading ? (
-          <FileImpactView result={fileResult} base={base} />
+          <FileImpactView result={fileResult} base={base} repoId={repoId} revisionSha={revisionSha} />
         ) : null}
 
         {symbolResult && mode === 'symbol' && !loading ? (
-          <SymbolImpactView result={symbolResult} base={base} />
+          <SymbolImpactView
+            result={symbolResult}
+            base={base}
+            repoId={repoId}
+            revisionSha={revisionSha}
+          />
         ) : null}
 
         {pullResult && mode === 'pull' && !loading ? (
-          <PullImpactView result={pullResult} base={base} />
+          <PullImpactView result={pullResult} base={base} repoId={repoId} revisionSha={revisionSha} />
         ) : null}
 
         {loading ? (
@@ -486,7 +572,17 @@ export default function ImpactPage() {
   );
 }
 
-function FileImpactView({ result, base }: { result: FileImpactAnalysis; base: string }) {
+function FileImpactView({
+  result,
+  base,
+  repoId,
+  revisionSha
+}: {
+  result: FileImpactAnalysis;
+  base: string;
+  repoId: string | null;
+  revisionSha: string | null;
+}) {
   return (
     <>
       <p className="ui-impact-page__summary">{result.summary}</p>
@@ -505,11 +601,17 @@ function FileImpactView({ result, base }: { result: FileImpactAnalysis; base: st
           transitiveDependents={result.transitiveDependents}
           outboundImports={result.outboundImports}
           baseHref={base}
+          repoId={repoId}
+          revisionSha={revisionSha}
         />
-        {base ? (
+        {repoId ? (
           <p className="ui-impact-blast__link">
             <Link
-              href={`${base}/architecture?file=${encodeURIComponent(result.target.filePath)}&blast=1`}
+              href={architectureHref(repoId, {
+                file: result.target.filePath,
+                blast: true,
+                revisionSha
+              })}
             >
               Open in dependency graph →
             </Link>
@@ -518,6 +620,8 @@ function FileImpactView({ result, base }: { result: FileImpactAnalysis; base: st
       </BentoPanel>
       <ImpactLists
         base={base}
+        repoId={repoId}
+        revisionSha={revisionSha}
         risk={result.risk}
         directDependents={result.directDependents}
         transitiveDependents={result.transitiveDependents}
@@ -553,7 +657,17 @@ function FileImpactView({ result, base }: { result: FileImpactAnalysis; base: st
   );
 }
 
-function SymbolImpactView({ result, base }: { result: SymbolImpactAnalysis; base: string }) {
+function SymbolImpactView({
+  result,
+  base,
+  repoId,
+  revisionSha
+}: {
+  result: SymbolImpactAnalysis;
+  base: string;
+  repoId: string | null;
+  revisionSha: string | null;
+}) {
   return (
     <>
       <p className="ui-impact-page__summary">{result.summary}</p>
@@ -572,10 +686,12 @@ function SymbolImpactView({ result, base }: { result: SymbolImpactAnalysis; base
           transitiveDependents={result.transitiveCallers.map((c) => `${c.name} (${c.type})`)}
           outboundImports={[result.target.filePath]}
           baseHref={base}
+          repoId={repoId}
+          revisionSha={revisionSha}
         />
-        {base ? (
+        {repoId ? (
           <p className="ui-impact-blast__link">
-            <Link href={`${base}/impact?file=${encodeURIComponent(result.target.filePath)}`}>
+            <Link href={impactHref(repoId, { file: result.target.filePath, revisionSha })}>
               Open containing file impact →
             </Link>
           </p>
@@ -583,6 +699,8 @@ function SymbolImpactView({ result, base }: { result: SymbolImpactAnalysis; base
       </BentoPanel>
       <ImpactLists
         base={base}
+        repoId={repoId}
+        revisionSha={revisionSha}
         risk={result.risk}
         directDependents={result.directCallers.map((c) => `${c.name} · ${result.target.filePath}`)}
         transitiveDependents={result.transitiveCallers.map((c) => c.name)}
@@ -601,7 +719,17 @@ function SymbolImpactView({ result, base }: { result: SymbolImpactAnalysis; base
   );
 }
 
-function PullImpactView({ result, base }: { result: PullImpactAnalysis; base: string }) {
+function PullImpactView({
+  result,
+  base,
+  repoId,
+  revisionSha
+}: {
+  result: PullImpactAnalysis;
+  base: string;
+  repoId: string | null;
+  revisionSha: string | null;
+}) {
   return (
     <>
       <p className="ui-impact-page__summary">{result.summary}</p>
@@ -620,6 +748,8 @@ function PullImpactView({ result, base }: { result: PullImpactAnalysis; base: st
           transitiveDependents={result.transitiveDependents}
           outboundImports={result.changedFiles.slice(0, 8)}
           baseHref={base}
+          repoId={repoId}
+          revisionSha={revisionSha}
         />
         {base ? (
           <p className="ui-impact-blast__link">
@@ -631,7 +761,13 @@ function PullImpactView({ result, base }: { result: PullImpactAnalysis; base: st
         <ul className="ui-impact-panel__modules">
           {result.fileRisks.map((file) => (
             <li key={file.filePath}>
-              <Link href={`${base}/impact?file=${encodeURIComponent(file.filePath)}`}>
+              <Link
+                href={
+                  repoId
+                    ? impactHref(repoId, { file: file.filePath, revisionSha })
+                    : `${base}/impact?file=${encodeURIComponent(file.filePath)}`
+                }
+              >
                 {file.filePath}
               </Link>{' '}
               <span className="label-caps">
@@ -649,6 +785,8 @@ function PullImpactView({ result, base }: { result: PullImpactAnalysis; base: st
       </BentoPanel>
       <ImpactLists
         base={base}
+        repoId={repoId}
+        revisionSha={revisionSha}
         risk={result.risk}
         directDependents={result.directDependents}
         transitiveDependents={result.transitiveDependents}
@@ -707,6 +845,8 @@ function RiskFactors({
 
 function ImpactLists(props: {
   base: string;
+  repoId?: string | null;
+  revisionSha?: string | null;
   risk: 'LOW' | 'MEDIUM' | 'HIGH';
   directDependents: string[];
   transitiveDependents: string[];
@@ -714,6 +854,11 @@ function ImpactLists(props: {
   checklist: string[];
   tests: FileImpactAnalysis['relevantTests'];
 }) {
+  function fileLink(mod: string) {
+    if (props.repoId) return impactHref(props.repoId, { file: mod, revisionSha: props.revisionSha });
+    return `${props.base}/impact?file=${encodeURIComponent(mod)}`;
+  }
+
   return (
     <>
       <div className="ui-pr-detail__grid">
@@ -729,7 +874,7 @@ function ImpactLists(props: {
                 <ul className="ui-impact-panel__modules">
                   {props.directDependents.map((mod) => (
                     <li key={mod}>
-                      <Link href={`${props.base}/impact?file=${encodeURIComponent(mod)}`}>{mod}</Link>
+                      <Link href={fileLink(mod)}>{mod}</Link>
                     </li>
                   ))}
                 </ul>
@@ -743,7 +888,7 @@ function ImpactLists(props: {
                 <ul className="ui-impact-panel__modules">
                   {props.transitiveDependents.slice(0, 8).map((mod) => (
                     <li key={mod}>
-                      <Link href={`${props.base}/impact?file=${encodeURIComponent(mod)}`}>{mod}</Link>
+                      <Link href={fileLink(mod)}>{mod}</Link>
                     </li>
                   ))}
                 </ul>

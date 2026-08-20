@@ -21,6 +21,7 @@ import { isDemoMode } from '../../../lib/demoMode';
 import { type RevisionRow } from '../../../lib/history';
 import {
   REVISION_QUERY_KEY,
+  matchRevisionValue,
   parseRevisionQuery,
   revisionSelectLabel,
   withRevisionSha
@@ -259,14 +260,7 @@ export default function ArchitecturePage() {
     );
   }
 
-  const selectedRevisionValue =
-    revisionSha &&
-    revisions.find(
-      (row) =>
-        row.revisionSha === revisionSha ||
-        row.revisionSha.startsWith(revisionSha) ||
-        revisionSha.startsWith(row.revisionSha)
-    )?.revisionSha;
+  const selectedRevisionValue = matchRevisionValue(revisions, revisionSha);
 
   return (
     <DashboardLayout activeNav="architecture" canvasClass="canvas--diagram">

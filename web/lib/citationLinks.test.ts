@@ -13,6 +13,9 @@ describe('citationLinks', () => {
     expect(citationImpactHref('r1', 'web/lib/x.ts')).toBe(
       '/dashboard/r1/impact?file=web%2Flib%2Fx.ts'
     );
+    expect(citationImpactHref('r1', 'web/lib/x.ts', 'deadbeef')).toBe(
+      '/dashboard/r1/impact?file=web%2Flib%2Fx.ts&rev=deadbeef'
+    );
   });
 
   it('appends GitHub line anchors for file paths', () => {

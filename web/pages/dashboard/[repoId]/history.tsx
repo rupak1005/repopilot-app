@@ -10,7 +10,7 @@ import { DashboardLayout } from '../../../lib/dashboard';
 import { isDemoMode } from '../../../lib/demoMode';
 import { DEMO_HISTORY_HITS, DEMO_REVISIONS } from '../../../lib/demoData';
 import { formatIndexedAt, shortSha, type HistoryHit, type RevisionRow } from '../../../lib/history';
-import { architectureHref } from '../../../lib/revisionScope';
+import { architectureHref, impactHref } from '../../../lib/revisionScope';
 import { repoApiPath } from '../../../lib/serverApi';
 
 export default function HistoryPage() {
@@ -123,13 +123,22 @@ export default function HistoryPage() {
                     {formatIndexedAt(rev.indexedAt)}
                   </span>
                   {repoId ? (
-                    <Link
-                      className="ui-history-revision__link"
-                      href={architectureHref(repoId, rev.revisionSha)}
-                      title="Open dependency graph at this revision"
-                    >
-                      Graph
-                    </Link>
+                    <span className="ui-history-revision__links">
+                      <Link
+                        className="ui-history-revision__link"
+                        href={architectureHref(repoId, rev.revisionSha)}
+                        title="Open dependency graph at this revision"
+                      >
+                        Graph
+                      </Link>
+                      <Link
+                        className="ui-history-revision__link"
+                        href={impactHref(repoId, { revisionSha: rev.revisionSha })}
+                        title="Open impact analysis at this revision"
+                      >
+                        Impact
+                      </Link>
+                    </span>
                   ) : null}
                 </li>
               ))}

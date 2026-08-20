@@ -45,7 +45,7 @@ import { useDiagramColors } from '../../lib/diagramTheme';
 import { isDemoMode } from '../../lib/demoMode';
 import { githubModuleUrl, moduleSearchQuery } from '../../lib/modulePaths';
 import { repoApiPath } from '../../lib/serverApi';
-import { withRevisionSha } from '../../lib/revisionScope';
+import { impactHref, withRevisionSha } from '../../lib/revisionScope';
 import { toMermaidFlowchart } from '../../lib/mermaidDiagram';
 import { MermaidDiagram, type MermaidDiagramHandle } from './MermaidDiagram';
 import { IconButton } from './IconButton';
@@ -140,9 +140,9 @@ function DiagramInspector({
     repoId && !isCluster
       ? `/dashboard/${repoId}/search?q=${encodeURIComponent(moduleSearchQuery(selectedNode.id))}`
       : null;
-  const impactHref =
+  const impactHrefValue =
     repoId && !isCluster
-      ? `/dashboard/${repoId}/impact?file=${encodeURIComponent(selectedNode.id)}`
+      ? impactHref(repoId, { file: selectedNode.id, revisionSha: scopedRevisionSha })
       : null;
 
   async function openOnGitHub() {
@@ -248,8 +248,8 @@ function DiagramInspector({
               {expandingNeighborhood ? 'Expanding…' : 'Expand neighborhood'}
             </button>
           ) : null}
-          {impactHref ? (
-            <a className="ui-diagram__action" href={impactHref}>
+          {impactHrefValue ? (
+            <a className="ui-diagram__action" href={impactHrefValue}>
               <Crosshair size={14} weight="bold" aria-hidden />
               Show impact
             </a>

@@ -1,16 +1,31 @@
 import Link from 'next/link';
+import { impactHref } from '../../lib/revisionScope';
 
 type ImpactBlastMapProps = {
   target: string;
   directDependents: string[];
   transitiveDependents: string[];
   outboundImports: string[];
+  /** Dashboard base `/dashboard/:repoId` — used when repoId is not set. */
   baseHref: string;
+  repoId?: string | null;
+  revisionSha?: string | null;
 };
 
 function shortName(path: string): string {
   const parts = path.split('/');
   return parts.length <= 2 ? path : parts.slice(-2).join('/');
+}
+
+function fileImpactLink(
+  mod: string,
+  baseHref: string,
+  repoId?: string | null,
+  revisionSha?: string | null
+): string {
+  if (repoId) return impactHref(repoId, { file: mod, revisionSha });
+  const rev = revisionSha ? `&rev=${encodeURIComponent(revisionSha)}` : '';
+  return `${baseHref}/impact?file=${encodeURIComponent(mod)}${rev}`;
 }
 
 /** Lightweight blast-radius map — no canvas dependency. */
@@ -19,7 +34,9 @@ export function ImpactBlastMap({
   directDependents,
   transitiveDependents,
   outboundImports,
-  baseHref
+  baseHref,
+  repoId,
+  revisionSha = null
 }: ImpactBlastMapProps) {
   const direct = directDependents.slice(0, 8);
   const transitive = transitiveDependents.slice(0, 6);
@@ -55,7 +72,11 @@ export function ImpactBlastMap({
           ) : (
             direct.map((mod) => (
               <li key={mod}>
-                <Link className="mono" href={`${baseHref}/impact?file=${encodeURIComponent(mod)}`} title={mod}>
+                <Link
+                  className="mono"
+                  href={fileImpactLink(mod, baseHref, repoId, revisionSha)}
+                  title={mod}
+                >
                   {shortName(mod)}
                 </Link>
               </li>
@@ -70,7 +91,7 @@ export function ImpactBlastMap({
                 <li key={mod}>
                   <Link
                     className="mono ui-impact-blast__muted"
-                    href={`${baseHref}/impact?file=${encodeURIComponent(mod)}`}
+                    href={fileImpactLink(mod, baseHref, repoId, revisionSha)}
                     title={mod}
                   >
                     {shortName(mod)}
