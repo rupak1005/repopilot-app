@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { File } from '@phosphor-icons/react';
 import { hotspotScoreClass } from '../../lib/metrics';
 import type { HotspotRow } from '../../lib/types';
@@ -6,9 +7,15 @@ import { EmptyState } from './EmptyState';
 type HotspotListProps = {
   hotspots: HotspotRow[];
   emptyMessage?: string;
+  repoId?: string | null;
 };
 
-export function HotspotList({ hotspots, emptyMessage = 'No hotspot data yet.' }: HotspotListProps) {
+function metricTag(label: string, value: number | undefined): string | null {
+  if (value == null || value <= 0) return null;
+  return `${value} ${label}`;
+}
+
+export function HotspotList({ hotspots, emptyMessage = 'No hotspot data yet.', repoId }: HotspotListProps) {
   if (hotspots.length === 0) {
     return (
       <EmptyState compact className="ui-hotspot-empty" icon={File} title={emptyMessage} />
@@ -19,12 +26,27 @@ export function HotspotList({ hotspots, emptyMessage = 'No hotspot data yet.' }:
     <div className="ui-hotspot-list">
       {hotspots.map((hotspot) => {
         const color = hotspotScoreClass(hotspot.score);
+        const extras = [
+          metricTag('dependents', hotspot.dependentCount),
+          metricTag('co-changes', hotspot.coChangeCount),
+          metricTag('review findings', hotspot.findingsCount)
+        ].filter((tag): tag is string => Boolean(tag));
+        const href = repoId
+          ? `/dashboard/${repoId}/impact?file=${encodeURIComponent(hotspot.filePath)}`
+          : null;
+
         return (
           <div key={hotspot.filePath} className="ui-hotspot-item">
             <div className="ui-hotspot-row">
               <div className="ui-hotspot-file">
                 <File size={16} weight="light" aria-hidden />
-                <span className="mono">{hotspot.filePath}</span>
+                {href ? (
+                  <Link href={href} className="mono ui-hotspot-file-link">
+                    {hotspot.filePath}
+                  </Link>
+                ) : (
+                  <span className="mono">{hotspot.filePath}</span>
+                )}
               </div>
               <span className="ui-hotspot-score" style={{ color }}>
                 {hotspot.score.toFixed(hotspot.score >= 10 ? 0 : 1)} pts
@@ -43,6 +65,11 @@ export function HotspotList({ hotspots, emptyMessage = 'No hotspot data yet.' }:
                 </span>
               ))}
               <span className="ui-hotspot-tag">{hotspot.changeCount} changes</span>
+              {extras.map((tag) => (
+                <span key={tag} className="ui-hotspot-tag">
+                  {tag}
+                </span>
+              ))}
             </div>
           </div>
         );

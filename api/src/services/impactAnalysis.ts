@@ -27,7 +27,7 @@ export type ImpactAnalysisResult = {
 
 /** Detect test modules across TS/JS, Python, and Go — the languages we index. */
 export function isTestFile(filePath: string): boolean {
-  const lower = filePath.toLowerCase().replaceAll('\\', '/');
+  const lower = filePath.toLowerCase().split('\\').join('/');
   const base = lower.slice(lower.lastIndexOf('/') + 1);
   return (
     lower.includes('/__tests__/') ||

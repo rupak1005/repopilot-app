@@ -26,7 +26,10 @@ export default function HotspotsPage() {
       <div className="canvas-inner">
         <div className="page-title-block">
           <h1>Hotspots</h1>
-          <p>Files with the highest change churn.</p>
+          <p>
+            Ranked by churn, dependents, co-change, and review findings — not change count
+            alone. Open a file to see blast radius.
+          </p>
         </div>
 
         {error ? <ErrorBanner>{error}</ErrorBanner> : null}
@@ -39,6 +42,7 @@ export default function HotspotsPage() {
         >
           <HotspotList
             hotspots={hotspots}
+            repoId={repoId}
             emptyMessage="No hotspot data yet — run history ingest on the API."
           />
         </BentoPanel>

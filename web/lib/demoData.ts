@@ -75,30 +75,45 @@ export const DEMO_HOTSPOTS: HotspotRow[] = [
     filePath: 'api/src/server.ts',
     score: 92.4,
     changeCount: 38,
+    dependentCount: 14,
+    coChangeCount: 9,
+    findingsCount: 4,
     reasons: ['high churn', 'many dependents']
   },
   {
     filePath: 'web/lib/dashboard.tsx',
     score: 78.1,
     changeCount: 24,
+    dependentCount: 8,
+    coChangeCount: 5,
+    findingsCount: 1,
     reasons: ['recent edits', 'shared module']
   },
   {
     filePath: 'api/src/services/codebaseQa.ts',
     score: 65.3,
     changeCount: 17,
+    dependentCount: 3,
+    coChangeCount: 4,
+    findingsCount: 2,
     reasons: ['AI surface']
   },
   {
     filePath: 'web/components/AppShell.tsx',
     score: 54.8,
     changeCount: 14,
+    dependentCount: 6,
+    coChangeCount: 2,
+    findingsCount: 0,
     reasons: ['UI churn']
   },
   {
     filePath: 'common/src/github.ts',
     score: 41.2,
     changeCount: 9,
+    dependentCount: 11,
+    coChangeCount: 1,
+    findingsCount: 0,
     reasons: ['stable core']
   }
 ];

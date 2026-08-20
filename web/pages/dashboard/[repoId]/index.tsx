@@ -145,7 +145,7 @@ export default function OverviewPage() {
           </BentoPanel>
 
           <BentoPanel title="Code Hotspots">
-            <HotspotList hotspots={hotspots} />
+            <HotspotList hotspots={hotspots} repoId={repoId} />
           </BentoPanel>
         </div>
       </div>
