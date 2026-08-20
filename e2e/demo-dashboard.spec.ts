@@ -46,8 +46,9 @@ test.describe('demo dashboard — 100% nav coverage', () => {
 
   test('search returns demo hits', async ({ page }) => {
     await page.goto(`/dashboard/${DEMO_REPO_ID}/search`);
-    await page.getByLabel('Search query').fill('sync');
-    await page.getByRole('button', { name: 'Search' }).click();
+    const input = page.getByLabel('Search query');
+    await input.fill('sync');
+    await input.press('Enter');
     await expect(page.locator('.ui-search-hit').first()).toBeVisible({
       timeout: 15_000
     });
