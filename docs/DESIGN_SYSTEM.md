@@ -1,4 +1,4 @@
-# Design System — Phase 1
+# Design System
 
 **Authoritative tokens:** `web/styles/tokens.css`  
 **Layers:** A brand shell · B engineering workspace · C canvas overlays (`neo-panels.css`)

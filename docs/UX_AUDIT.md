@@ -1,71 +1,40 @@
-# UX Audit — Phase 0
+# UX Audit
 
-**Date:** 2026-08-20  
+**Updated:** 2026-08-20  
 **Scope:** Cross-feature UX, IA, a11y, empty/loading/error
 
-## What exists
-
-| Pattern | Status |
-|---------|--------|
-| Neo-brutalist shell + mobile drawer | Real |
-| Index progress float + stages | Real |
-| EmptyState / ErrorBanner / IndexHint / Toast | Real |
-| Cross-links graph → impact / search / GitHub | Real |
-| Ask citations (file + lines) | Real (interactive open limited) |
-| Topbar Activity + contextual Help | In progress (local) |
-| Dark mode | Real |
-| Reduced motion | Partial coverage |
-
-## Information architecture gaps (vs prompt Phase 2)
-
-Current flat nav:
+## Information architecture (current)
 
 ```text
-Overview, Search, Ask, PRs, Hotspots, Architecture, Impact, Settings
-```
-
-Target grouped IA:
-
-```text
-Understand → Architecture, Dependency Graph, Topography, Search, Docs
-Investigate → Impact, Ask, History, Hotspots
+Understand → Dependency Graph, Topography, Search, Wiki
+Investigate → Impact, Ask, History
 Change → Planning, PRs, Findings
 Integrate → MCP
-System → Indexing, Settings
+System → Settings (+ index health)
 ```
 
-Missing surfaces: Findings shipped (Phase 20). Wiki foundation shipped (Phase 25). Planning foundation shipped (Phase 26 — hotspot candidates). Deeper wiki render / persisted briefs still later.
-## Progressive disclosure
+Cmd+K covers the same routes. Revision pickers live on Graph / Impact / Wiki where scoped.
 
-- Graph starts with capped overview — good instinct, bad hard cap
-- Impact dumps lists — OK for v1, needs progressive “why”
-- Ask is conversation-first — good
+## Patterns that work
 
-## Accessibility gaps
+| Pattern | Notes |
+|---------|--------|
+| Neo-brutalist shell + mobile drawer | Real; drawer focus restore |
+| Index progress float | Real |
+| EmptyState / ErrorBanner / IndexHint / Toast | Real (not every page uses EmptyState yet) |
+| Citation → Graph / Impact / GitHub | Ask, Search, PR evidence, Findings |
+| Skip link + `#main-content` | Dashboard, public, docs |
+| Graph Jump-to + reduced-motion pans | Architecture |
+| Mobile graph inspector | Bottom sheet under 960px |
 
-- Force-graph largely pointer-driven → **mitigated** with Jump-to module select (Phase 15)
-- Some table rows are click-only → **fixed** for PR tables (Enter / Space)
-- Touch targets generally OK (≥40px on buttons)
-- Focus rings present via `focus-audit.css`
-- Skip link + main landmark added (Phase 15)
-- Mobile drawer focuses on open and restores toggle on close
+## Remaining UX debt
 
-## Empty / error / loading
+1. Mixed EmptyState vs plain `.empty-state` text across pages
+2. Ask failures sometimes surface raw API strings
+3. Empty Impact could spell out “what we checked”
+4. Force-graph remains primarily pointer-driven (mitigated by Jump-to + sheet)
 
-| Good | Debt |
-|------|------|
-| Architecture index-in-progress messaging | Mixed EmptyState vs plain text |
-| Ask thinking bubble | Failures sometimes raw API strings |
-| IndexHint when not indexed | No “what we checked” on empty impact |
+## Deferred product depth
 
-## Migration plan
-
-1. Restructure nav groups without removing routes (aliases OK)
-2. Cmd+K command palette over existing routes
-3. Revision bar: repo + SHA + index state (data already on index status)
-4. Citation actions: open graph / impact / GitHub — **done** (Ask, Search, PR evidence)
-5. Mobile: inspector → bottom sheet for graph — **done** (Phase 31)
-
-## Risk
-
-IA churn confuses existing users — ship with redirects and “What’s new” once.
+- Persisted Planning briefs
+- Wiki search-within-bodies / ownership overlays on wiki pages

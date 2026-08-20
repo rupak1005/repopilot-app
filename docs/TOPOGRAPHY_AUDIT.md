@@ -1,6 +1,6 @@
-# Topography Audit — Phase 0
+# Topography Audit
 
-**Date:** 2026-08-20  
+**Updated:** 2026-08-20  
 **Scope:** Codebase topography / hotspot landscape
 
 ## What exists
@@ -8,35 +8,21 @@
 | Piece | Status | Location |
 |-------|--------|----------|
 | Hotspot scores | Real | `ModuleHotspot` via `historyIngest.ts` |
-| Topography page | 2D directory clusters + ranked list (`topK=40`) | `hotspots.tsx`, `TopographyMap.tsx` |
-| Graph stroke | Hotspot nodes painted orange | `ArchitectureGraph.tsx` |
-| Overview tiles | Mentions hotspots (still `topK=5`) | overview bento |
+| Topography page | 2D directory clusters + ranked list | `/hotspots`, `TopographyMap.tsx` |
+| Metrics | Score / churn / dependents / findings | Topography toggles |
+| Lookback | 7d / 30d / 90d / 1y (`windowDays`) | Hotspots API + UI |
+| Graph stroke | Hotspot nodes painted | `ArchitectureGraph.tsx` |
+| Planning feed | Hotspots → change candidates | `/planning` |
 
-## What is mocked
+## Mocked
 
 - Demo hotspot fixtures in `demoData.ts`
 
-## What is real
+## Explicitly deferred
 
-- Formula: `changeCount * log(1+dependents) * (1+coChange) * (1+findings)` over selectable window (7/30/90/365d)
-- Human-readable `reasons[]`
-- Links into Impact
-- 2D cluster map sized/colored by hotspot score
-- Metric toggles + lookback window on Topography
+- **3D topography** — not in v1; 2D map is the product landscape
 
-## Gaps vs world-class Topography
+## Remaining debt
 
-- No 3D mode — **deferred permanently for v1** (Phase 35); 2D topography is the product default
-- Hotspots are repo-scoped, not revision-scoped; non-30d windows recompute churn live
-
-## Migration plan (Phase 6)
-
-1. **Started:** 2D directory-cluster topography on `/hotspots` (Topography) with `topK=40`
-2. Metric toggles without inventing fake complexity
-3. Time window lookback (live churn for non-30d)
-4. Keep 3D optional and metric-mapped only
-5. Benchmark large repos before claiming landscape UX
-
-## Risk
-
-Medium — a pretty map without trustworthy scores is worse than a ranked list. Current blocks are driven only by existing `ModuleHotspot` scores.
+- Hotspots are repo-scoped, not fully revision-scoped; non-30d windows recompute churn live
+- Large-repo landscape UX still needs production benchmarking

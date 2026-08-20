@@ -35,7 +35,6 @@ import '../styles/architecture.css';
 import '../styles/pr-detail.css';
 import '../styles/mcp-connect.css';
 import '../styles/history.css';
-import '../styles/surface-stub.css';
 import '../styles/findings.css';
 import '../styles/wiki.css';
 import '../styles/planning.css';

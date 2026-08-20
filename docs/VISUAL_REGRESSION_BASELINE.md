@@ -1,58 +1,40 @@
-# Visual Regression Baseline — Phase 0
+# Visual Regression Baseline
 
-**Date:** 2026-08-20  
-**Purpose:** Snapshot inventory before world-class redesign work.
+**Updated:** 2026-08-20  
+**Purpose:** Keep flagship chrome from regressing without a hosted visual SaaS.
 
-## Captured product surfaces (manual / e2e)
+## Surfaces worth watching
 
-| Surface | Route | Notes |
-|---------|-------|-------|
-| Landing | `/` | Layer A marketing neo |
-| Login | `/login` | OAuth |
-| Browse | `/browse` | Public repos |
-| Overview | `/dashboard/:id` | Bento + KPIs |
-| Architecture | `/dashboard/:id/architecture` | Force + Mermaid |
-| Impact | `/dashboard/:id/impact` | Lists + KPIs |
-| Hotspots | `/dashboard/:id/hotspots` | List only |
-| Ask | `/dashboard/:id/ask` | Chat |
-| Search | `/dashboard/:id/search` | Hits |
-| PRs | `/dashboard/:id/pulls` | Table |
-| Settings | `/dashboard/:id/settings` | Meta |
-| MCP | `/mcp`, `/dashboard/:id/mcp` | Connect panel |
-| Docs | `/docs/*` | Prose |
+| Surface | Route |
+|---------|-------|
+| Landing | `/` |
+| Architecture | `/dashboard/:id/architecture` |
+| Impact | `/dashboard/:id/impact` |
+| Topography | `/dashboard/:id/hotspots` |
+| Wiki | `/dashboard/:id/wiki` |
+| Findings | `/dashboard/:id/findings` |
+| Ask | `/dashboard/:id/ask` |
+| Shell (mobile) | any dashboard @ 390px |
 
-## Automated coverage today
+## Automated coverage
 
-- Playwright: `e2e/demo-dashboard.spec.ts` (demo mode nav smoke)
-- Playwright: `e2e/visual-baseline.spec.ts` — landing / architecture / impact screenshots (Phase 32)
-- No Percy/Chromatic/storybook visual suite yet
+- `e2e/demo-dashboard.spec.ts` — demo nav smoke
+- `e2e/visual-baseline.spec.ts` — landing / architecture / impact screenshots (committed PNGs)
 
-## Baseline visual DNA to preserve
-
-- Lavender surfaces, 2–3px black borders, hard offset shadows
-- Mono for technical labels; sans for UI
-- Diagram quiet canvas (`--diagram-*` tokens)
-- Dark theme dedicated (not invert)
-
-## Gaps to photograph after each phase
-
-1. Shell (desktop + 390px mobile)
-2. Architecture selection + inspector
-3. Impact risk panel
-4. Future topography 2D
-5. Ask citation chip expanded
-6. Dark mode variants of 1–5
-
-## Process
-
-Update snapshots with:
+Update baselines:
 
 ```bash
 yarn playwright test e2e/visual-baseline.spec.ts --update-snapshots=changed
 ```
 
-Until a hosted visual tool is added, committed Playwright baselines under `e2e/visual-baseline.spec.ts-snapshots/` are the source of truth for shell/graph/impact chrome.
+## Design DNA to preserve
 
-## Risk
+- Hard borders + offset shadows (neo layers)
+- Mono for paths / SHAs; display font for page titles
+- Quiet diagram canvas (`--diagram-*` tokens)
+- Dedicated dark theme (not inverted light)
 
-Without tooling, regressions slip — **mitigated** by Phase 32 soft screenshot baselines in CI (`yarn test:e2e`).
+## Deferred
+
+- Percy / Chromatic / Storybook visual suite
+- Dark-mode + mobile screenshot matrix in CI

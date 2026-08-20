@@ -1,250 +1,44 @@
 # Product Implementation Status
 
-**Master prompt:** RepoPilot World-Class Product + UI/UX Implementation  
-**Started:** 2026-08-20
-
-## Phase status
-
-| Phase | Name | Status |
-|------:|------|--------|
-| 0–3 | Audits, design system, shell, context graph | **Done** |
-| 4 | Real dependency graph | **Done foundation** — clusters, path, neighborhood, cycles |
-| 5 | Impact analysis | **Done foundation** — file / symbol / PR + blast overlay |
-| 6 | Codebase topography | **Done foundation** — 2D map + metrics + lookback |
-| 7 | Ask / Search UX | **Done foundation** — citation Graph / Impact / GitHub |
-| 8 | PR / Change workflow | **Done foundation** — file links, finding filters |
-| 9 | MCP / Integrate | **Done foundation** — tool examples + dashboard links |
-| 10 | History / revisions | **Done foundation** — revisions list + history search |
-| 11 | Settings / indexing | **Done foundation** — index health + re-index |
-| 12 | Overview polish | **Done foundation** — pulse + quick actions |
-| 13 | Docs / onboarding | **Done foundation** — checklist + tour refresh |
-| 14 | Landing / marketing | **Done foundation** — brand hero + how-it-works |
-| 15 | Accessibility / motion | **Done foundation** — skip link, landmarks, keyboard rows |
-| 16 | Revision-scoped graph | **Done foundation** — `?rev=` + History deep links |
-| 17 | Universal search | **Done foundation** — code + history scopes |
-| 18 | Impact revision deep links | **Done foundation** — `?rev=` on Impact + citations |
-| 19 | Planning / Wiki stubs | **Done foundation** — nav + roadmap stubs |
-| 20 | Findings surface | **Done foundation** — repo-wide severity board |
-| 21 | ELK System View | **Done foundation** — Flow / System layout toggle |
-| 22 | Graph minimap | **Done foundation** — overview + click-to-pan |
-| 23 | Graph share deep links | **Done foundation** — `?layout=` + Copy link |
-| 24 | Tsconfig path aliases | **Done foundation** — indexed `paths` at graph build |
-| 25 | Wiki (indexed docs) | **Done foundation** — markdown / ADR board |
-| 26 | Planning candidates | **Done foundation** — hotspot → Impact/Graph |
-| 27 | Wiki inline reader | **Done foundation** — `?path=` + markdown render |
-| 28 | Findings board polish | **Done foundation** — category + search filters |
-| 29 | Impact calibration | **Done foundation** — golden risk/confidence cases |
-| 30 | Impact handoff | **Done foundation** — Planning / MCP / Graph exits |
-| 31 | Mobile graph sheet | **Done foundation** — inspector bottom sheet |
-| 32 | Visual baseline e2e | **Done foundation** — Playwright screenshots |
-| 33 | Context pack handoff | **Done foundation** — copy `get_context_pack` |
-| 34 | CODEOWNERS ownership | **Done foundation** — Impact owners panel |
-| 35 | Program close | **Done** — 3D deferred; tracker complete |
-
-## Phase 5
-
-- [x] File impact risk factors + confidence + blast overlay
-- [x] PR impact aggregation
-- [x] Symbol impact (`symbolName` / `symbolId`) with callers + cycle signal
-- [x] Canvas ArchitectureGraph blast overlay (`?file=&blast=1`)
-
-## Phase 6
-
-- [x] 2D topography clusters
-- [x] Metric toggles: hotspot score / churn / dependents / findings
-- [x] Time window lookback (7d / 30d / 90d / 1y) via `windowDays`
-- [x] Optional 3D — **deferred** (Phase 35; 2D remains the product surface)
-
-## Phase 4 extras
-
-- [x] Module cycle inspector (`graph?op=cycles`)
-- [x] `@/` import alias resolve at graph build (package-root heuristic)
-- [x] Full `tsconfig` / `jsconfig` `paths` resolve at graph build
-
-## Phase 7
-
-- [x] Citation actions: Graph / Impact / GitHub (Ask, Search, PR evidence)
-- [ ] History time machine surface (deferred) → **started as Phase 10**
-- [x] Universal search merge → **Phase 17**
-
-## Phase 8
-
-- [x] PR changed files → Impact + Graph (blast) deep links
-- [x] Similar PRs link to pull detail
-- [x] Findings severity filter (All / High / Medium / Low)
-- [x] Test signals link to file impact when path-like
-- [x] Re-fetch live pull impact after manual review
-
-## Phase 9
-
-- [x] MCP tool examples filled with current repo id
-- [x] Per-tool “Open in dashboard” links
-- [x] Copy repo id + clearer agent-oriented copy
-
-## Phase 10
-
-- [x] History page: indexed revisions timeline
-- [x] Commit / PR history search (`search/history`)
-- [x] Nav + Cmd+K entry under Investigate
-- [x] Per-revision graph switch (Architecture `?rev=` + History Graph links)
-
-## Phase 11
-
-- [x] Index health panel (state, SHA, file/symbol counts, last error)
-- [x] Re-index button wired to `/api/repositories/:id/index` + progress float
-- [x] Copy RepoPilot ID + links to History / MCP
-- [x] IndexHint mentions Settings re-index
-
-## Phase 12
-
-- [x] Overview pulse from live index status + PR/hotspot counts
-- [x] Quick actions: Ask, Search, Graph, Impact, History
-- [x] Hotspots panel link to Topography; Settings deep link
-- [x] Differentiator MCP copy de-branded to agents
-
-## Phase 13
-
-- [x] First-run onboarding checklist on Getting started
-- [x] Dashboard tour updated for Graph / Topography / History / Settings / citations
-- [x] Docs nav + MCP page titled for agents; API reference covers new query ops
-- [x] Introduction links to MCP docs
-
-## Phase 14
-
-- [x] Brand-first landing hero (RepoPilot + headline + analyze CTA)
-- [x] How-it-works section (paste → index → investigate)
-- [x] Differentiators moved below the fold; docs/MCP footer links
-- [x] Shared landing copy module + tests
-
-## Phase 15
-
-- [x] Skip-to-main link on dashboard, public pages, and docs
-- [x] `#main-content` landmark + focus restore for mobile nav drawer
-- [x] Keyboard-activatable PR table rows (Enter / Space)
-- [x] Graph “Jump to” module select + reduced-motion camera pans
-- [x] Index status `aria-live` + dialog `aria-labelledby`
-
-## Phase 16
-
-- [x] Architecture revision picker (`?rev=`) over indexed revisions
-- [x] Architecture / cycles / impact / neighborhood / path scoped by `revisionSha`
-- [x] History “Graph” links open the matching revision
-- [x] Shared `revisionScope` helpers + tests
-
-## Phase 17
-
-- [x] Search page runs code + history queries together
-- [x] All / Code / History scope tabs with counts (`?scope=`)
-- [x] Shared `universalSearch` helpers + tests
-
-## Phase 18
-
-- [x] Impact page revision picker + `revisionSha` on file / symbol / PR analyze
-- [x] `impactHref` / citation Graph+Impact preserve `?rev=`
-- [x] History revision row: Graph + Impact deep links
-- [x] Blast map / graph handoff keep the selected SHA
-
-## Phase 19
-
-- [x] Planning stub under Change (roadmap + Impact / Topography / PRs exits)
-- [x] Wiki stub under Understand (roadmap + Ask / Graph / Docs exits)
-- [x] Nav + Cmd+K + help tips for both surfaces
-- [x] Shared `surfaceStubs` helpers + tests
-
-## Phase 20
-
-- [x] `GET /findings` — latest-review findings across PRs
-- [x] Findings page with severity filters (`?severity=`) + PR deep links
-- [x] Demo flatten of PR findings; nav under Change
-- [x] Shared `findings` helpers + API/web tests
-
-## Phase 21
-
-- [x] `elkjs` layered layout (`layoutWithElk`) for hierarchical System View
-- [x] Architecture Flow (dagre) / System (ELK) toggle; dagre fallback on ELK failure
-- [x] Loading state while System View computes
-- [x] Unit test for pinned ELK positions
-
-## Phase 22
-
-- [x] Interactive ArchitectureGraph minimap (node dots + viewport frame)
-- [x] Camera sync via force-graph `onZoom`; click/Enter to `centerAt`
-- [x] Shared `graphMinimap` helpers + unit tests
-
-## Phase 23
-
-- [x] Architecture `?layout=system|flow` deep link (ELK / dagre)
-- [x] Selection sync to `?file=` + Copy share link control
-- [x] `architectureHref` / `architectureRouteQuery` preserve layout with rev/blast
-
-## Phase 24
-
-- [x] Parse indexed `tsconfig` / `jsconfig` `compilerOptions.paths`
-- [x] Prefer alias targets when resolving JS/TS module edges
-- [x] Keep `@/` package-root heuristic as fallback
-- [x] Unit tests for parse / expand / resolve
-
-## Phase 25
-
-- [x] `GET /wiki` — indexed `.md`/`.mdx` pages with ADR/docs/readme kind
-- [x] Wiki page with kind filters, GitHub / Ask / Search exits
-- [x] Demo wiki fixture; revisionSha support via BFF
-- [x] Shared wiki helpers + API/web tests
-
-## Phase 26
-
-- [x] Planning board ranked from topography hotspots
-- [x] Per-candidate Impact / Graph blast / PRs exits + optional `?file=` seed
-- [x] Shared `planning` helpers + unit tests
-
-## Phase 27
-
-- [x] `GET /wiki?path=` returns full indexed markdown body
-- [x] Wiki inline reader (`?path=` + `?rev=`) with dependency-free markdown blocks
-- [x] Demo page bodies + reader deep links (`wikiHref`)
-
-## Phase 28
-
-- [x] Findings category chips + `?q=` text search over title/file/PR
-- [x] Evidence citations carry PR `headRevision` into Graph / Impact links
-- [x] Shared board filter helpers + tests
-
-## Phase 29
-
-- [x] Golden `impactCalibration` scenarios for risk / confidence / factor ids
-- [x] `assertImpactCalibration` self-check + unit tests
-- [x] IMPACT_AUDIT migration item closed
-
-## Phase 30
-
-- [x] Impact file view handoff: Plan this change / MCP / Graph blast
-
-## Phase 31
-
-- [x] Architecture inspector becomes a fixed bottom sheet under 960px
-- [x] Grab handle + safe-area padding for touch
-
-## Phase 32
-
-- [x] Playwright `visual-baseline.spec.ts` for landing / architecture / impact
-- [x] Soft `maxDiffPixelRatio` for CI flake tolerance
-
-## Phase 33
-
-- [x] `mcpContextPackSnippet` + Copy context pack on Impact handoff
-- [x] MCP example uses `filePath` (matches tool schema)
-
-## Phase 34
-
-- [x] CODEOWNERS parse + last-match-wins path lookup
-- [x] `GET /ownership?path=` from indexed `CODEOWNERS` / `.github/CODEOWNERS` / `docs/CODEOWNERS`
-- [x] Impact Ownership panel with GitHub owner/team links + demo fixture
-
-## Phase 35
-
-- [x] Explicitly defer 3D topography (2D is the v1 landscape)
-- [x] World-class product tracker marked complete through Phase 35
-
-## Next action
-
-None — foundation program complete. Follow-ups: push when ready; optional ownership on graph inspector; hosted visual review (Percy/Chromatic).
+**Master prompt:** RepoPilot World-Class Product + UI/UX  
+**Status:** Phase 0–35 foundation **complete** (2026-08-20)
+
+## Shipped (current product)
+
+| Area | What’s live |
+|------|-------------|
+| Shell / IA | Grouped nav, Cmd+K, revision context, skip links, dark mode |
+| Graph | Clusters, path trace, neighborhood, cycles, Flow/System (ELK), minimap, shareable `?file=&blast=&rev=&layout=` |
+| Impact | File / symbol / PR modes, risk factors + confidence, blast map, handoff (Planning / MCP / context pack), CODEOWNERS |
+| Topography | 2D map, metric toggles, lookback windows |
+| Ask / Search | Citations → Graph / Impact / GitHub; universal code + history search |
+| Change | Planning candidates, Findings board (severity / category / `?q=`), PR workflow |
+| Wiki | Indexed markdown / ADRs, kind filters, inline reader (`?path=`) |
+| History | Revisions timeline + history search + deep links |
+| Integrate | MCP examples, `get_context_pack` clipboard handoff |
+| Quality | Impact calibration fixtures, Playwright visual baselines, a11y/motion passes |
+| Alias resolve | `@/` heuristic + indexed `tsconfig` / `jsconfig` `paths` |
+
+## Explicitly deferred
+
+- **3D topography** — 2D is the v1 landscape
+- Extra Context Graph node kinds (Test, PR, ADR, Owner as first-class graph nodes)
+- Hosted visual review (Percy / Chromatic) — soft Playwright baselines cover CI for now
+- Persisted named Planning briefs across sessions
+
+## Audit docs (living)
+
+| Doc | Role |
+|-----|------|
+| [GRAPH_AUDIT.md](./GRAPH_AUDIT.md) | Graph capabilities + remaining debt |
+| [IMPACT_AUDIT.md](./IMPACT_AUDIT.md) | Impact capabilities + remaining debt |
+| [TOPOGRAPHY_AUDIT.md](./TOPOGRAPHY_AUDIT.md) | Topography + deferred 3D |
+| [UX_AUDIT.md](./UX_AUDIT.md) | IA / a11y / empty states |
+| [UI_AUDIT.md](./UI_AUDIT.md) | Web stack + shell debt |
+| [VISUAL_REGRESSION_BASELINE.md](./VISUAL_REGRESSION_BASELINE.md) | Screenshot inventory + Playwright |
+
+## Follow-ups (optional)
+
+- Ownership chips on the graph inspector (Impact already shows CODEOWNERS)
+- Server-side overview for 10k+ node repos
+- Stricter empty/loading primitive consistency across pages
