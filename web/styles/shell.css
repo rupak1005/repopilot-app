@@ -465,6 +465,35 @@ a.topbar-activity__item:hover {
   margin-bottom: var(--space-6);
 }
 
+.ui-overview-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.ui-overview-pulse__headline {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-body);
+  font-weight: 700;
+}
+
+.ui-overview-pulse__detail {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-ui);
+  line-height: 1.45;
+}
+
+.ui-overview-pulse__settings {
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--color-link);
+  white-space: nowrap;
+}
+
 .ui-table-scroll {
   overflow-x: auto;
 }

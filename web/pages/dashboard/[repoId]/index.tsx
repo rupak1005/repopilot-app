@@ -1,7 +1,16 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { GitPullRequest, Lightning, MagnifyingGlass } from '@phosphor-icons/react';
+import {
+  ClockCounterClockwise,
+  Crosshair,
+  GitPullRequest,
+  Graph,
+  Lightning,
+  MagnifyingGlass
+} from '@phosphor-icons/react';
+import type { Icon } from '@phosphor-icons/react';
 import { BentoPanel } from '../../../components/ui/BentoPanel';
+import { Button } from '../../../components/ui/Button';
 import { DifferentiatorsStrip } from '../../../components/ui/DifferentiatorsStrip';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { ErrorBanner } from '../../../components/ui/ErrorBanner';
@@ -9,7 +18,6 @@ import { HotspotList } from '../../../components/ui/HotspotList';
 import { IndexHint } from '../../../components/ui/IndexHint';
 import { KpiTile } from '../../../components/ui/KpiTile';
 import { OutcomeIcon } from '../../../components/ui/OutcomeIcon';
-import { Button } from '../../../components/ui/Button';
 import { StatusBadge, reviewStatusVariant } from '../../../components/ui/StatusBadge';
 import {
   DashboardLayout,
@@ -19,6 +27,15 @@ import {
   useRepoData,
   useRepoIndexStatus
 } from '../../../lib/dashboard';
+import { OVERVIEW_ACTIONS, overviewPulse } from '../../../lib/overview';
+
+const ACTION_ICONS: Record<string, Icon> = {
+  ask: Lightning,
+  search: MagnifyingGlass,
+  architecture: Graph,
+  impact: Crosshair,
+  history: ClockCounterClockwise
+};
 
 export default function OverviewPage() {
   const router = useRouter();
@@ -35,37 +52,54 @@ export default function OverviewPage() {
     repoId,
     pendingIndexJobRepoId
   );
+  const pulse = overviewPulse({
+    indexStatus,
+    pullCount: pulls.length,
+    hotspotCount: hotspots.length
+  });
 
   return (
     <DashboardLayout activeNav="overview">
       <div className="canvas-inner">
+        <div className="page-title-block ui-overview-hero">
+          <div>
+            <h1>Overview</h1>
+            <p className="ui-overview-pulse__headline">{pulse.headline}</p>
+            <p className="ui-overview-pulse__detail">{pulse.detail}</p>
+          </div>
+          {base ? (
+            <Link className="ui-overview-pulse__settings" href={`${base}/settings`}>
+              Index settings →
+            </Link>
+          ) : null}
+        </div>
+
         {error ? <ErrorBanner>{error}</ErrorBanner> : null}
         {needsIndex ? <IndexHint /> : null}
         {loading ? <p className="empty-state">Loading repository data…</p> : null}
 
         {repoId ? (
           <DifferentiatorsStrip
-            title="RepoPilot depth"
+            title="Explore this repo"
             repoBase={base}
             className="diff-strip--dashboard"
           />
         ) : null}
 
-        <div className="ui-quick-actions">
-          <Button
-            variant="primary"
-            icon={<Lightning size={16} weight="fill" />}
-            onClick={() => void router.push(`${base}/ask`)}
-          >
-            Ask a question
-          </Button>
-          <Button
-            variant="secondary"
-            icon={<MagnifyingGlass size={16} weight="light" />}
-            onClick={() => void router.push(`${base}/search`)}
-          >
-            Search code
-          </Button>
+        <div className="ui-quick-actions" role="group" aria-label="Quick actions">
+          {OVERVIEW_ACTIONS.map((action) => {
+            const Icon = ACTION_ICONS[action.id] ?? Lightning;
+            return (
+              <Button
+                key={action.id}
+                variant={action.primary ? 'primary' : 'secondary'}
+                icon={<Icon size={16} weight={action.primary ? 'fill' : 'light'} />}
+                onClick={() => void router.push(`${base}${action.path}`)}
+              >
+                {action.label}
+              </Button>
+            );
+          })}
         </div>
 
         {analytics ? (
@@ -144,7 +178,10 @@ export default function OverviewPage() {
             )}
           </BentoPanel>
 
-          <BentoPanel title="Code Hotspots">
+          <BentoPanel
+            title="Code Hotspots"
+            action={<Link href={`${base}/hotspots`}>Topography</Link>}
+          >
             <HotspotList hotspots={hotspots} repoId={repoId} />
           </BentoPanel>
         </div>

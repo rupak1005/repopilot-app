@@ -54,8 +54,8 @@ export const REPO_PILOT_DIFFERENTIATORS: Differentiator[] = [
   },
   {
     id: 'mcp',
-    title: 'Cursor / MCP',
-    description: 'Step-by-step setup to connect Cursor or Claude Desktop.',
+    title: 'MCP for agents',
+    description: 'Connect IDE agents to search, impact, Ask, and context tools.',
     icon: 'mcp',
     path: '/mcp'
   }

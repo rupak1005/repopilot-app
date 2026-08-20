@@ -16,7 +16,8 @@
 | 9 | MCP / Integrate | **Done foundation** — tool examples + dashboard links |
 | 10 | History / revisions | **Done foundation** — revisions list + history search |
 | 11 | Settings / indexing | **Done foundation** — index health + re-index |
-| 12–35 | Remaining | Not started / partial |
+| 12 | Overview polish | **Done foundation** — pulse + quick actions |
+| 13–35 | Remaining | Not started / partial |
 
 ## Phase 5
 
