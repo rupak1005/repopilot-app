@@ -151,6 +151,29 @@
   margin-bottom: 0;
 }
 
+.docs-onboarding-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  color: var(--color-text);
+}
+
+.docs-onboarding-list > li {
+  margin: 0;
+  padding: var(--space-4);
+  border: var(--border-medium);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.docs-onboarding-list p {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-muted);
+}
+
 .docs-section a {
   color: var(--color-link);
   font-weight: 600;
