@@ -7,8 +7,8 @@
 
 | Role | Family | Token |
 |------|--------|-------|
-| Display / headings | Manrope | `--font-display` |
-| Body / UI | Hanken Grotesk | `--font-sans` |
+| Display / headings | Cabinet Grotesk | `--font-display` |
+| Body / UI | General Sans | `--font-sans` |
 | Technical | JetBrains Mono | `--font-mono` |
 
 Do not use monospace for ordinary prose.

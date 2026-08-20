@@ -82,8 +82,9 @@
   --secondary: var(--color-link);
 
   /* ——— Typography ——— */
-  --font-display: 'Manrope', system-ui, sans-serif;
-  --font-sans: 'Hanken Grotesk', system-ui, sans-serif;
+  /* Option C: Cabinet Grotesk (brand) + General Sans (UI) + JetBrains Mono */
+  --font-display: 'Cabinet Grotesk', system-ui, sans-serif;
+  --font-sans: 'General Sans', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
   /* Responsive type (~48→32 display, 32→24 heading, 16→15 body) */
   --text-display: clamp(2rem, 4vw + 1rem, 3rem);

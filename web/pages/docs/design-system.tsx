@@ -36,10 +36,10 @@ export default function DocsDesignSystemPage() {
       <DocsSection title="Typography">
         <ul>
           <li>
-            <strong>Display</strong> — Manrope via <code>--font-display</code>
+            <strong>Display</strong> — Cabinet Grotesk via <code>--font-display</code>
           </li>
           <li>
-            <strong>UI / body</strong> — Hanken Grotesk via <code>--font-sans</code>
+            <strong>UI / body</strong> — General Sans via <code>--font-sans</code>
           </li>
           <li>
             <strong>Technical</strong> — JetBrains Mono via <code>--font-mono</code> for inputs, tables, KPI labels

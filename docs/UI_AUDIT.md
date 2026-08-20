@@ -9,7 +9,7 @@
 |------|--------|----------|
 | Framework | Next.js 16 Pages Router, React 19 | `web/pages/` |
 | Design tokens | Semantic light/dark CSS vars, Layers A/B/C | `web/styles/tokens.css`, `neo-panels.css` |
-| Fonts | Manrope (display) · Hanken Grotesk (body) · JetBrains Mono | Design system |
+| Fonts | Cabinet Grotesk (display) · General Sans (body) · JetBrains Mono | Design system |
 | App shell | Grouped sidebar, topbar, mobile drawer, Cmd+K | `AppShell.tsx`, `shellNav.ts` |
 | Dashboard routes | overview, architecture, hotspots, search, wiki, impact, ask, history, planning, pulls, findings, settings, mcp | `web/pages/dashboard/[repoId]/` |
 | BFF proxy | Session-gated allowlist | `web/pages/api/repositories/[repoId]/[...path].ts` |
