@@ -31,6 +31,10 @@ import type { FileImpactAnalysis, PullImpactAnalysis, SymbolImpactAnalysis } fro
 
 type ImpactMode = 'file' | 'pull' | 'symbol';
 
+const DEMO_FILE = 'api/src/services/PaymentService.ts';
+const DEMO_SYMBOL = 'PaymentService';
+const DEMO_PULL = '42';
+
 function resolveImpactMode(query: {
   file?: string | string[];
   pull?: string | string[];
@@ -43,24 +47,25 @@ function resolveImpactMode(query: {
   return 'file';
 }
 
+function queryString(value: string | string[] | undefined): string | null {
+  return typeof value === 'string' && value.trim() ? value : null;
+}
+
 export default function ImpactPage() {
   const router = useRouter();
   const repoId = typeof router.query.repoId === 'string' ? router.query.repoId : null;
   const queryMode = resolveImpactMode(router.query);
+  const demo = isDemoMode();
   const initialFile =
-    typeof router.query.file === 'string' ? router.query.file : 'api/src/services/PaymentService.ts';
+    queryString(router.query.file) ?? (demo ? DEMO_FILE : '');
   const initialPull =
-    typeof router.query.pull === 'string'
-      ? router.query.pull
-      : typeof router.query.pullNumber === 'string'
-        ? router.query.pullNumber
-        : '42';
+    queryString(router.query.pull) ??
+    queryString(router.query.pullNumber) ??
+    (demo ? DEMO_PULL : '');
   const initialSymbol =
-    typeof router.query.symbol === 'string'
-      ? router.query.symbol
-      : typeof router.query.symbolName === 'string'
-        ? router.query.symbolName
-        : 'PaymentService';
+    queryString(router.query.symbol) ??
+    queryString(router.query.symbolName) ??
+    (demo ? DEMO_SYMBOL : '');
 
   const { pulls, analytics, hotspots, error: repoError, loading: repoLoading } = useRepoData(repoId);
   const indexStatus = useRepoIndexStatus(repoId);
@@ -315,34 +320,40 @@ export default function ImpactPage() {
   useEffect(() => {
     if (!repoId) return;
     if (queryMode === 'pull') {
-      void analyzePull(
-        typeof router.query.pull === 'string'
-          ? router.query.pull
-          : typeof router.query.pullNumber === 'string'
-            ? router.query.pullNumber
-            : '42'
-      );
+      const pull =
+        queryString(router.query.pull) ??
+        queryString(router.query.pullNumber) ??
+        (demo ? DEMO_PULL : null);
+      if (pull) void analyzePull(pull);
+      else {
+        setPullResult(null);
+        setError(null);
+      }
       return;
     }
     if (queryMode === 'symbol') {
-      void analyzeSymbol(
-        typeof router.query.symbol === 'string'
-          ? router.query.symbol
-          : typeof router.query.symbolName === 'string'
-            ? router.query.symbolName
-            : 'PaymentService'
-      );
+      const symbol =
+        queryString(router.query.symbol) ??
+        queryString(router.query.symbolName) ??
+        (demo ? DEMO_SYMBOL : null);
+      if (symbol) void analyzeSymbol(symbol);
+      else {
+        setSymbolResult(null);
+        setError(null);
+      }
       return;
     }
-    void analyzeFile(
-      typeof router.query.file === 'string'
-        ? router.query.file
-        : 'api/src/services/PaymentService.ts'
-    );
+    const file = queryString(router.query.file) ?? (demo ? DEMO_FILE : null);
+    if (file) void analyzeFile(file);
+    else {
+      setFileResult(null);
+      setError(null);
+    }
   }, [
     repoId,
     queryMode,
     revisionSha,
+    demo,
     router.query.file,
     router.query.pull,
     router.query.pullNumber,
@@ -485,7 +496,11 @@ export default function ImpactPage() {
                 className="ui-input"
                 value={filePath}
                 onChange={(event) => setFilePath(event.target.value)}
-                placeholder="api/src/services/PaymentService.ts"
+                placeholder={
+                  demo
+                    ? DEMO_FILE
+                    : hotspots[0]?.filePath ?? 'e.g. api/src/server.ts'
+                }
                 spellCheck={false}
               />
             ) : mode === 'symbol' ? (
@@ -494,7 +509,7 @@ export default function ImpactPage() {
                 className="ui-input"
                 value={symbolName}
                 onChange={(event) => setSymbolName(event.target.value)}
-                placeholder="PaymentService"
+                placeholder={demo ? DEMO_SYMBOL : 'e.g. startPublicRepositoryIndex'}
                 spellCheck={false}
               />
             ) : (
@@ -503,7 +518,7 @@ export default function ImpactPage() {
                 className="ui-input"
                 value={pullNumber}
                 onChange={(event) => setPullNumber(event.target.value)}
-                placeholder="42"
+                placeholder={demo ? DEMO_PULL : 'e.g. 12'}
                 inputMode="numeric"
               />
             )}
@@ -547,10 +562,18 @@ export default function ImpactPage() {
             }
             description={
               mode === 'file'
-                ? 'Try api/src/services/PaymentService.ts in demo mode.'
+                ? demo
+                  ? `Try ${DEMO_FILE} in demo mode.`
+                  : hotspots[0]?.filePath
+                    ? `Start with a hotspot like ${hotspots[0].filePath}, or paste any indexed module path.`
+                    : 'Paste a module path from Architecture, Search, or Hotspots.'
                 : mode === 'symbol'
-                  ? 'Try PaymentService in demo mode.'
-                  : 'Try pull 42 in demo mode.'
+                  ? demo
+                    ? `Try ${DEMO_SYMBOL} in demo mode.`
+                    : 'Enter an exported function, class, or type name from the index.'
+                  : demo
+                    ? `Try pull ${DEMO_PULL} in demo mode.`
+                    : 'Enter a GitHub pull request number for this repository.'
             }
           />
         ) : null}
