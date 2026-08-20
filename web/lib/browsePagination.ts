@@ -6,9 +6,12 @@ export function browsePageSize(): number {
   return PAGE_SIZE;
 }
 
+export function listTotalPages(totalCount: number, pageSize = PAGE_SIZE): number {
+  return Math.max(1, Math.ceil(Math.max(0, totalCount) / pageSize));
+}
+
 export function browseTotalPages(totalCount: number): number {
-  const capped = Math.min(totalCount, GITHUB_BROWSE_MAX);
-  return Math.max(1, Math.ceil(capped / PAGE_SIZE));
+  return listTotalPages(Math.min(totalCount, GITHUB_BROWSE_MAX));
 }
 
 /** Page numbers to render with optional ellipsis gaps. */
@@ -42,9 +45,14 @@ export function browseVisiblePages(current: number, total: number): Array<number
   return out;
 }
 
-export function browseResultRange(page: number, totalCount: number, itemCount: number): string {
+export function browseResultRange(
+  page: number,
+  totalCount: number,
+  itemCount: number,
+  pageSize = PAGE_SIZE
+): string {
   if (totalCount === 0 || itemCount === 0) return '0 results';
-  const start = (page - 1) * PAGE_SIZE + 1;
+  const start = (page - 1) * pageSize + 1;
   const end = start + itemCount - 1;
-  return `${start.toLocaleString()}–${end.toLocaleString()} of ${totalCount.toLocaleString()}`;
+  return `${start.toLocaleString()}-${end.toLocaleString()} of ${totalCount.toLocaleString()}`;
 }

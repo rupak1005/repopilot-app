@@ -52,6 +52,16 @@
   color: var(--color-text);
 }
 
+.ui-repos-filters {
+  grid-template-columns: 1fr 1fr;
+  margin-bottom: var(--space-5);
+  padding: var(--space-4);
+}
+
+.ui-repos-filters label:first-child {
+  grid-column: 1 / -1;
+}
+
 .ui-repos-grid {
   display: grid;
   gap: var(--space-3);

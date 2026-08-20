@@ -1,77 +1,104 @@
-# RepoPilot — local setup & test
+# RepoPilot — local setup
 
-## One-time prerequisites (Arch Linux)
+## Prerequisites
 
-Run these **once** in your terminal (requires sudo):
+- Node.js 20+ and Yarn 1.22
+- PostgreSQL 15 with **pgvector** (or Docker Compose)
+- Redis 7
+- Git
 
 ```bash
-# Option A — Docker (recommended)
-sudo pacman -S docker docker-compose
-sudo systemctl enable --now docker
-sudo usermod -aG docker "$USER"
-# log out/in so docker group applies, then:
-cd /home/deadlyr/repoPilot
+# Docker (recommended)
 docker compose up -d db redis
 
-# Option B — Native Postgres + Redis (no Docker)
-sudo pacman -S postgresql redis
-sudo systemctl enable --now postgresql redis
-sudo -u postgres psql -c "CREATE USER rp WITH PASSWORD 'secret' CREATEDB;"
-sudo -u postgres psql -c "CREATE DATABASE repopilot OWNER rp;"
-# pgvector for search (optional but needed for semantic search):
-sudo pacman -S postgresql-pgvector  # if available on your system
+# Or native Postgres + Redis — create DB/user, then:
+# CREATE EXTENSION IF NOT EXISTS vector;
 ```
 
-Env files (already created if you followed earlier steps):
-
-- `api/.env` — DATABASE_URL, REDIS_HOST, REDIS_PORT, PORT, REPO_CLONE_ROOT
-- `web/.env.local` — NEXT_PUBLIC_API_URL=http://localhost:3001
-
-## Automated setup + smoke test
+## Env files
 
 ```bash
-cd /home/deadlyr/repoPilot
+cp api/.env.example api/.env
+cp web/.env.example web/.env.local
+```
+
+Minimum local values:
+
+| File | Keys |
+|------|------|
+| `api/.env` | `DATABASE_URL`, Redis (`REDIS_HOST`/`REDIS_PORT` or `REDIS_URL`), `PORT=3001`, `INDEX_INLINE=true` |
+| `web/.env.local` | `NEXT_PUBLIC_API_URL=http://localhost:3001`, `SESSION_SECRET` (any long random string) |
+
+For Ask / PR review, set a chat provider (see [AI_PROVIDERS.md](./AI_PROVIDERS.md)). Recommended free stack:
+
+```env
+LLM_PROVIDER=groq
+GROQ_API_KEY=gsk_...
+GROQ_CHAT_MODEL=openai/gpt-oss-120b
+EMBEDDING_PROVIDER=local
+```
+
+## Run locally
+
+```bash
+yarn install
+yarn --cwd api prisma generate
+yarn --cwd api prisma migrate deploy
+
+# Terminal 1 — API (inline indexing OK with INDEX_INLINE=true)
+yarn --cwd api dev
+
+# Terminal 2 — web
+yarn --cwd web dev
+
+# Optional — background worker if INDEX_INLINE is false
+yarn --cwd api worker
+```
+
+- Web: http://localhost:3000  
+- API health: http://localhost:3001/health  
+
+**Demo UI without indexing:** set `NEXT_PUBLIC_DEMO_MODE=true` in `web/.env.local` and restart web.
+
+## Automated smoke setup
+
+```bash
 chmod +x scripts/setup-and-test.sh
-export TMPDIR="$PWD/.tmp"   # avoids /tmp ENOSPC on some systems
+export TMPDIR="$PWD/.tmp"
 ./scripts/setup-and-test.sh
 ```
 
-This script:
+Starts DB/Redis, migrates, builds API, indexes this repo, and hits health/search/ask.
 
-1. Starts Docker `db` + `redis` (or checks native services)
-2. Runs `yarn install`, Prisma migrate, API build
-3. Starts API + worker in the background
-4. Syncs this repo, builds graph, indexes search, ingests git history
-5. Hits `/health`, search, hotspots, ask endpoints
-
-Default test repository ID: `11111111-1111-1111-1111-111111111111`
-
-## Manual dev (3 terminals)
+## Index a GitHub repo
 
 ```bash
-# Terminal 1 — after db/redis are up
-yarn --cwd api prisma generate
-yarn --cwd api prisma migrate deploy
-yarn --cwd api dev
-
-# Terminal 2
-yarn --cwd api dev:worker
-
-# Terminal 3
-yarn --cwd web dev
+./scripts/index-repo.sh owner/repo
+# or warm landing chips:
+./scripts/preindex-examples.sh
 ```
 
-- API: http://localhost:3001/health  
-- Web: http://localhost:3000 (paste repo UUID from setup script)
-
-## Unit tests (no database required)
+## Quality checks
 
 ```bash
-export TMPDIR="$PWD/.tmp"
-yarn test
+yarn lint
+yarn type-check
+yarn build
+yarn test                 # unit (api + web + common)
+yarn test:coverage        # unit + coverage thresholds
+yarn test:e2e             # Playwright (demo-mode UI routes; needs build first)
+yarn ci                   # lint + type-check + build + coverage + e2e
 ```
 
-Integration tests need `TEST_DATABASE_URL` pointing at a migrated database.
+E2E expects a production web build with demo mode:
+
+```bash
+SESSION_SECRET=e2e-test-session-secret-32chars-minimum \
+NEXT_PUBLIC_DEMO_MODE=true \
+yarn build
+
+E2E_PORT=3099 yarn test:e2e
+```
 
 ## Stop background API/worker from setup script
 

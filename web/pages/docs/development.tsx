@@ -53,12 +53,18 @@ yarn dev`}</DocsCode>
             ['yarn build', 'Build all workspaces (Turbo)'],
             ['yarn --cwd api build', 'Compile API TypeScript'],
             ['yarn --cwd web build', 'Next.js production build'],
-            ['yarn --cwd common build', 'Build shared package'],
-            ['yarn test', 'Run Vitest across api + web'],
+            ['yarn lint', 'ESLint all packages'],
             ['yarn type-check', 'TypeScript check all packages'],
-            ['yarn lint', 'ESLint all packages']
+            ['yarn test', 'Unit tests (api + web + common)'],
+            ['yarn test:coverage', 'Unit tests with coverage thresholds'],
+            ['yarn test:e2e', 'Playwright UI route coverage (demo mode)'],
+            ['yarn ci', 'lint + type-check + build + coverage + e2e']
           ]}
         />
+        <p>
+          Full local setup notes: see <code>docs/SETUP.md</code> in the repo. Deploy guide:{' '}
+          <code>docs/FREE_DEPLOY.md</code>. AI keys: <code>docs/AI_PROVIDERS.md</code>.
+        </p>
       </DocsSection>
 
       <DocsSection title="Environment variables">

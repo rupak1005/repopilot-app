@@ -298,10 +298,10 @@ Never commit real values — use Railway/Vercel secret UI only.
 
 ## Related docs
 
-- [ROADMAP_TO_PRODUCTION.md](./ROADMAP_TO_PRODUCTION.md) — full production path
-- [AI_PROVIDERS.md](./AI_PROVIDERS.md) — Groq / Gemini / Ollama
-- [SETUP.md](./SETUP.md) — local dev
-- [api/.env.example](../api/.env.example) — all env vars
+- [AI_PROVIDERS.md](./AI_PROVIDERS.md) — Groq / Gemini / Ollama / OpenAI
+- [SETUP.md](./SETUP.md) — local development and CI
+- [api/.env.example](../api/.env.example) — all API env vars
+- In-app docs: `/docs` on the web app
 
 ---
 
@@ -309,7 +309,7 @@ Never commit real values — use Railway/Vercel secret UI only.
 
 - [ ] `curl https://API/health` → ok + postgres + redis
 - [ ] App loads on Vercel, no CORS errors
-- [ ] Search + Ask work with repo UUID
+- [ ] Search + Ask work on an indexed repo
 - [ ] Marketing links to app URL
 - [ ] GitHub webhook deliveries → 200
 - [ ] UptimeRobot green (if Serverless on)

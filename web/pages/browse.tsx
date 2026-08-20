@@ -10,11 +10,8 @@ import { githubUrl } from '../lib/exampleRepos';
 import { isDemoMode } from '../lib/demoMode';
 import { useIndexProgressUi } from '../lib/indexProgressUi';
 import { apiUnreachableMessage, parseJsonResponse } from '../lib/parseJsonResponse';
-import {
-  browseResultRange,
-  browseTotalPages,
-  browseVisiblePages
-} from '../lib/browsePagination';
+import { Pagination } from '../components/ui/Pagination';
+import { browseResultRange, browseTotalPages } from '../lib/browsePagination';
 
 type BrowseItem = {
   fullName: string;
@@ -79,7 +76,6 @@ export default function BrowsePage() {
   }, [query, sort, minStars, page]);
 
   const totalPages = browseTotalPages(totalCount);
-  const pageItems = browseVisiblePages(page, totalPages);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void load(), 300);
@@ -224,44 +220,12 @@ export default function BrowsePage() {
         </div>
 
         {totalPages > 1 && !loading ? (
-          <nav className="browse-pagination" aria-label="Browse pages">
-            <button
-              type="button"
-              className="browse-pagination__btn"
-              disabled={page <= 1}
-              onClick={() => setPage((current) => Math.max(1, current - 1))}
-            >
-              Previous
-            </button>
-            <ol className="browse-pagination__pages">
-              {pageItems.map((item, index) =>
-                item === '…' ? (
-                  <li key={`gap-${index}`} className="browse-pagination__gap" aria-hidden>
-                    …
-                  </li>
-                ) : (
-                  <li key={item}>
-                    <button
-                      type="button"
-                      className={`browse-pagination__page${item === page ? ' browse-pagination__page--active' : ''}`}
-                      aria-current={item === page ? 'page' : undefined}
-                      onClick={() => setPage(item)}
-                    >
-                      {item}
-                    </button>
-                  </li>
-                )
-              )}
-            </ol>
-            <button
-              type="button"
-              className="browse-pagination__btn"
-              disabled={page >= totalPages}
-              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
-            >
-              Next
-            </button>
-          </nav>
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            label="Browse pages"
+          />
         ) : null}
 
         <p className="browse-meta">
