@@ -13,6 +13,24 @@ import {
 
 export type IndexJobStatus = 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'DEAD_LETTER';
 
+/** Default: abandon RUNNING/QUEUED index jobs with no heartbeat (Render free can kill mid-pipeline). */
+const DEFAULT_INDEX_JOB_STALE_MS = 20 * 60 * 1000;
+
+export function indexJobStaleMs(): number {
+  const raw = Number(process.env.INDEX_JOB_STALE_MS);
+  return Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_INDEX_JOB_STALE_MS;
+}
+
+export function indexJobLooksAbandoned(
+  updatedAtIso: string,
+  nowMs = Date.now(),
+  staleMs = indexJobStaleMs()
+): boolean {
+  const updated = Date.parse(updatedAtIso);
+  if (!Number.isFinite(updated)) return false;
+  return nowMs - updated >= staleMs;
+}
+
 export type RepositoryIndexStatus = {
   repositoryId: string;
   state: 'not_indexed' | 'indexing' | 'ready' | 'failed';
@@ -130,6 +148,54 @@ async function latestIndexJob(repositoryId: string) {
   };
 }
 
+async function touchIndexJob(jobId: string): Promise<void> {
+  await getPrisma().$executeRawUnsafe(
+    `
+      UPDATE "QueuedJob"
+      SET "updatedAt" = NOW()
+      WHERE "id" = $1
+        AND "status" IN ('QUEUED', 'RUNNING')
+    `,
+    jobId
+  );
+}
+
+async function abandonStaleIndexJob(job: {
+  id: string;
+  status: IndexJobStatus;
+  lastError: string | null;
+  updatedAt: string;
+}): Promise<{
+  id: string;
+  status: IndexJobStatus;
+  lastError: string | null;
+  updatedAt: string;
+}> {
+  if (job.status !== 'QUEUED' && job.status !== 'RUNNING') return job;
+  if (!indexJobLooksAbandoned(job.updatedAt)) return job;
+
+  const lastError =
+    'Index job timed out or the API process restarted mid-run. Re-index from Settings.';
+  await getPrisma().$executeRawUnsafe(
+    `
+      UPDATE "QueuedJob"
+      SET "status" = 'FAILED',
+          "lastError" = $2,
+          "updatedAt" = NOW()
+      WHERE "id" = $1
+        AND "status" IN ('QUEUED', 'RUNNING')
+    `,
+    job.id,
+    lastError
+  );
+  return {
+    ...job,
+    status: 'FAILED',
+    lastError,
+    updatedAt: new Date().toISOString()
+  };
+}
+
 async function beginIndexJob(args: {
   repositoryId: string;
   revisionSha: string;
@@ -211,6 +277,8 @@ export async function runFullRepositoryIndex(args: {
   owner: string;
   name: string;
   revisionSha: string;
+  /** Heartbeat so status polling does not mark a long run abandoned. */
+  onStage?: (stage: 'parse' | 'graph' | 'history') => Promise<void>;
 }): Promise<void> {
   logEvent('repo.index.pipeline.started', {
     repositoryId: args.repositoryId,
@@ -224,15 +292,18 @@ export async function runFullRepositoryIndex(args: {
     owner: args.owner,
     repositoryName: args.name
   });
+  await args.onStage?.('parse');
 
   await buildDependencyGraph({
     repositoryId: args.repositoryId,
     revisionSha: args.revisionSha
   });
+  await args.onStage?.('graph');
 
   try {
     const maxCount = historyMaxCommits();
     if (maxCount > 0) {
+      await args.onStage?.('history');
       await ingestRepositoryHistory({
         repositoryId: args.repositoryId,
         repoPath: args.repoPath,
@@ -264,13 +335,20 @@ async function runFullRepositoryIndexWithJob(args: {
   name: string;
   revisionSha: string;
 }): Promise<void> {
-  await beginIndexJob({
+  const jobId = await beginIndexJob({
     repositoryId: args.repositoryId,
     revisionSha: args.revisionSha
   });
 
   try {
-    await runFullRepositoryIndex(args);
+    await runFullRepositoryIndex({
+      ...args,
+      onStage: jobId
+        ? async () => {
+            await touchIndexJob(jobId);
+          }
+        : undefined
+    });
     await finishIndexJob({
       repositoryId: args.repositoryId,
       revisionSha: args.revisionSha,
@@ -422,7 +500,8 @@ export async function startPublicRepositoryIndex(args: {
 export async function getRepositoryIndexStatus(
   repositoryId: string
 ): Promise<RepositoryIndexStatus> {
-  const job = await latestIndexJob(repositoryId);
+  let job = await latestIndexJob(repositoryId);
+  if (job) job = await abandonStaleIndexJob(job);
   const revisions = await listRepositoryRevisions(repositoryId);
   const latestRevision = revisions[0] ?? null;
 
