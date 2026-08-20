@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { resolveGoModule, resolveModuleSpecifier, resolvePythonModule } from './moduleResolve';
+import {
+  resolveGoModule,
+  resolveJsModule,
+  resolveModuleSpecifier,
+  resolvePythonModule
+} from './moduleResolve';
 
 describe('moduleResolve', () => {
   it('maps FastAPI-style relative and package imports onto .py files', () => {
@@ -23,5 +28,22 @@ describe('moduleResolve', () => {
     expect(resolveGoModule('internal/db/open.go', './sibling', new Set(['internal/db/sibling/x.go']))).toBe(
       'internal/db/sibling/x.go'
     );
+  });
+
+  it('resolves @/ aliases against the package root', () => {
+    const known = new Set([
+      'web/lib/dashboard.tsx',
+      'web/components/AppShell.tsx',
+      'web/src/utils/format.ts',
+      'src/hooks/useRepo.ts'
+    ]);
+    expect(resolveJsModule('web/lib/dashboard.tsx', '@/components/AppShell', known)).toBe(
+      'web/components/AppShell.tsx'
+    );
+    expect(resolveJsModule('web/src/pages/home.tsx', '@/utils/format', known)).toBe(
+      'web/src/utils/format.ts'
+    );
+    expect(resolveModuleSpecifier('src/app.tsx', '@/hooks/useRepo', known)).toBe('src/hooks/useRepo.ts');
+    expect(resolveJsModule('web/lib/x.ts', '@/missing', known)).toBeNull();
   });
 });
