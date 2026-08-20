@@ -5,7 +5,7 @@ describe('shellNav', () => {
   it('groups navigation into Understand / Investigate / Change / Integrate', () => {
     const ids = NAV_GROUPS.map((g) => g.id);
     expect(ids).toEqual(['home', 'understand', 'investigate', 'change', 'integrate', 'system']);
-    expect(NAV_GROUPS.flatMap((g) => g.items.map((i) => i.key))).toContain('mcp');
+    expect(NAV_GROUPS.flatMap((g) => g.items.map((i) => i.key))).toContain('history');
   });
 
   it('filters command palette entries by keyword', () => {

@@ -1,6 +1,7 @@
 import type { Icon } from '@phosphor-icons/react';
 import {
   BookOpen,
+  ClockCounterClockwise,
   Crosshair,
   Flame,
   Gear,
@@ -50,7 +51,8 @@ export const NAV_GROUPS: NavGroupDef[] = [
     label: 'Investigate',
     items: [
       { key: 'impact', href: '/impact', label: 'Impact Analysis', icon: Crosshair },
-      { key: 'ask', href: '/ask', label: 'Ask RepoPilot', icon: Lightning }
+      { key: 'ask', href: '/ask', label: 'Ask RepoPilot', icon: Lightning },
+      { key: 'history', href: '/history', label: 'History', icon: ClockCounterClockwise }
     ]
   },
   {
@@ -114,6 +116,12 @@ export function dashboardCommands(repoId: string): CommandDef[] {
       keywords: ['ai', 'question', 'chat']
     },
     {
+      id: 'history',
+      label: 'Open history',
+      path: `${base}/history`,
+      keywords: ['commit', 'revision', 'timeline', 'past']
+    },
+    {
       id: 'pulls',
       label: 'Open pull requests',
       path: `${base}/pulls`,
@@ -165,6 +173,7 @@ export const COMMAND_ICONS: Record<string, Icon> = {
   search: MagnifyingGlass,
   impact: Crosshair,
   ask: Lightning,
+  history: ClockCounterClockwise,
   pulls: GitPullRequest,
   mcp: Terminal,
   settings: Gear,

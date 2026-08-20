@@ -10,6 +10,29 @@ import type {
   SimilarChange
 } from './types';
 import type { ArchitectureGraph } from './architecture';
+import type { HistoryHit, RevisionRow } from './history';
+
+export const DEMO_REVISIONS: RevisionRow[] = [
+  { revisionSha: 'a1b2c3d4e5f6789012345678', indexedAt: '2026-08-20T10:00:00.000Z' },
+  { revisionSha: '9f8e7d6c5b4a3210fedcba98', indexedAt: '2026-08-18T16:30:00.000Z' }
+];
+
+export const DEMO_HISTORY_HITS: HistoryHit[] = [
+  {
+    type: 'commit',
+    id: 'a1b2c3d4e5f6789012345678',
+    title: 'Add GitHub OAuth and repo picker to dashboard',
+    snippet: 'Wire session auth and repository selection into the web shell.',
+    authoredAt: '2026-08-19T14:00:00.000Z'
+  },
+  {
+    type: 'pull_request',
+    id: '42',
+    title: 'Add GitHub OAuth and repo picker to dashboard',
+    snippet: 'Open PR covering auth + picker UX.',
+    authoredAt: '2026-08-19T15:00:00.000Z'
+  }
+];
 
 export const DEMO_PULLS: PullRequestRow[] = [
   {

@@ -34,6 +34,7 @@ import '../styles/demo-banner.css';
 import '../styles/architecture.css';
 import '../styles/pr-detail.css';
 import '../styles/mcp-connect.css';
+import '../styles/history.css';
 import '../styles/differentiators.css';
 import '../styles/index-progress-float.css';
 import '../styles/docs.css';

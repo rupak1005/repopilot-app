@@ -28,6 +28,7 @@ const PHOSPHOR_ICONS = [
   'Gear',
   'Graph',
   'Crosshair',
+  'ClockCounterClockwise',
   'Plugs',
   'Terminal'
 ] as const;

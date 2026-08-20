@@ -59,6 +59,7 @@ const DASHBOARD_TITLES: Record<NavKey, string> = {
   hotspots: 'Topography',
   architecture: 'Dependency Graph',
   impact: 'Impact',
+  history: 'History',
   settings: 'Settings',
   mcp: 'MCP'
 };

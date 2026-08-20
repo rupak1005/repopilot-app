@@ -9,6 +9,7 @@ export type NavKey =
   | 'hotspots'
   | 'architecture'
   | 'impact'
+  | 'history'
   | 'settings'
   | 'mcp';
 
@@ -77,6 +78,14 @@ const HELP_BY_NAV: Record<NavKey, HelpTip> = {
     docLabel: 'Impact analysis',
     secondaryHref: '/docs/architecture',
     secondaryLabel: 'Graph model'
+  },
+  history: {
+    title: 'Time machine for this repo',
+    body: 'Browse indexed SHAs and search commit / PR history that feeds hotspots and similar-change signals.',
+    docHref: '/docs/api-reference',
+    docLabel: 'History API',
+    secondaryHref: '/docs/getting-started',
+    secondaryLabel: 'Getting started'
   },
   settings: {
     title: 'Repo + session controls',

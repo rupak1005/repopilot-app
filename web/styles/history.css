@@ -1,0 +1,109 @@
+.ui-history-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.ui-history-revisions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ui-history-revision {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: var(--border-medium);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.ui-history-revision__sha {
+  font-weight: 700;
+}
+
+.ui-history-revision__meta {
+  color: var(--color-text-muted);
+  font-size: var(--text-ui);
+  flex: 1;
+}
+
+.ui-history-revision__link {
+  font-size: var(--text-micro);
+  font-weight: 700;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--color-link);
+}
+
+.ui-history-search {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.ui-history-search .ui-input {
+  flex: 1;
+  min-width: 12rem;
+}
+
+.ui-history-hits {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.ui-history-hit {
+  padding: var(--space-3);
+  border: var(--border-medium);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.ui-history-hit__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.ui-history-hit__when {
+  color: var(--color-text-muted);
+  font-size: var(--text-caption);
+}
+
+.ui-history-hit__title {
+  margin: 0 0 var(--space-2);
+  font-weight: 700;
+}
+
+.ui-history-hit__snippet {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  overflow-x: auto;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+  font-size: var(--text-caption);
+  line-height: 1.45;
+  color: var(--color-text-muted);
+  white-space: pre-wrap;
+}
+
+.ui-history-hit__link {
+  display: inline-block;
+  margin-top: var(--space-2);
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--color-link);
+}
