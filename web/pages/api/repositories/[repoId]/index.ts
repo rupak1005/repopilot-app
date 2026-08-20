@@ -45,10 +45,11 @@ export default async function handler(
       const response = await proxyApiRequest('/api/v1/public/repositories/open', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        // Omit inline — API INDEX_INLINE decides (Vercel must not force false → Redis queue with no worker).
         body: JSON.stringify({
           owner,
           name,
-          inline: process.env.INDEX_INLINE === 'true'
+          background: true
         })
       });
       const payload = await response.json();
@@ -67,8 +68,7 @@ export default async function handler(
       body: JSON.stringify({
         owner,
         name,
-        accessToken: session.accessToken,
-        inline: process.env.INDEX_INLINE === 'true'
+        accessToken: session.accessToken
       })
     });
 

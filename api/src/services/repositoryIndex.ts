@@ -328,7 +328,8 @@ export async function startRepositoryIndex(args: {
     accessToken: args.accessToken
   });
 
-  const inline = args.inline ?? process.env.INDEX_INLINE === 'true';
+  // Server INDEX_INLINE wins — clients must not force Redis queue on workerless deploys.
+  const inline = process.env.INDEX_INLINE === 'true' || args.inline === true;
 
   if (inline) {
     await runFullRepositoryIndexWithJob({
@@ -374,7 +375,8 @@ export async function startPublicRepositoryIndex(args: {
   });
 
   const background = args.background ?? false;
-  const inline = !background && (args.inline ?? process.env.INDEX_INLINE === 'true');
+  // Server INDEX_INLINE wins — same as authenticated index path.
+  const inline = !background && (process.env.INDEX_INLINE === 'true' || args.inline === true);
   const pipelineArgs = {
     repositoryId: args.repositoryId,
     repoPath,
