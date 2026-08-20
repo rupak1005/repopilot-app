@@ -18,9 +18,11 @@ function severityVariant(severity: string): StatusBadgeVariant {
 
 type ReviewFindingCardProps = {
   finding: ReviewFinding;
+  repoId?: string | null;
+  repoFullName?: string | null;
 };
 
-export function ReviewFindingCard({ finding }: ReviewFindingCardProps) {
+export function ReviewFindingCard({ finding, repoId, repoFullName }: ReviewFindingCardProps) {
   return (
     <article className="ui-finding-card">
       <header className="ui-finding-card__head">
@@ -44,7 +46,12 @@ export function ReviewFindingCard({ finding }: ReviewFindingCardProps) {
             {finding.evidence.map((item) => (
               <span key={`${item.type}:${item.file}:${item.lines[0]}`} className="ui-finding-card__chip-wrap">
                 <span className="ui-finding-card__chip-type">{item.type}</span>
-                <CitationChip file={item.file} lines={item.lines} />
+                <CitationChip
+                  file={item.file}
+                  lines={item.lines}
+                  repoId={repoId}
+                  repoFullName={repoFullName}
+                />
               </span>
             ))}
           </div>

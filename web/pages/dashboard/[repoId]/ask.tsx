@@ -17,7 +17,7 @@ import {
 import { demoAskResponse, demoDelay } from '../../../lib/demoData';
 import { isDemoMode } from '../../../lib/demoMode';
 import { repoApiPath } from '../../../lib/serverApi';
-import { DashboardLayout } from '../../../lib/dashboard';
+import { DashboardLayout, useDashboardContext } from '../../../lib/dashboard';
 import { type AskResponse } from '../../../lib/types';
 
 const SUGGESTIONS = [
@@ -25,7 +25,15 @@ const SUGGESTIONS = [
   'Show architecture of auth module'
 ];
 
-function AssistantContent({ response }: { response: AskResponse }) {
+function AssistantContent({
+  response,
+  repoId,
+  repoFullName
+}: {
+  response: AskResponse;
+  repoId: string;
+  repoFullName?: string;
+}) {
   return (
     <>
       <p style={{ margin: 0 }}>{response.answer}</p>
@@ -34,7 +42,13 @@ function AssistantContent({ response }: { response: AskResponse }) {
           <span className="ui-chat-bubble__citations-label label-caps">Citations & Evidence</span>
           <div className="ui-chat-bubble__citation-row">
             {response.citations.map((c) => (
-              <CitationChip key={`${c.file}:${c.lines[0]}`} file={c.file} lines={c.lines} />
+              <CitationChip
+                key={`${c.file}:${c.lines[0]}`}
+                file={c.file}
+                lines={c.lines}
+                repoId={repoId}
+                repoFullName={repoFullName}
+              />
             ))}
           </div>
         </div>
@@ -45,7 +59,9 @@ function AssistantContent({ response }: { response: AskResponse }) {
 
 export default function AskPage() {
   const router = useRouter();
+  const dash = useDashboardContext();
   const repoId = typeof router.query.repoId === 'string' ? router.query.repoId : null;
+  const repoFullName = dash?.repoFullName;
   const [query, setQuery] = useState('');
   const [messages, setMessages] = useState<AskMessage[]>([]);
   const [loading, setLoading] = useState(false);
@@ -202,7 +218,11 @@ export default function AskPage() {
                   </span>
                 }
               >
-                <AssistantContent response={message.response} />
+                <AssistantContent
+                  response={message.response}
+                  repoId={repoId!}
+                  repoFullName={repoFullName}
+                />
               </ChatBubble>
             );
           })}

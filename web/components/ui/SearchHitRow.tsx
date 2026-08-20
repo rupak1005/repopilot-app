@@ -3,14 +3,22 @@ import { CitationChip } from './CitationChip';
 
 type SearchHitRowProps = {
   hit: SearchHit;
+  repoId?: string | null;
+  repoFullName?: string | null;
 };
 
-/** Phase 7 — semantic search result row. */
-export function SearchHitRow({ hit }: SearchHitRowProps) {
+/** Phase 7 — semantic search result row with citation actions. */
+export function SearchHitRow({ hit, repoId, repoFullName }: SearchHitRowProps) {
   return (
     <li className="ui-search-hit">
       <div className="ui-search-hit__head">
-        <CitationChip file={hit.file} lines={hit.lines} score={hit.score} />
+        <CitationChip
+          file={hit.file}
+          lines={hit.lines}
+          score={hit.score}
+          repoId={repoId}
+          repoFullName={repoFullName}
+        />
       </div>
       <pre className="ui-search-hit__snippet">{hit.text.slice(0, 280)}</pre>
     </li>

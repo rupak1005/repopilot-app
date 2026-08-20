@@ -1,7 +1,7 @@
 import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import { CircleNotch, MagnifyingGlass } from '@phosphor-icons/react';
-import { DashboardLayout } from '../../../lib/dashboard';
+import { DashboardLayout, useDashboardContext } from '../../../lib/dashboard';
 import { Button } from '../../../components/ui/Button';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { ErrorBanner } from '../../../components/ui/ErrorBanner';
@@ -14,7 +14,9 @@ import { type SearchHit } from '../../../lib/types';
 
 export default function SearchPage() {
   const router = useRouter();
+  const dash = useDashboardContext();
   const repoId = typeof router.query.repoId === 'string' ? router.query.repoId : null;
+  const repoFullName = dash?.repoFullName;
   const queryFromUrl = typeof router.query.q === 'string' ? router.query.q : '';
   const [query, setQuery] = useState(queryFromUrl);
   const [results, setResults] = useState<SearchHit[]>([]);
@@ -132,7 +134,12 @@ export default function SearchPage() {
               </p>
               <ul className="ui-search-hits">
                 {results.map((hit) => (
-                  <SearchHitRow key={`${hit.file}:${hit.lines[0]}`} hit={hit} />
+                  <SearchHitRow
+                    key={`${hit.file}:${hit.lines[0]}`}
+                    hit={hit}
+                    repoId={repoId}
+                    repoFullName={repoFullName}
+                  />
                 ))}
               </ul>
             </>

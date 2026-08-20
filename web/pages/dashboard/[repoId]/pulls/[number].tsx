@@ -17,7 +17,7 @@ import {
   demoSimilarChanges
 } from '../../../../lib/demoData';
 import { isDemoMode } from '../../../../lib/demoMode';
-import { DashboardLayout } from '../../../../lib/dashboard';
+import { DashboardLayout, useDashboardContext } from '../../../../lib/dashboard';
 import { repoApiPath } from '../../../../lib/serverApi';
 import type {
   PullImpactSummary,
@@ -47,7 +47,9 @@ function deriveImpact(review: PullRequestDetail['latestReview']): PullImpactSumm
 
 export default function PullDetailPage() {
   const router = useRouter();
+  const dash = useDashboardContext();
   const repoId = typeof router.query.repoId === 'string' ? router.query.repoId : null;
+  const repoFullName = dash?.repoFullName;
   const pullNumberRaw = typeof router.query.number === 'string' ? router.query.number : null;
   const pullNumber = pullNumberRaw ? Number(pullNumberRaw) : NaN;
 
@@ -307,7 +309,12 @@ export default function PullDetailPage() {
                   {review.findings.length > 0 ? (
                     <div className="ui-finding-list">
                       {review.findings.map((finding) => (
-                        <ReviewFindingCard key={finding.title} finding={finding} />
+                        <ReviewFindingCard
+                          key={finding.title}
+                          finding={finding}
+                          repoId={repoId}
+                          repoFullName={repoFullName}
+                        />
                       ))}
                     </div>
                   ) : (

@@ -62,7 +62,7 @@ Missing surfaces: History time machine, Planning, Wiki, Command Palette, Univers
 1. Restructure nav groups without removing routes (aliases OK)
 2. Cmd+K command palette over existing routes
 3. Revision bar: repo + SHA + index state (data already on index status)
-4. Citation actions: open source / graph / impact / GitHub
+4. Citation actions: open graph / impact / GitHub — **done** (Ask, Search, PR evidence)
 5. Mobile: inspector → bottom sheet for graph/impact
 
 ## Risk

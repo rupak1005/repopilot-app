@@ -53,6 +53,22 @@ describe('CitationChip', () => {
     expect(html).toContain('src/auth.ts:10–20');
     expect(html).toContain('0.87');
   });
+
+  it('renders investigate actions when repoId is set', () => {
+    const html = renderToStaticMarkup(
+      <CitationChip
+        file="src/auth.ts"
+        lines={[10, 20]}
+        repoId="r1"
+        repoFullName="ada/app"
+      />
+    );
+    expect(html).toContain('Graph');
+    expect(html).toContain('Impact');
+    expect(html).toContain('GitHub');
+    expect(html).toContain('/dashboard/r1/architecture?file=');
+    expect(html).toContain('/dashboard/r1/impact?file=');
+  });
 });
 
 describe('ChatBubble', () => {

@@ -11,7 +11,8 @@
 | 4 | Real dependency graph | **Done foundation** — clusters, path, neighborhood, cycles |
 | 5 | Impact analysis | **Done foundation** — file / symbol / PR + blast overlay |
 | 6 | Codebase topography | **Done foundation** — 2D map + metrics + lookback |
-| 7–35 | Remaining | Not started / partial |
+| 7 | Ask / Search UX | **Done foundation** — citation Graph / Impact / GitHub |
+| 8–35 | Remaining | Not started / partial |
 
 ## Phase 5
 
@@ -32,6 +33,12 @@
 - [x] Module cycle inspector (`graph?op=cycles`)
 - [x] `@/` import alias resolve at graph build (package-root heuristic)
 
+## Phase 7
+
+- [x] Citation actions: Graph / Impact / GitHub (Ask, Search, PR evidence)
+- [ ] History time machine surface (deferred)
+- [ ] Universal search merge (deferred)
+
 ## Next action
 
-Phase 7 (Ask / Search UX polish) or full tsconfig paths — ask before committing.
+Phase 8 (PR / Change workflow polish) or History surface — ask before committing.
