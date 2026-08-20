@@ -3,6 +3,7 @@
 .app-shell {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
   overflow: hidden;
   background: var(--color-background);
 }
@@ -83,6 +84,14 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.topbar-account {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
 }
 
 .topbar-signin {
@@ -276,6 +285,37 @@
   margin-bottom: 0;
 }
 
+.mobile-nav-drawer__footer {
+  display: none;
+  margin-top: auto;
+  padding-top: var(--space-4);
+  border-top: var(--border-medium);
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.mobile-nav-drawer__account {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.mobile-nav-drawer__account-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mobile-nav-drawer__account-meta .topbar-user {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
 @media (max-width: 768px) {
   .sidebar {
     display: none;
@@ -286,12 +326,52 @@
   }
 
   .topbar {
+    height: 56px;
     gap: var(--space-2);
+    padding: 0 var(--space-3);
+  }
+
+  .topbar-actions {
+    gap: var(--space-1);
   }
 
   .topbar-actions .indexing-pill,
-  .topbar-actions .signout-btn {
+  .topbar-hide-sm {
     display: none;
+  }
+
+  .topbar-signin--compact {
+    padding: var(--space-2);
+  }
+
+  .topbar-signin--compact .topbar-signin__label {
+    display: none;
+  }
+
+  .canvas {
+    padding: var(--space-4) var(--space-3);
+  }
+
+  .shell-main {
+    height: 100dvh;
+  }
+
+  .mobile-nav-drawer__footer {
+    display: flex;
+  }
+
+  .ui-quick-actions {
+    gap: var(--space-2);
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar {
+    padding: 0 var(--space-2);
+  }
+
+  .canvas {
+    padding: var(--space-3) var(--space-2);
   }
 }
 

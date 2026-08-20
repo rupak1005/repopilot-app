@@ -146,3 +146,19 @@
     transition: border-color var(--duration-fast) ease, box-shadow var(--duration-fast) ease;
   }
 }
+
+@media (max-width: 768px) {
+  .page-title-block,
+  .ui-page-header {
+    margin-bottom: var(--space-4);
+  }
+
+  .page-title-block h1,
+  .ui-page-header h1 {
+    font-size: clamp(1.5rem, 6vw, 2rem);
+  }
+
+  .standalone-page {
+    padding: var(--space-4);
+  }
+}

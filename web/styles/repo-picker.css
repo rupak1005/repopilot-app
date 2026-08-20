@@ -66,9 +66,11 @@
 }
 
 .ui-repo-picker__label {
-  display: inline-flex;
-  align-items: baseline;
+  display: block;
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-family: var(--font-mono);
   font-size: var(--text-ui);
   line-height: 1.2;
@@ -77,20 +79,15 @@
 
 .ui-repo-picker__owner {
   color: var(--color-text-muted);
-  flex-shrink: 0;
 }
 
 .ui-repo-picker__sep {
   color: var(--color-text-subtle);
   margin: 0 1px;
-  flex-shrink: 0;
 }
 
 .ui-repo-picker__name {
   color: var(--color-text);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .ui-repo-picker__caret {
@@ -208,5 +205,27 @@
   .ui-repo-picker:hover,
   .ui-repo-picker:active {
     transform: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .ui-repo-picker-wrap {
+    max-width: none;
+  }
+
+  .ui-repo-picker {
+    padding: var(--space-1) var(--space-2);
+  }
+
+  .ui-repo-picker__glyph {
+    width: 24px;
+    height: 24px;
+  }
+
+  .ui-repo-picker-menu {
+    left: 0;
+    right: 0;
+    width: auto;
+    max-width: min(360px, calc(100vw - 2 * var(--space-3)));
   }
 }

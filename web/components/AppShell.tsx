@@ -158,9 +158,9 @@ export function AppShell({
           <RepoPicker repoId={repoId} repoFullName={repoFullName} isPublicGuest={isPublicGuest} />
           <div className="topbar-actions">
             {isPublicGuest ? (
-              <Link href={GITHUB_SIGN_IN_URL} className="topbar-signin">
+              <Link href={GITHUB_SIGN_IN_URL} className="topbar-signin topbar-signin--compact">
                 <GithubLogo size={16} weight="fill" aria-hidden />
-                Connect GitHub
+                <span className="topbar-signin__label">Connect GitHub</span>
               </Link>
             ) : null}
             <div className={indexPillClass} title={indexStatus?.job?.lastError ?? undefined}>
@@ -168,14 +168,14 @@ export function AppShell({
               <span className="label-caps">{indexLabel}</span>
             </div>
             <ThemeToggle />
-            <IconButton label="Notifications">
+            <IconButton className="topbar-hide-sm" label="Notifications">
               <Bell size={18} weight="light" />
             </IconButton>
-            <IconButton label="Help">
+            <IconButton className="topbar-hide-sm" label="Help">
               <Question size={18} weight="light" />
             </IconButton>
             {!isPublicGuest ? (
-              <>
+              <div className="topbar-account topbar-hide-sm">
                 <img
                   src={userAvatar || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'}
                   alt=""
@@ -187,9 +187,9 @@ export function AppShell({
                 <button type="button" className="signout-btn" onClick={() => void handleLogout()}>
                   Log out
                 </button>
-              </>
+              </div>
             ) : (
-              <span className="topbar-guest label-caps">Guest preview</span>
+              <span className="topbar-guest label-caps topbar-hide-sm">Guest preview</span>
             )}
           </div>
         </header>
@@ -237,6 +237,34 @@ export function AppShell({
             />
           ))}
         </nav>
+        <div className="mobile-nav-drawer__footer">
+          <div className={indexPillClass} title={indexStatus?.job?.lastError ?? undefined}>
+            <span className={`pulse-dot${pulseIdle ? ' pulse-dot--idle' : ''}`} />
+            <span className="label-caps">{indexLabel}</span>
+          </div>
+          {!isPublicGuest ? (
+            <div className="mobile-nav-drawer__account">
+              <img
+                src={userAvatar || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'}
+                alt=""
+                className="avatar"
+                width={32}
+                height={32}
+              />
+              <div className="mobile-nav-drawer__account-meta">
+                <span className="topbar-user">{userLogin}</span>
+                <button type="button" className="signout-btn" onClick={() => void handleLogout()}>
+                  Log out
+                </button>
+              </div>
+            </div>
+          ) : (
+            <Link href={GITHUB_SIGN_IN_URL} className="topbar-signin" onClick={() => setMobileNavOpen(false)}>
+              <GithubLogo size={16} weight="fill" aria-hidden />
+              Connect GitHub
+            </Link>
+          )}
+        </div>
       </aside>
     </div>
   );
