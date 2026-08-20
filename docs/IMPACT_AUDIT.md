@@ -53,7 +53,7 @@
 
 1. Surface structured risk factors in UI (centrality, tests, churn, dependents)
 2. Embed Impact Graph view (highlight neighborhood from existing deps API)
-3. Wire similar-changes + ownership when available
+3. Wire similar-changes + ownership when available — **ownership via CODEOWNERS (Phase 34)**
 4. Add entry points from Ask citations and PR changed files — **done**
 5. Benchmark fixture set — **done** (Phase 29 `impactCalibration` golden scenarios)
 

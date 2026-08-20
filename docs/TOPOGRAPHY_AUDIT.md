@@ -26,7 +26,7 @@
 
 ## Gaps vs world-class Topography
 
-- No 3D mode (intentionally deferred; 2D default)
+- No 3D mode — **deferred permanently for v1** (Phase 35); 2D topography is the product default
 - Hotspots are repo-scoped, not revision-scoped; non-30d windows recompute churn live
 
 ## Migration plan (Phase 6)

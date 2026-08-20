@@ -35,6 +35,7 @@ import {
   listReviewHistory
 } from './services/repositoryAnalytics';
 import { listRepositoryWikiPages, getRepositoryWikiPage } from './services/repositoryWiki';
+import { getRepositoryOwnership } from './services/repositoryOwnership';
 import { ingestRepositoryHistory } from './services/historyIngest';
 import {
   findSimilarChanges,
@@ -460,6 +461,16 @@ async function bootstrap() {
       repositoryId: params.repoId,
       revisionSha: query.revisionSha,
       limit: Number.isFinite(limit) ? limit : undefined
+    });
+  });
+
+  server.get('/api/v1/repositories/:repoId/ownership', async (request) => {
+    const params = request.params as { repoId: string };
+    const query = request.query as { revisionSha?: string; path?: string };
+    return getRepositoryOwnership({
+      repositoryId: params.repoId,
+      revisionSha: query.revisionSha,
+      path: query.path
     });
   });
 

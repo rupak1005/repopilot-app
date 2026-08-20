@@ -9,11 +9,13 @@ import { ErrorBanner } from '../../../components/ui/ErrorBanner';
 import { ImpactBlastMap } from '../../../components/ui/ImpactBlastMap';
 import { IndexHint } from '../../../components/ui/IndexHint';
 import { KpiTile } from '../../../components/ui/KpiTile';
-import { DEMO_REVISIONS, demoDelay, demoFileImpact, demoPullImpact } from '../../../lib/demoData';
+import { DEMO_REVISIONS, demoDelay, demoFileImpact, demoOwnership, demoPullImpact } from '../../../lib/demoData';
 import { mcpContextPackSnippet } from '../../../lib/mcpConnect';
+import { formatOwnershipLabel, githubOwnerHref, type OwnershipSummary } from '../../../lib/ownership';
 import {
   DashboardLayout,
   shouldShowIndexHint,
+  useDashboardContext,
   usePendingIndexJobRepoId,
   useRepoData,
   useRepoIndexStatus
@@ -585,6 +587,43 @@ function FileImpactView({
   revisionSha: string | null;
 }) {
   const [packHint, setPackHint] = useState<string | null>(null);
+  const [ownership, setOwnership] = useState<OwnershipSummary | null>(null);
+  const dash = useDashboardContext();
+  const repoFullName = dash?.repoFullName;
+
+  useEffect(() => {
+    if (!repoId) {
+      setOwnership(null);
+      return;
+    }
+    let cancelled = false;
+    async function loadOwners() {
+      try {
+        if (isDemoMode()) {
+          if (!cancelled) setOwnership(demoOwnership(result.target.filePath));
+          return;
+        }
+        const response = await fetch(
+          repoApiPath(
+            repoId!,
+            withRevisionSha(
+              `ownership?path=${encodeURIComponent(result.target.filePath)}`,
+              revisionSha
+            )
+          )
+        );
+        if (!response.ok) throw new Error('ownership unavailable');
+        const data = (await response.json()) as OwnershipSummary;
+        if (!cancelled) setOwnership(data);
+      } catch {
+        if (!cancelled) setOwnership(null);
+      }
+    }
+    void loadOwners();
+    return () => {
+      cancelled = true;
+    };
+  }, [repoId, result.target.filePath, revisionSha]);
 
   async function copyContextPack() {
     if (!repoId || typeof navigator === 'undefined' || !navigator.clipboard) return;
@@ -615,6 +654,40 @@ function FileImpactView({
         confidence={result.confidence}
       />
       <RiskFactors factors={result.riskFactors} />
+      {ownership && (ownership.owners.length > 0 || ownership.sourcePath) ? (
+        <BentoPanel title="Ownership">
+          <div className="ui-impact-ownership">
+            <p className="ui-finding-card__desc">
+              {ownership.owners.length > 0
+                ? `CODEOWNERS match for ${result.target.filePath}`
+                : `No path match in ${ownership.sourcePath ?? 'CODEOWNERS'}`}
+            </p>
+            {ownership.owners.length > 0 ? (
+              <ul className="ui-impact-ownership__list">
+                {ownership.owners.map((owner) => {
+                  const href = githubOwnerHref(owner, repoFullName);
+                  return (
+                    <li key={owner}>
+                      {href ? (
+                        <a href={href} target="_blank" rel="noreferrer" className="ui-diagram__action">
+                          {owner}
+                        </a>
+                      ) : (
+                        <span className="mono">{owner}</span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="ui-impact-ownership__empty mono">{formatOwnershipLabel([])}</p>
+            )}
+            {ownership.sourcePath ? (
+              <p className="ui-impact-ownership__source mono">Source · {ownership.sourcePath}</p>
+            ) : null}
+          </div>
+        </BentoPanel>
+      ) : null}
       <BentoPanel title="Blast radius map">
         <ImpactBlastMap
           target={result.target.filePath}

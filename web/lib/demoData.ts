@@ -452,6 +452,42 @@ export function demoWikiPages(): Array<{
   ];
 }
 
+/** Demo CODEOWNERS resolution for Impact ownership chips. */
+export function demoOwnership(path?: string | null): {
+  revisionSha: string | null;
+  sourcePath: string;
+  rules: Array<{ pattern: string; owners: string[]; line: number }>;
+  path: string | null;
+  owners: string[];
+} {
+  const rules = [
+    { pattern: '*', owners: ['@repopilot/maintainers'], line: 1 },
+    { pattern: '/api/', owners: ['@repopilot/backend'], line: 2 },
+    { pattern: '/web/', owners: ['@repopilot/web'], line: 3 },
+    { pattern: '*.md', owners: ['@repopilot/docs'], line: 4 }
+  ];
+  const filePath = path?.trim() || null;
+  let owners: string[] = [];
+  if (filePath) {
+    for (const rule of rules) {
+      const lower = filePath.replace(/\\/g, '/');
+      const hit =
+        rule.pattern === '*' ||
+        (rule.pattern === '/api/' && (lower.startsWith('api/') || lower.startsWith('/api/'))) ||
+        (rule.pattern === '/web/' && (lower.startsWith('web/') || lower.startsWith('/web/'))) ||
+        (rule.pattern === '*.md' && /\.mdx?$/i.test(lower));
+      if (hit) owners = [...rule.owners];
+    }
+  }
+  return {
+    revisionSha: 'demo42abc',
+    sourcePath: '.github/CODEOWNERS',
+    rules,
+    path: filePath,
+    owners
+  };
+}
+
 /** Full markdown body for a demo wiki path (inline reader). */
 export function demoWikiPageDetail(path: string): {
   path: string;

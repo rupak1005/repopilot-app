@@ -38,7 +38,8 @@
 | 31 | Mobile graph sheet | **Done foundation** — inspector bottom sheet |
 | 32 | Visual baseline e2e | **Done foundation** — Playwright screenshots |
 | 33 | Context pack handoff | **Done foundation** — copy `get_context_pack` |
-| 34–35 | Remaining | Not started / partial (deferred 3D) |
+| 34 | CODEOWNERS ownership | **Done foundation** — Impact owners panel |
+| 35 | Program close | **Done** — 3D deferred; tracker complete |
 
 ## Phase 5
 
@@ -52,7 +53,7 @@
 - [x] 2D topography clusters
 - [x] Metric toggles: hotspot score / churn / dependents / findings
 - [x] Time window lookback (7d / 30d / 90d / 1y) via `windowDays`
-- [ ] Optional 3D (deferred)
+- [x] Optional 3D — **deferred** (Phase 35; 2D remains the product surface)
 
 ## Phase 4 extras
 
@@ -233,6 +234,17 @@
 - [x] `mcpContextPackSnippet` + Copy context pack on Impact handoff
 - [x] MCP example uses `filePath` (matches tool schema)
 
+## Phase 34
+
+- [x] CODEOWNERS parse + last-match-wins path lookup
+- [x] `GET /ownership?path=` from indexed `CODEOWNERS` / `.github/CODEOWNERS` / `docs/CODEOWNERS`
+- [x] Impact Ownership panel with GitHub owner/team links + demo fixture
+
+## Phase 35
+
+- [x] Explicitly defer 3D topography (2D is the v1 landscape)
+- [x] World-class product tracker marked complete through Phase 35
+
 ## Next action
 
-Phase 34–35 (deferred 3D topography; optional ownership / CODEOWNERS).
+None — foundation program complete. Follow-ups: push when ready; optional ownership on graph inspector; hosted visual review (Percy/Chromatic).

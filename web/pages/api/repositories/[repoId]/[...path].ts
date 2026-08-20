@@ -20,7 +20,8 @@ const ALLOWED_PREFIXES = [
   'similar-changes',
   'symbols',
   'findings',
-  'wiki'
+  'wiki',
+  'ownership'
 ];
 
 export default async function handler(
