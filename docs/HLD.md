@@ -81,7 +81,7 @@ GitHub → webhook → API → queue → worker → DB → web/MCP consumers.
 
 ```text
 clone/update on disk
-    → sync (discover TS/JS → parse → persist → embed chunks)
+    → sync (discover TS/JS/Python/Go → parse → persist → embed chunks)
     → build dependency graph
     → ingest git history (optional cap)
     → state: ready
@@ -153,7 +153,7 @@ Agent calls tools → same service layer as HTTP (search, impact, deps, history,
 | Indexing | Sync → graph → history | Graph usable before full history finishes |
 | Queue | Postgres `QueuedJob` + Redis | Durable jobs; Redis for worker coordination |
 | Web stack | Next.js Pages + BFF | Cookie sessions stay server-side; API never sees OAuth cookies |
-| Languages | TS/JS first | Tree-sitter grammars already in stack |
+| Languages | TS/JS + Python + Go | Tree-sitter grammars already in stack |
 | Marketing | Separate deploy | Keep product app lean |
 
 ---

@@ -35,6 +35,13 @@ export default function LoginPage() {
     void check();
   }, [router]);
 
+  const seo = {
+    title: 'Sign in',
+    description: 'Connect GitHub for private repositories, or analyze a public repo with no account.',
+    path: '/login',
+    noIndex: true
+  };
+
   if (checking) {
     return (
       <PublicPageLayout
@@ -42,6 +49,7 @@ export default function LoginPage() {
         pageClassName="login-page"
         mainClassName="login-page__main"
         shellClassName="login-shell"
+        seo={seo}
       >
         <p className="empty-state">Loading…</p>
       </PublicPageLayout>
@@ -54,6 +62,7 @@ export default function LoginPage() {
       pageClassName="login-page"
       mainClassName="login-page__main"
       shellClassName="login-shell"
+      seo={seo}
     >
           <div className="login-card">
             <span className="login-eyebrow">Mission control</span>

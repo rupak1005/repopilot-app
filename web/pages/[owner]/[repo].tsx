@@ -78,6 +78,12 @@ export default function ShortRepoPage() {
       pageClassName="landing-page"
       mainClassName="landing-page__main"
       shellClassName="landing-shell"
+      seo={{
+        title: slug ? `Opening ${slug}` : 'Opening repository',
+        description: 'Start indexing a public GitHub repository in RepoPilot.',
+        path: slug ? `/${slug}` : '/',
+        noIndex: true
+      }}
     >
       <div className="landing-card">
         <p className="landing-eyebrow">Opening repository</p>

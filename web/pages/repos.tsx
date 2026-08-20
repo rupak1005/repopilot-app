@@ -108,6 +108,12 @@ export default function ReposPage() {
       pageClassName="ui-repos-page"
       mainClassName="ui-repos-page__main"
       shellClassName="ui-repos-shell"
+      seo={{
+        title: 'Choose a repository',
+        description: 'Pick a GitHub repository to open in RepoPilot.',
+        path: '/repos',
+        noIndex: true
+      }}
     >
         <div className="page-title-block">
           <h1>Choose a repository</h1>

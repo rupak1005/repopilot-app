@@ -12,6 +12,7 @@ import { isDemoMode } from '../lib/demoMode';
 import { useIndexProgressUi } from '../lib/indexProgressUi';
 import { apiUnreachableMessage, parseJsonResponse } from '../lib/parseJsonResponse';
 import { MARKETING_URL } from '../lib/types';
+import { DEFAULT_DESCRIPTION, siteJsonLd } from '../lib/seo';
 
 export default function LandingPage() {
   const router = useRouter();
@@ -84,6 +85,12 @@ export default function LandingPage() {
       pageClassName="landing-page"
       mainClassName="landing-page__main"
       shellClassName="landing-shell"
+      seo={{
+        title: 'Repository intelligence',
+        description: DEFAULT_DESCRIPTION,
+        path: '/',
+        jsonLd: siteJsonLd()
+      }}
     >
           <div className="landing-card">
                 <p className="landing-eyebrow">Engineering intelligence</p>

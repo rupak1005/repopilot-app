@@ -76,6 +76,56 @@ describe('treeSitterParser (unit)', () => {
     const exportNames = parsed.exports.map((e) => e.name);
     expect(exportNames).toEqual(expect.arrayContaining(['Bar', 'foo']));
   });
+
+  it('extracts FastAPI-style Python imports and symbols', () => {
+    const code = `
+from fastapi import FastAPI
+from .db import SessionLocal
+
+@app.get("/")
+def read_root():
+    return SessionLocal()
+
+class Settings:
+    debug = True
+`;
+    const parsed = parseCodeToRecords('app/main.py', code);
+    expect(parsed.imports).toEqual(
+      expect.arrayContaining([
+        { module: 'fastapi', specifiers: ['FastAPI'] },
+        { module: '.db', specifiers: ['SessionLocal'] }
+      ])
+    );
+    expect(parsed.symbols.map((s) => s.name)).toEqual(
+      expect.arrayContaining(['read_root', 'Settings'])
+    );
+  });
+
+  it('extracts Go imports and functions', () => {
+    const code = `
+package auth
+
+import (
+  "fmt"
+  "github.com/org/repo/internal/db"
+)
+
+func Login() error {
+  return db.Open()
+}
+
+type User struct {
+  Name string
+}
+`;
+    const parsed = parseCodeToRecords('internal/auth/login.go', code);
+    expect(parsed.imports.map((i) => i.module)).toEqual(
+      expect.arrayContaining(['fmt', 'github.com/org/repo/internal/db'])
+    );
+    expect(parsed.symbols.map((s) => s.name)).toEqual(
+      expect.arrayContaining(['Login', 'User'])
+    );
+  });
 });
 
 describe('Phase 2 persistence (integration, optional)', () => {

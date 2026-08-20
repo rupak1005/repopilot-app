@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { DOCS_NAV, type DocSlug } from '../../lib/docsNav';
+import { DEFAULT_DESCRIPTION } from '../../lib/seo';
+import { DOCS_NAV, docHref, type DocSlug } from '../../lib/docsNav';
 import { PublicSiteHeader } from './PublicSiteHeader';
+import { SeoHead } from './SeoHead';
 
 type DocsLayoutProps = {
   slug: DocSlug;
@@ -13,6 +15,11 @@ type DocsLayoutProps = {
 export function DocsLayout({ slug, title, lede, children }: DocsLayoutProps) {
   return (
     <div className="docs-page">
+      <SeoHead
+        title={title}
+        description={lede ?? DEFAULT_DESCRIPTION}
+        path={docHref(slug)}
+      />
       <PublicSiteHeader active="docs" />
       <div className="docs-page__frame">
         <aside className="docs-sidebar" aria-label="Documentation">

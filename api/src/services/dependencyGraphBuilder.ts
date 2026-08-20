@@ -1,6 +1,11 @@
 import path from 'node:path';
 import { getPrisma, prismaInteractiveTxOptions } from '../db/prisma';
-import { createTreeSitterParser } from '../repo/treeSitterParser';
+import { resolveModuleSpecifier } from '../repo/moduleResolve';
+import {
+  createTreeSitterParser,
+  extractGoImports,
+  extractPythonImports
+} from '../repo/treeSitterParser';
 import { resolveRepositoryRevision } from './repositoryRevisions';
 
 type TreeSitterSyntaxNode = {
@@ -68,19 +73,19 @@ function nodeText(code: string, node: TreeSitterSyntaxNode): string {
   return code.slice(node.startIndex, node.endIndex);
 }
 
-function normalizePath(filePath: string): string {
-  return path.posix.normalize(filePath);
-}
-
 function declarationTypeForNode(node: TreeSitterSyntaxNode): string | null {
   switch (node.type) {
     case 'function_declaration':
+    case 'method_declaration':
+    case 'function_definition':
       return 'function';
     case 'class_declaration':
+    case 'class_definition':
       return 'class';
     case 'interface_declaration':
       return 'interface';
     case 'type_alias_declaration':
+    case 'type_spec':
       return 'type';
     default:
       return null;
@@ -94,6 +99,16 @@ function symbolKey(args: {
   endLine: number;
 }): string {
   return `${args.type}:${args.name}:${args.startLine}:${args.endLine}`;
+}
+
+function unwrapDeclaration(node: TreeSitterSyntaxNode): TreeSitterSyntaxNode {
+  if (node.type !== 'decorated_definition' && node.type !== 'type_declaration') return node;
+  for (const nested of node.namedChildren) {
+    if (declarationTypeForNode(nested) || nested.type === 'decorated_definition') {
+      return unwrapDeclaration(nested);
+    }
+  }
+  return node;
 }
 
 function getDeclarationNodes(
@@ -110,18 +125,60 @@ function getDeclarationNodes(
       continue;
     }
 
-    const type = declarationTypeForNode(child);
-    if (type) declarations.push({ node: child, type });
+    const unwrapped = unwrapDeclaration(child);
+    const type = declarationTypeForNode(unwrapped);
+    if (type) declarations.push({ node: unwrapped, type });
   }
 
   return declarations;
 }
 
+function addParsedImportBindings(
+  bindings: Map<string, ImportBinding>,
+  module: string,
+  specifiers: string[]
+) {
+  if (specifiers.length === 0) {
+    const local = module.split(/[./]/).filter(Boolean).pop() ?? module;
+    bindings.set(local, { module, kind: 'namespace', importedName: '*' });
+    return;
+  }
+  for (const spec of specifiers) {
+    if (spec === '*') {
+      bindings.set(module, { module, kind: 'namespace', importedName: '*' });
+      continue;
+    }
+    bindings.set(spec, { module, kind: 'named', importedName: spec });
+  }
+}
+
 function extractImportBindings(
   root: TreeSitterSyntaxNode,
-  code: string
+  code: string,
+  filePath: string
 ): Map<string, ImportBinding> {
   const bindings = new Map<string, ImportBinding>();
+  const ext = path.extname(filePath).toLowerCase();
+
+  if (ext === '.py') {
+    for (const child of root.namedChildren) {
+      if (child.type !== 'import_statement' && child.type !== 'import_from_statement') continue;
+      for (const parsed of extractPythonImports(nodeText(code, child))) {
+        addParsedImportBindings(bindings, parsed.module, parsed.specifiers);
+      }
+    }
+    return bindings;
+  }
+
+  if (ext === '.go') {
+    for (const child of root.namedChildren) {
+      if (child.type !== 'import_declaration') continue;
+      for (const parsed of extractGoImports(nodeText(code, child))) {
+        addParsedImportBindings(bindings, parsed.module, parsed.specifiers);
+      }
+    }
+    return bindings;
+  }
 
   for (const child of root.namedChildren) {
     if (child.type !== 'import_statement') continue;
@@ -170,38 +227,6 @@ function extractImportBindings(
   }
 
   return bindings;
-}
-
-function resolveModuleSpecifier(
-  fromFilePath: string,
-  moduleSpecifier: string,
-  knownFiles: Set<string>
-): string | null {
-  if (!moduleSpecifier.startsWith('.')) {
-    return null;
-  }
-
-  const baseDir = path.posix.dirname(fromFilePath);
-  const resolvedBase = normalizePath(path.posix.join(baseDir, moduleSpecifier));
-  const candidates = new Set<string>([
-    resolvedBase,
-    `${resolvedBase}.ts`,
-    `${resolvedBase}.tsx`,
-    `${resolvedBase}.js`,
-    `${resolvedBase}.jsx`,
-    normalizePath(path.posix.join(resolvedBase, 'index.ts')),
-    normalizePath(path.posix.join(resolvedBase, 'index.tsx')),
-    normalizePath(path.posix.join(resolvedBase, 'index.js')),
-    normalizePath(path.posix.join(resolvedBase, 'index.jsx'))
-  ]);
-
-  for (const candidate of candidates) {
-    if (knownFiles.has(candidate)) {
-      return candidate;
-    }
-  }
-
-  return null;
 }
 
 function walk(node: TreeSitterSyntaxNode, visit: (node: TreeSitterSyntaxNode) => void) {
@@ -292,7 +317,7 @@ function extractEdgesForSymbol(args: {
 
   const resolveMemberExpression = (node: TreeSitterSyntaxNode) => {
     const objectNode = node.childForFieldName('object');
-    const propertyNode = node.childForFieldName('property');
+    const propertyNode = node.childForFieldName('property') ?? node.childForFieldName('attribute');
     if (!objectNode) return;
 
     const objectName = nodeText(args.currentFile.content, objectNode).trim();
@@ -324,7 +349,7 @@ function extractEdgesForSymbol(args: {
   };
 
   walk(args.declarationNode, (node) => {
-    if (node.type === 'call_expression') {
+    if (node.type === 'call_expression' || node.type === 'call') {
       const expressionNode = node.childForFieldName('function') ?? node.childForFieldName('expression');
       if (!expressionNode) return;
 
@@ -333,13 +358,13 @@ function extractEdgesForSymbol(args: {
         return;
       }
 
-      if (expressionNode.type === 'member_expression') {
+      if (expressionNode.type === 'member_expression' || expressionNode.type === 'attribute') {
         resolveMemberExpression(expressionNode);
       }
       return;
     }
 
-    if (node.type === 'member_expression') {
+    if (node.type === 'member_expression' || node.type === 'attribute') {
       resolveMemberExpression(node);
     }
   });
@@ -529,7 +554,7 @@ export async function buildDependencyGraph(args: {
       );
     }
 
-    const importBindings = extractImportBindings(root, file.content);
+    const importBindings = extractImportBindings(root, file.content, file.path);
     const symbolEdges = new Map<string, SymbolEdge>();
     const moduleEdges = new Map<string, ModuleEdge>();
 

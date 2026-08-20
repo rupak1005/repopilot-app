@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { AppShell, type NavKey } from '../components/AppShell';
+import { SeoHead } from '../components/ui/SeoHead';
 import type { PublicUser } from './session';
 import type {
   HotspotRow,
@@ -50,6 +51,17 @@ export function useDashboardContext(): DashboardContext | null {
   return { repoId, repoFullName, user };
 }
 
+const DASHBOARD_TITLES: Record<NavKey, string> = {
+  overview: 'Overview',
+  search: 'Search',
+  ask: 'Ask',
+  pulls: 'Pull requests',
+  hotspots: 'Hotspots',
+  architecture: 'Architecture',
+  impact: 'Impact',
+  settings: 'Settings'
+};
+
 type DashboardLayoutProps = {
   activeNav: NavKey;
   canvasClass?: string;
@@ -61,6 +73,7 @@ export function DashboardLayout({ activeNav, canvasClass, children }: DashboardL
   if (!ctx) {
     return (
       <main className="standalone-page">
+        <SeoHead title="Dashboard" path="/dashboard" noIndex />
         <p className="empty-state">Loading…</p>
       </main>
     );
@@ -77,6 +90,12 @@ export function DashboardLayout({ activeNav, canvasClass, children }: DashboardL
       demoMode={isDemoMode()}
       isPublicGuest={ctx.user.isPublicGuest}
     >
+      <SeoHead
+        title={`${DASHBOARD_TITLES[activeNav]} · ${ctx.repoFullName}`}
+        description={`Indexed view of ${ctx.repoFullName} in RepoPilot.`}
+        path={`/dashboard/${ctx.repoId}`}
+        noIndex
+      />
       {isDemoMode() ? <DemoBanner /> : null}
       {ctx.user.isPublicGuest && !isDemoMode() ? <PublicGuestBanner /> : null}
       {children}

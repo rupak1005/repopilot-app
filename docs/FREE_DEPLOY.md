@@ -152,7 +152,13 @@ yarn --cwd api prisma generate && yarn --cwd api build && yarn --cwd api worker
 
 ```env
 NEXT_PUBLIC_API_URL=https://YOUR-API.up.railway.app
+NEXT_PUBLIC_APP_URL=https://YOUR-APP.vercel.app
 NEXT_PUBLIC_MARKETING_URL=https://repopilot-pi.vercel.app
+NEXT_PUBLIC_DEMO_MODE=false
+SESSION_SECRET=<openssl rand -hex 32>
+INTERNAL_API_SECRET=<same as Railway API>
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
 ```
 
 5. Deploy → note URL e.g. `repopilot-web.vercel.app`

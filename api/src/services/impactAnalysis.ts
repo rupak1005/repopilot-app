@@ -25,32 +25,32 @@ export type ImpactAnalysisResult = {
   summary: string;
 };
 
-function isTestFile(filePath: string): boolean {
-  const lower = filePath.toLowerCase();
+/** Detect test modules across TS/JS, Python, and Go — the languages we index. */
+export function isTestFile(filePath: string): boolean {
+  const lower = filePath.toLowerCase().replaceAll('\\', '/');
+  const base = lower.slice(lower.lastIndexOf('/') + 1);
   return (
-    lower.includes('__tests__') ||
+    lower.includes('/__tests__/') ||
     lower.includes('/test/') ||
-    lower.endsWith('.test.ts') ||
-    lower.endsWith('.test.tsx') ||
-    lower.endsWith('.test.js') ||
-    lower.endsWith('.spec.ts') ||
-    lower.endsWith('.spec.tsx') ||
-    lower.endsWith('.spec.js')
+    lower.includes('/tests/') ||
+    /\.(test|spec)\.(c|m)?(t|j)sx?$/.test(base) ||
+    base.startsWith('test_') ||
+    base.endsWith('_test.py') ||
+    base.endsWith('_test.go')
   );
 }
 
-function computeRisk(args: {
+export function computeRisk(args: {
   directCount: number;
   transitiveCount: number;
   hotspotScore: number;
   testCount: number;
 }): ImpactRisk {
-  if (args.transitiveCount >= 10 || args.directCount >= 5 || args.hotspotScore >= 40) {
-    return 'HIGH';
-  }
-  if (args.directCount >= 1 || args.transitiveCount >= 3 || args.hotspotScore >= 15) {
-    return 'MEDIUM';
-  }
+  const wideBlast = args.transitiveCount >= 10 || args.directCount >= 5 || args.hotspotScore >= 40;
+  if (wideBlast) return 'HIGH';
+  const someBlast = args.directCount >= 1 || args.transitiveCount >= 3 || args.hotspotScore >= 15;
+  if (someBlast && args.testCount === 0) return 'HIGH';
+  if (someBlast) return 'MEDIUM';
   return 'LOW';
 }
 

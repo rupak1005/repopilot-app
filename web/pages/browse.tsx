@@ -118,6 +118,12 @@ export default function BrowsePage() {
       pageClassName="browse-page"
       mainClassName="browse-main"
       decorVariant="top"
+      seo={{
+        title: 'Browse public repositories',
+        description:
+          'Search public GitHub repositories and open one in RepoPilot to index graphs, hotspots, Ask, and PR review.',
+        path: '/browse'
+      }}
     >
         <header className="browse-hero">
           <h1>Browse public repositories</h1>

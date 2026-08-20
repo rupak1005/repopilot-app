@@ -29,7 +29,9 @@
     "pg": "*",
     "prisma": "*",
     "tree-sitter": "*",
+    "tree-sitter-go": "^0.25.0",
     "tree-sitter-javascript": "*",
+    "tree-sitter-python": "^0.25.0",
     "tree-sitter-typescript": "*",
     "zod": "^4.4.3"
   },

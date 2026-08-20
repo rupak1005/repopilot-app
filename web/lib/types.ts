@@ -105,6 +105,9 @@ export type HotspotRow = {
   score: number;
   changeCount: number;
   reasons: string[];
+  dependentCount?: number;
+  coChangeCount?: number;
+  findingsCount?: number;
 };
 
 export type SearchHit = {

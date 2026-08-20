@@ -17,7 +17,7 @@ api/
     cli.ts           sync/graph/search/history CLI
     mcp/server.ts    MCP stdio
     middleware/      internalAuth, rateLimit
-    repo/            fileDiscovery, treeSitterParser, persistence
+    repo/            fileDiscovery, treeSitterParser, moduleResolve, persistence
     services/        index, sync, graph, search, ask, PR, history, MCP tools…
 web/
   pages/             Next.js routes + BFF under pages/api
@@ -98,8 +98,9 @@ IDs: repository UUID often derived as SHA-256-based UUID from `owner/repo` (`der
 | Orchestrator | `services/repositoryIndex.ts` | Start public/auth index; job begin/finish; status/stage; full pipeline |
 | Clone | `services/githubClone.ts` | Clone/update under `REPO_CLONE_ROOT` |
 | Sync | `services/repositorySync.ts` | Discover → parse → persist → search index |
-| Discover | `repo/fileDiscovery.ts` | `*.{ts,tsx,js,jsx}` only |
-| Parse | `repo/treeSitterParser.ts` | Symbols / imports / exports |
+| Discover | `repo/fileDiscovery.ts` | `*.{ts,tsx,js,jsx,py,go}` |
+| Parse | `repo/treeSitterParser.ts` | Symbols / imports / exports (TS/JS, Python, Go) |
+| Resolve | `repo/moduleResolve.ts` | Relative JS, dotted Python, Go import paths |
 | Persist | `repo/persistence.ts` | Bulk upsert into Prisma |
 | Graph | `services/dependencyGraphBuilder.ts` | Module + symbol edges |
 | Graph query | `services/dependencyGraphQueries.ts` | Traversals for impact/deps |

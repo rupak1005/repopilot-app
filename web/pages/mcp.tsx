@@ -35,6 +35,12 @@ export default function PublicMcpPage() {
       pageClassName="mcp-page"
       mainClassName="mcp-page__main"
       shellClassName="mcp-page__shell"
+      seo={{
+        title: 'Connect Cursor / MCP',
+        description:
+          'Wire RepoPilot into Cursor, Claude Desktop, or any MCP client for search, dependencies, and impact analysis.',
+        path: '/mcp'
+      }}
     >
           <div className="page-title-block">
             <h1>Connect Cursor / MCP</h1>

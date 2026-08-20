@@ -2,6 +2,8 @@
 import Parser = require('tree-sitter');
 import TS = require('tree-sitter-typescript');
 import JS = require('tree-sitter-javascript');
+import Python = require('tree-sitter-python');
+import Go = require('tree-sitter-go');
 import path from 'node:path';
 
 type TreeSitterSyntaxNode = {
@@ -179,39 +181,112 @@ function extractExportsFromExportStatement(
   return exports;
 }
 
-export function createTreeSitterParser(
-  filePath: string
-): Parser {
+function languageForFile(filePath: string): TreeSitterLanguageParam {
   const ext = path.extname(filePath).toLowerCase();
-  const parser = new Parser();
+  if (ext === '.py') return Python as unknown as TreeSitterLanguageParam;
+  if (ext === '.go') return Go as unknown as TreeSitterLanguageParam;
+  if (ext === '.tsx') {
+    return ((TS as unknown as { tsx?: TreeSitterLanguageParam }).tsx ?? TS.typescript) as TreeSitterLanguageParam;
+  }
+  if (ext === '.jsx') {
+    const jsxLang = (JS as unknown as { jsx?: TreeSitterLanguageParam }).jsx;
+    const jsFallback = (JS as unknown as { javascript?: TreeSitterLanguageParam }).javascript;
+    return (jsxLang ?? jsFallback ?? TS.typescript) as TreeSitterLanguageParam;
+  }
+  if (ext === '.js' || ext === '.mjs' || ext === '.cjs') {
+    const jsLang = (JS as unknown as { javascript?: TreeSitterLanguageParam }).javascript;
+    return (jsLang ?? TS.typescript) as TreeSitterLanguageParam;
+  }
+  return TS.typescript;
+}
 
-  // Tree-sitter-typescript exports a handful of language bindings (typescript + tsx).
-  if (ext === '.ts' || ext === '.mts' || ext === '.cts') {
-    parser.setLanguage(TS.typescript);
-  } else if (ext === '.tsx') {
-    const tsxLang = (TS as unknown as {
-      tsx?: TreeSitterLanguageParam;
-    }).tsx;
-    parser.setLanguage(tsxLang ?? TS.typescript);
-  } else if (ext === '.js' || ext === '.mjs' || ext === '.cjs') {
-    const jsLang = (JS as unknown as {
-      javascript?: TreeSitterLanguageParam;
-    }).javascript;
-    parser.setLanguage(jsLang ?? TS.typescript);
-  } else if (ext === '.jsx') {
-    const jsxLang = (JS as unknown as {
-      jsx?: TreeSitterLanguageParam;
-    }).jsx;
-    const jsFallback = (JS as unknown as {
-      javascript?: TreeSitterLanguageParam;
-    }).javascript;
-    parser.setLanguage(jsxLang ?? jsFallback ?? TS.typescript);
-  } else {
-    // Default to TS grammar; parsing will still be best-effort.
-    parser.setLanguage(TS.typescript);
+export function createTreeSitterParser(filePath: string): Parser {
+  const parser = new Parser();
+  parser.setLanguage(languageForFile(filePath));
+  return parser;
+}
+
+export function extractPythonImports(text: string): ParsedImport[] {
+  const compact = text.replace(/\\\s*\n/g, ' ').replace(/\s+/g, ' ').trim();
+  const fromMatch = compact.match(/^from\s+(\.+[\w.]*)\s+import\s+(.+)$/)
+    ?? compact.match(/^from\s+([\w.]+)\s+import\s+(.+)$/);
+  if (fromMatch) {
+    const moduleBase = fromMatch[1];
+    const rest = fromMatch[2].replace(/[()]/g, '').trim();
+    if (rest === '*') return [{ module: moduleBase, specifiers: ['*'] }];
+
+    const specifiers: string[] = [];
+    for (const part of rest.split(',')) {
+      const name = part.trim().split(/\s+as\s+/)[0]?.trim();
+      if (name) specifiers.push(name);
+    }
+    if (/^\.+$/.test(moduleBase)) {
+      return specifiers.map((name) => ({ module: `${moduleBase}${name}`, specifiers: [name] }));
+    }
+    return [{ module: moduleBase, specifiers }];
   }
 
-  return parser;
+  const importMatch = compact.match(/^import\s+(.+)$/);
+  if (!importMatch) return [];
+  const imports: ParsedImport[] = [];
+  for (const part of importMatch[1].split(',')) {
+    const module = part.trim().split(/\s+as\s+/)[0]?.trim();
+    if (module) imports.push({ module, specifiers: [] });
+  }
+  return imports;
+}
+
+export function extractGoImports(text: string): ParsedImport[] {
+  return [...text.matchAll(/"([^"]+)"/g)].map((match) => ({
+    module: match[1],
+    specifiers: []
+  }));
+}
+
+function pythonSymbolFromNode(code: string, node: TreeSitterSyntaxNode): ParsedSymbol | null {
+  if (node.type === 'decorated_definition') {
+    for (const child of node.namedChildren) {
+      const nested = pythonSymbolFromNode(code, child);
+      if (nested) return nested;
+    }
+    return null;
+  }
+  if (node.type !== 'function_definition' && node.type !== 'class_definition') return null;
+  const nameNode = node.childForFieldName('name');
+  const name = nameNode ? nodeText(code, nameNode) : '';
+  if (!name) return null;
+  const { startLine, endLine } = toLineRange(node);
+  return {
+    name,
+    type: node.type === 'class_definition' ? 'class' : 'function',
+    startLine,
+    endLine
+  };
+}
+
+function goSymbolFromNode(code: string, node: TreeSitterSyntaxNode): ParsedSymbol | null {
+  if (node.type === 'function_declaration' || node.type === 'method_declaration') {
+    const nameNode = node.childForFieldName('name');
+    const name = nameNode ? nodeText(code, nameNode) : '';
+    if (!name) return null;
+    const { startLine, endLine } = toLineRange(node);
+    return { name, type: 'function', startLine, endLine };
+  }
+  if (node.type === 'type_declaration') {
+    for (const child of node.namedChildren) {
+      const nested = goSymbolFromNode(code, child);
+      if (nested) return nested;
+    }
+    return null;
+  }
+  if (node.type === 'type_spec') {
+    const nameNode = node.childForFieldName('name');
+    const name = nameNode ? nodeText(code, nameNode) : '';
+    if (!name) return null;
+    const { startLine, endLine } = toLineRange(node);
+    return { name, type: 'type', startLine, endLine };
+  }
+  return null;
 }
 
 export function parseCodeToRecords(
@@ -226,7 +301,35 @@ export function parseCodeToRecords(
   const imports: ParsedImport[] = [];
   const exportsList: ParsedExport[] = [];
 
+  const ext = path.extname(filePath).toLowerCase();
+
   const visitTopLevel = (node: TreeSitterSyntaxNode) => {
+    if (ext === '.py') {
+      if (node.type === 'import_statement' || node.type === 'import_from_statement') {
+        imports.push(...extractPythonImports(nodeText(code, node)));
+        return;
+      }
+      const pySym = pythonSymbolFromNode(code, node);
+      if (pySym) {
+        symbols.push(pySym);
+        exportsList.push({ name: pySym.name });
+      }
+      return;
+    }
+
+    if (ext === '.go') {
+      if (node.type === 'import_declaration') {
+        imports.push(...extractGoImports(nodeText(code, node)));
+        return;
+      }
+      const goSym = goSymbolFromNode(code, node);
+      if (goSym) {
+        symbols.push(goSym);
+        exportsList.push({ name: goSym.name });
+      }
+      return;
+    }
+
     switch (node.type) {
       case 'import_statement':
         imports.push(extractImportsFromImportStatement(code, node));

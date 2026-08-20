@@ -4650,6 +4650,14 @@ tree-kill@^1.2.2:
   resolved "https://registry.yarnpkg.com/tree-kill/-/tree-kill-1.2.2.tgz#4ca09a9092c88b73a7cdc5e8a01b507b0790a0cc"
   integrity sha512-L0Orpi8qGpRG//Nd+H90vFB+3iHnue1zSSGmNOOCh1GLJ7rUKVwV2HvijphGQS2UmhUZewS9VgvxYIdgr+fG1A==
 
+tree-sitter-go@^0.25.0:
+  version "0.25.0"
+  resolved "https://registry.yarnpkg.com/tree-sitter-go/-/tree-sitter-go-0.25.0.tgz#ebd6653c43b0146c3c6fe354e1b99963534c8ee0"
+  integrity sha512-APBc/Dq3xz/e35Xpkhb1blu5UgW+2E3RyGWawZSCNcbGwa7jhSQPS8KsUupuzBla8PCo8+lz9W/JDJjmfRa2tw==
+  dependencies:
+    node-addon-api "^8.3.1"
+    node-gyp-build "^4.8.4"
+
 tree-sitter-javascript@*:
   version "0.25.0"
   resolved "https://registry.yarnpkg.com/tree-sitter-javascript/-/tree-sitter-javascript-0.25.0.tgz#2e336b8f128e6e85401eb67667dfd87cfcf153e8"
@@ -4665,6 +4673,14 @@ tree-sitter-javascript@^0.23.1:
   dependencies:
     node-addon-api "^8.2.2"
     node-gyp-build "^4.8.2"
+
+tree-sitter-python@^0.25.0:
+  version "0.25.0"
+  resolved "https://registry.yarnpkg.com/tree-sitter-python/-/tree-sitter-python-0.25.0.tgz#c1c460915cb883feb2d9ecefeb98b3794eba85f5"
+  integrity sha512-eCmJx6zQa35GxaCtQD+wXHOhYqBxEL+bp71W/s3fcDMu06MrtzkVXR437dRrCrbrDbyLuUDJpAgycs7ncngLXw==
+  dependencies:
+    node-addon-api "^8.5.0"
+    node-gyp-build "^4.8.4"
 
 tree-sitter-typescript@*:
   version "0.23.2"

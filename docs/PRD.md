@@ -89,14 +89,14 @@ Typical “repo diagram” tools guess architecture with an LLM. RepoPilot:
 | Security | Session HMAC cookies; optional `INTERNAL_API_SECRET` for BFF→API; webhook HMAC |
 | Cost | Default AI path free (Groq chat + local embeddings) |
 | Performance | Parallel sync (`SYNC_CONCURRENCY`); history capped for MVP |
-| Language | **TS/JS only** for AST parse today (`*.{ts,tsx,js,jsx}`) |
+| Language | AST parse for **TS/JS, Python, Go** (`*.{ts,tsx,js,jsx,py,go}`) |
 
 ---
 
 ## 6. Explicit non-goals (v3)
 
 - Multi-tenant orgs, SSO, billing  
-- First-class Python/Go/Java AST (examples may open but won’t get full graphs)  
+- First-class Java/C++/Rust AST (Python/Go graphs are in; others may clone without edges)  
 - Merging marketing site into this monorepo  
 - Slack/Teams bots beyond MCP  
 - Guaranteeing CI gate enforcement (impact + review are advisory signals)
@@ -106,7 +106,7 @@ Typical “repo diagram” tools guess architecture with an LLM. RepoPilot:
 ## 7. Success metrics (product)
 
 - Guest can open a public repo and see architecture / search without signing in  
-- Ask returns cited answer for indexed TS/JS repos with configured LLM  
+- Ask returns cited answer for indexed TS/JS/Python/Go repos with configured LLM  
 - Indexing progress visible until `ready`  
 - MCP tools return non-empty results for a pre-indexed `MCP_REPO_SLUG`  
 - CI green on push (`yarn ci`)

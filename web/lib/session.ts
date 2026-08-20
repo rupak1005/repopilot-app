@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { publicAppOrigin } from './seo';
 
 export const SESSION_COOKIE = 'rp_session';
 export const OAUTH_STATE_COOKIE = 'rp_oauth_state';
@@ -126,5 +127,5 @@ export function clearOAuthStateCookie(res: NextApiResponse): void {
 }
 
 export function appOrigin(): string {
-  return process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  return publicAppOrigin();
 }

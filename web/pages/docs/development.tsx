@@ -91,6 +91,8 @@ yarn dev`}</DocsCode>
           headers={['Variable', 'Purpose']}
           rows={[
             ['NEXT_PUBLIC_API_URL', 'Fastify API base URL'],
+            ['NEXT_PUBLIC_APP_URL', 'Public app origin (canonical URLs, OAuth callback)'],
+            ['NEXT_PUBLIC_MARKETING_URL', 'Separate marketing site URL'],
             ['NEXT_PUBLIC_DEMO_MODE', 'Show seeded dashboard without indexing'],
             ['GITHUB_CLIENT_ID / SECRET', 'OAuth for private repos'],
             ['SESSION_SECRET', 'Cookie signing key'],
