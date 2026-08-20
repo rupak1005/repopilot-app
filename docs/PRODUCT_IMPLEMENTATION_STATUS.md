@@ -20,7 +20,8 @@
 | 13 | Docs / onboarding | **Done foundation** — checklist + tour refresh |
 | 14 | Landing / marketing | **Done foundation** — brand hero + how-it-works |
 | 15 | Accessibility / motion | **Done foundation** — skip link, landmarks, keyboard rows |
-| 16–35 | Remaining | Not started / partial |
+| 16 | Revision-scoped graph | **Done foundation** — `?rev=` + History deep links |
+| 17–35 | Remaining | Not started / partial |
 
 ## Phase 5
 
@@ -66,7 +67,7 @@
 - [x] History page: indexed revisions timeline
 - [x] Commit / PR history search (`search/history`)
 - [x] Nav + Cmd+K entry under Investigate
-- [ ] Per-revision graph switch (deferred)
+- [x] Per-revision graph switch (Architecture `?rev=` + History Graph links)
 
 ## Phase 11
 
@@ -104,6 +105,13 @@
 - [x] Graph “Jump to” module select + reduced-motion camera pans
 - [x] Index status `aria-live` + dialog `aria-labelledby`
 
+## Phase 16
+
+- [x] Architecture revision picker (`?rev=`) over indexed revisions
+- [x] Architecture / cycles / impact / neighborhood / path scoped by `revisionSha`
+- [x] History “Graph” links open the matching revision
+- [x] Shared `revisionScope` helpers + tests
+
 ## Next action
 
-Phase 16 (revision-scoped graph viewing) or Phase 17 (universal search merge).
+Phase 17 (universal search merge) or Phase 18 (impact revision deep links).

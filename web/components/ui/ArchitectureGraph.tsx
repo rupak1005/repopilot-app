@@ -45,6 +45,7 @@ import { useDiagramColors } from '../../lib/diagramTheme';
 import { isDemoMode } from '../../lib/demoMode';
 import { githubModuleUrl, moduleSearchQuery } from '../../lib/modulePaths';
 import { repoApiPath } from '../../lib/serverApi';
+import { withRevisionSha } from '../../lib/revisionScope';
 import { toMermaidFlowchart } from '../../lib/mermaidDiagram';
 import { MermaidDiagram, type MermaidDiagramHandle } from './MermaidDiagram';
 import { IconButton } from './IconButton';
@@ -74,6 +75,8 @@ type ArchitectureGraphProps = {
   viewMeta?: ArchitectureViewMeta;
   repoFullName?: string;
   repoId?: string;
+  /** When set, graph ops run against this indexed SHA instead of latest. */
+  revisionSha?: string | null;
   loading?: boolean;
   initialSelectedId?: string | null;
   expandedClusters?: string[];
@@ -98,6 +101,7 @@ type InspectorProps = {
   pathHint?: string | null;
   repoId?: string;
   repoFullName?: string;
+  revisionSha?: string | null;
   embedded?: boolean;
   onClose: () => void;
   onSelectModule: (moduleId: string) => void;
@@ -117,6 +121,7 @@ function DiagramInspector({
   pathHint,
   repoId,
   repoFullName,
+  revisionSha: scopedRevisionSha = null,
   embedded = false,
   onClose,
   onSelectModule,
@@ -143,16 +148,22 @@ function DiagramInspector({
   async function openOnGitHub() {
     if (!repoFullName?.includes('/')) return;
     let path = selectedNode.id;
-    let revisionSha: string | undefined;
+    let revisionSha = scopedRevisionSha ?? undefined;
     if (repoId) {
       try {
         const response = await fetch(
-          repoApiPath(repoId, `resolve-path?module=${encodeURIComponent(selectedNode.id)}`)
+          repoApiPath(
+            repoId,
+            withRevisionSha(
+              `resolve-path?module=${encodeURIComponent(selectedNode.id)}`,
+              scopedRevisionSha
+            )
+          )
         );
         if (response.ok) {
           const data = (await response.json()) as { path?: string | null; revisionSha?: string };
           if (data.path) path = data.path;
-          revisionSha = data.revisionSha;
+          revisionSha = scopedRevisionSha ?? data.revisionSha;
         }
       } catch {
         // Fall through to alias/search URL.
@@ -266,6 +277,7 @@ export function ArchitectureGraphView({
   viewMeta,
   repoFullName,
   repoId,
+  revisionSha = null,
   loading = false,
   initialSelectedId = null,
   expandedClusters = [],
@@ -386,7 +398,10 @@ export function ArchitectureGraphView({
         const response = await fetch(
           repoApiPath(
             activeRepoId,
-            `dependencies?filePath=${encodeURIComponent(activeSelectedId)}&depth=2`
+            withRevisionSha(
+              `dependencies?filePath=${encodeURIComponent(activeSelectedId)}&depth=2`,
+              revisionSha
+            )
           )
         );
         if (!response.ok) throw new Error('neighbors unavailable');
@@ -403,7 +418,7 @@ export function ArchitectureGraphView({
     return () => {
       cancelled = true;
     };
-  }, [repoId, selectedId]);
+  }, [repoId, selectedId, revisionSha]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -552,7 +567,10 @@ export function ArchitectureGraphView({
       const response = await fetch(
         repoApiPath(
           repoId,
-          `graph?op=shortestPath&from=${encodeURIComponent(fromId)}&to=${encodeURIComponent(toId)}`
+          withRevisionSha(
+            `graph?op=shortestPath&from=${encodeURIComponent(fromId)}&to=${encodeURIComponent(toId)}`,
+            revisionSha
+          )
         )
       );
       if (!response.ok) throw new Error('path unavailable');
@@ -576,7 +594,10 @@ export function ArchitectureGraphView({
       const response = await fetch(
         repoApiPath(
           repoId,
-          `graph?op=neighborhood&seed=${encodeURIComponent(seed)}&depth=2&limit=15`
+          withRevisionSha(
+            `graph?op=neighborhood&seed=${encodeURIComponent(seed)}&depth=2&limit=15`,
+            revisionSha
+          )
         )
       );
       if (!response.ok) throw new Error('neighborhood unavailable');
@@ -905,6 +926,7 @@ export function ArchitectureGraphView({
         pathHint={pathHint}
         repoId={repoId}
         repoFullName={repoFullName}
+        revisionSha={revisionSha}
         onClose={() => setSelectedId(null)}
         onSelectModule={selectModule}
         onExpandNeighborhood={
@@ -1043,6 +1065,7 @@ export function ArchitectureGraphView({
           pathHint={pathHint}
           repoId={repoId}
           repoFullName={repoFullName}
+          revisionSha={revisionSha}
           onClose={() => setSelectedId(null)}
           onSelectModule={selectModule}
           onExpandNeighborhood={

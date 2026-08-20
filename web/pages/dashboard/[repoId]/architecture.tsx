@@ -16,8 +16,15 @@ import {
   type ForceGraphData
 } from '../../../lib/architecture';
 import { blastFromImpactPayload, type BlastOverlay } from '../../../lib/blastOverlay';
-import { DEMO_ARCHITECTURE, demoFileImpact } from '../../../lib/demoData';
+import { DEMO_ARCHITECTURE, DEMO_REVISIONS, demoFileImpact } from '../../../lib/demoData';
 import { isDemoMode } from '../../../lib/demoMode';
+import { type RevisionRow } from '../../../lib/history';
+import {
+  REVISION_QUERY_KEY,
+  parseRevisionQuery,
+  revisionSelectLabel,
+  withRevisionSha
+} from '../../../lib/revisionScope';
 import { repoApiPath } from '../../../lib/serverApi';
 
 const DEMO_EXPLANATION =
@@ -38,6 +45,8 @@ export default function ArchitecturePage() {
   const prevIndexState = useRef<string | undefined>(undefined);
   const deepFile = typeof router.query.file === 'string' ? router.query.file : null;
   const wantBlast = router.query.blast === '1' || router.query.blast === 'true';
+  const revisionSha = parseRevisionQuery(router.query[REVISION_QUERY_KEY]);
+  const [revisions, setRevisions] = useState<RevisionRow[]>([]);
 
   useEffect(() => {
     async function loadUser() {
@@ -48,6 +57,36 @@ export default function ArchitecturePage() {
       }
     }
     void loadUser();
+  }, [repoId]);
+
+  useEffect(() => {
+    if (!repoId) return;
+    if (isDemoMode()) {
+      setRevisions(DEMO_REVISIONS);
+      return;
+    }
+    let cancelled = false;
+    async function loadRevisions() {
+      try {
+        const response = await fetch(repoApiPath(repoId!, 'revisions'));
+        if (!response.ok) return;
+        const data = (await response.json()) as Array<{ revisionSha: string; indexedAt: string }>;
+        if (!cancelled) {
+          setRevisions(
+            data.map((row) => ({
+              revisionSha: row.revisionSha,
+              indexedAt: typeof row.indexedAt === 'string' ? row.indexedAt : String(row.indexedAt)
+            }))
+          );
+        }
+      } catch {
+        if (!cancelled) setRevisions([]);
+      }
+    }
+    void loadRevisions();
+    return () => {
+      cancelled = true;
+    };
   }, [repoId]);
 
   useEffect(() => {
@@ -65,7 +104,9 @@ export default function ArchitecturePage() {
     async function load() {
       setLoading(true);
       try {
-        const response = await fetch(repoApiPath(activeRepoId, 'architecture'));
+        const response = await fetch(
+          repoApiPath(activeRepoId, withRevisionSha('architecture', revisionSha))
+        );
         if (!response.ok) throw new Error('Could not load architecture — index the repo first.');
         const data = (await response.json()) as ArchitectureGraph;
         if (!cancelled) {
@@ -85,7 +126,7 @@ export default function ArchitecturePage() {
     return () => {
       cancelled = true;
     };
-  }, [repoId, reloadToken]);
+  }, [repoId, reloadToken, revisionSha]);
 
   const architectureView = useMemo(
     () => (graph ? buildArchitectureView(graph, { expandedClusters }) : null),
@@ -120,7 +161,9 @@ export default function ArchitecturePage() {
     let cancelled = false;
     async function loadCycles() {
       try {
-        const response = await fetch(repoApiPath(repoId!, 'graph?op=cycles&limit=25'));
+        const response = await fetch(
+          repoApiPath(repoId!, withRevisionSha('graph?op=cycles&limit=25', revisionSha))
+        );
         if (!response.ok) return;
         const payload = (await response.json()) as { cycles?: string[][] };
         if (!cancelled) setModuleCycles(payload.cycles ?? []);
@@ -132,7 +175,7 @@ export default function ArchitecturePage() {
     return () => {
       cancelled = true;
     };
-  }, [repoId, graph]);
+  }, [repoId, graph, revisionSha]);
 
   useEffect(() => {
     if (!wantBlast || !deepFile || !repoId) {
@@ -148,7 +191,13 @@ export default function ArchitecturePage() {
     async function loadBlast() {
       try {
         const response = await fetch(
-          repoApiPath(repoId!, `impact?filePath=${encodeURIComponent(deepFile!)}&depth=2`)
+          repoApiPath(
+            repoId!,
+            withRevisionSha(
+              `impact?filePath=${encodeURIComponent(deepFile!)}&depth=2`,
+              revisionSha
+            )
+          )
         );
         if (!response.ok) throw new Error('impact unavailable');
         const payload = (await response.json()) as {
@@ -165,7 +214,7 @@ export default function ArchitecturePage() {
     return () => {
       cancelled = true;
     };
-  }, [wantBlast, deepFile, repoId]);
+  }, [wantBlast, deepFile, repoId, revisionSha]);
 
   useEffect(() => {
     if (!graph || graph.nodes.length <= 60) return;
@@ -197,6 +246,28 @@ export default function ArchitecturePage() {
     }
   }, [indexStatus?.state]);
 
+  function onRevisionChange(next: string) {
+    if (!repoId) return;
+    const query: Record<string, string> = {};
+    if (deepFile) query.file = deepFile;
+    if (wantBlast) query.blast = '1';
+    if (next) query[REVISION_QUERY_KEY] = next;
+    void router.replace(
+      { pathname: `/dashboard/${repoId}/architecture`, query },
+      undefined,
+      { shallow: true }
+    );
+  }
+
+  const selectedRevisionValue =
+    revisionSha &&
+    revisions.find(
+      (row) =>
+        row.revisionSha === revisionSha ||
+        row.revisionSha.startsWith(revisionSha) ||
+        revisionSha.startsWith(row.revisionSha)
+    )?.revisionSha;
+
   return (
     <DashboardLayout activeNav="architecture" canvasClass="canvas--diagram">
       <div className="ui-diagram-page">
@@ -212,6 +283,24 @@ export default function ArchitecturePage() {
           <div className="ui-diagram-repo-bar" aria-label="Current repository">
             <GitBranch size={16} weight="bold" aria-hidden />
             <span className="mono">{slug}</span>
+            {revisions.length > 0 ? (
+              <label className="ui-diagram-rev">
+                <span className="label-caps">Revision</span>
+                <select
+                  className="ui-diagram-rev__select"
+                  value={selectedRevisionValue ?? ''}
+                  onChange={(event) => onRevisionChange(event.target.value)}
+                  aria-label="Indexed revision for this graph"
+                >
+                  <option value="">Latest indexed</option>
+                  {revisions.map((row, index) => (
+                    <option key={row.revisionSha} value={row.revisionSha}>
+                      {revisionSelectLabel(row, index)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
           </div>
         </header>
 
@@ -246,6 +335,7 @@ export default function ArchitecturePage() {
             viewMeta={architectureView?.meta}
             repoFullName={repoFullName || undefined}
             repoId={repoId ?? undefined}
+            revisionSha={revisionSha}
             loading={loading}
             initialSelectedId={deepFile}
             expandedClusters={expandedClusters}

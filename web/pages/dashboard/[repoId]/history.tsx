@@ -10,6 +10,7 @@ import { DashboardLayout } from '../../../lib/dashboard';
 import { isDemoMode } from '../../../lib/demoMode';
 import { DEMO_HISTORY_HITS, DEMO_REVISIONS } from '../../../lib/demoData';
 import { formatIndexedAt, shortSha, type HistoryHit, type RevisionRow } from '../../../lib/history';
+import { architectureHref } from '../../../lib/revisionScope';
 import { repoApiPath } from '../../../lib/serverApi';
 
 export default function HistoryPage() {
@@ -121,11 +122,11 @@ export default function HistoryPage() {
                     {index === 0 ? 'Latest · ' : ''}
                     {formatIndexedAt(rev.indexedAt)}
                   </span>
-                  {base ? (
+                  {repoId ? (
                     <Link
                       className="ui-history-revision__link"
-                      href={`${base}/architecture`}
-                      title="Open dependency graph for the current index"
+                      href={architectureHref(repoId, rev.revisionSha)}
+                      title="Open dependency graph at this revision"
                     >
                       Graph
                     </Link>
