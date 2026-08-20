@@ -508,7 +508,9 @@ function FileImpactView({ result, base }: { result: FileImpactAnalysis; base: st
         />
         {base ? (
           <p className="ui-impact-blast__link">
-            <Link href={`${base}/architecture?file=${encodeURIComponent(result.target.filePath)}`}>
+            <Link
+              href={`${base}/architecture?file=${encodeURIComponent(result.target.filePath)}&blast=1`}
+            >
               Open in dependency graph →
             </Link>
           </p>

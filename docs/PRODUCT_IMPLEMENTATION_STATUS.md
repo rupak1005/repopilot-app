@@ -18,7 +18,7 @@
 - [x] File impact risk factors + confidence + blast map
 - [x] PR impact aggregation
 - [x] Symbol impact (`symbolName` / `symbolId`) with callers + cycle signal
-- [ ] Canvas ArchitectureGraph blast overlay
+- [x] Canvas ArchitectureGraph blast overlay (`?file=&blast=1`)
 
 ## Phase 6
 
@@ -29,4 +29,4 @@
 
 ## Next action
 
-Canvas blast overlay or time-window topography — ask before committing.
+Time-window topography, or optional ELK/symbol graph views — ask before committing.

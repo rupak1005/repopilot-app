@@ -15,9 +15,10 @@ import {
   type ArchitectureGraph,
   type ForceGraphData
 } from '../../../lib/architecture';
-import { repoApiPath } from '../../../lib/serverApi';
-import { DEMO_ARCHITECTURE } from '../../../lib/demoData';
+import { blastFromImpactPayload, type BlastOverlay } from '../../../lib/blastOverlay';
+import { DEMO_ARCHITECTURE, demoFileImpact } from '../../../lib/demoData';
 import { isDemoMode } from '../../../lib/demoMode';
+import { repoApiPath } from '../../../lib/serverApi';
 
 const DEMO_EXPLANATION =
   'RepoPilot maps your codebase into a system diagram: the API layer handles sync, search, and reviews; the web dashboard consumes those endpoints; shared IDs live in common. Orange borders mark churn hotspots from git history.';
@@ -32,7 +33,10 @@ export default function ArchitecturePage() {
   const [reloadToken, setReloadToken] = useState(0);
   const [expandedClusters, setExpandedClusters] = useState<string[]>([]);
   const [neighborhoodOverlay, setNeighborhoodOverlay] = useState<ForceGraphData | null>(null);
+  const [blastOverlay, setBlastOverlay] = useState<BlastOverlay | null>(null);
   const prevIndexState = useRef<string | undefined>(undefined);
+  const deepFile = typeof router.query.file === 'string' ? router.query.file : null;
+  const wantBlast = router.query.blast === '1' || router.query.blast === 'true';
 
   useEffect(() => {
     async function loadUser() {
@@ -100,14 +104,63 @@ export default function ArchitecturePage() {
   useEffect(() => {
     setExpandedClusters([]);
     setNeighborhoodOverlay(null);
+    setBlastOverlay(null);
   }, [graph]);
 
   useEffect(() => {
-    const file = typeof router.query.file === 'string' ? router.query.file : null;
-    if (!file || !graph || graph.nodes.length <= 60) return;
-    const cid = clusterIdForPrefix(directoryClusterKey(file));
-    setExpandedClusters((prev) => (prev.includes(cid) ? prev : [...prev, cid]));
-  }, [router.query.file, graph]);
+    if (!wantBlast || !deepFile || !repoId) {
+      setBlastOverlay(null);
+      return;
+    }
+    if (isDemoMode()) {
+      const demo = demoFileImpact(deepFile);
+      setBlastOverlay(demo ? blastFromImpactPayload(demo) : { seed: deepFile, direct: [], transitive: [] });
+      return;
+    }
+    let cancelled = false;
+    async function loadBlast() {
+      try {
+        const response = await fetch(
+          repoApiPath(repoId!, `impact?filePath=${encodeURIComponent(deepFile!)}&depth=2`)
+        );
+        if (!response.ok) throw new Error('impact unavailable');
+        const payload = (await response.json()) as {
+          target: { filePath: string };
+          directDependents: string[];
+          transitiveDependents: string[];
+        };
+        if (!cancelled) setBlastOverlay(blastFromImpactPayload(payload));
+      } catch {
+        if (!cancelled) setBlastOverlay({ seed: deepFile!, direct: [], transitive: [] });
+      }
+    }
+    void loadBlast();
+    return () => {
+      cancelled = true;
+    };
+  }, [wantBlast, deepFile, repoId]);
+
+  useEffect(() => {
+    if (!graph || graph.nodes.length <= 60) return;
+    const paths = blastOverlay
+      ? [blastOverlay.seed, ...blastOverlay.direct, ...blastOverlay.transitive]
+      : deepFile
+        ? [deepFile]
+        : [];
+    if (paths.length === 0) return;
+    setExpandedClusters((prev) => {
+      let changed = false;
+      const next = [...prev];
+      for (const path of paths) {
+        const cid = clusterIdForPrefix(directoryClusterKey(path));
+        if (!next.includes(cid)) {
+          next.push(cid);
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [deepFile, blastOverlay, graph]);
 
   useEffect(() => {
     const prev = prevIndexState.current;
@@ -167,10 +220,9 @@ export default function ArchitecturePage() {
             repoFullName={repoFullName || undefined}
             repoId={repoId ?? undefined}
             loading={loading}
-            initialSelectedId={
-              typeof router.query.file === 'string' ? router.query.file : null
-            }
+            initialSelectedId={deepFile}
             expandedClusters={expandedClusters}
+            blastOverlay={blastOverlay}
             onGraphRebuilt={() => setReloadToken((n) => n + 1)}
             onExpandCluster={(clusterId) => {
               setExpandedClusters((prev) =>

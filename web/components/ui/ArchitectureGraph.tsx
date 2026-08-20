@@ -34,6 +34,7 @@ import {
   type ForceGraphData,
   type ForceGraphNode
 } from '../../lib/architecture';
+import { blastHighlightSet, blastRole, type BlastOverlay } from '../../lib/blastOverlay';
 import { layoutWithDagre } from '../../lib/dagreLayout';
 import {
   directDependentModules,
@@ -76,6 +77,8 @@ type ArchitectureGraphProps = {
   loading?: boolean;
   initialSelectedId?: string | null;
   expandedClusters?: string[];
+  /** When set, dims everything outside the impact blast radius. */
+  blastOverlay?: BlastOverlay | null;
   onGraphRebuilt?: () => void;
   onExpandCluster?: (clusterId: string) => void;
   onCollapseCluster?: (clusterId: string) => void;
@@ -264,6 +267,7 @@ export function ArchitectureGraphView({
   loading = false,
   initialSelectedId = null,
   expandedClusters = [],
+  blastOverlay = null,
   onGraphRebuilt,
   onExpandCluster,
   onCollapseCluster,
@@ -312,9 +316,19 @@ export function ArchitectureGraphView({
   }, []);
 
   const highlight = useMemo(() => {
+    if (blastOverlay) return blastHighlightSet(blastOverlay);
     if (pathNodeIds && pathNodeIds.size > 0) return pathNodeIds;
     return selectedId ? neighborsOf(selectedId, filtered.links) : null;
-  }, [pathNodeIds, selectedId, filtered.links]);
+  }, [blastOverlay, pathNodeIds, selectedId, filtered.links]);
+
+  useEffect(() => {
+    if (!blastOverlay) return;
+    setPathHint(
+      `Blast radius: ${blastOverlay.direct.length} direct · ${blastOverlay.transitive.length} transitive dependents`
+    );
+    setSelectedId(blastOverlay.seed);
+    setPulseId(blastOverlay.seed);
+  }, [blastOverlay]);
 
   useEffect(() => {
     setSelectedId(null);
@@ -387,10 +401,12 @@ export function ArchitectureGraphView({
       const n = node as GraphNode;
       if (n.x == null || n.y == null) return;
 
-      const dimmed = highlight && !highlight.has(String(n.id));
-      const selected = selectedId === String(n.id);
-      const pulsing = pulseId === String(n.id);
-      const isCluster = n.kind === 'cluster' || Boolean(parseClusterId(String(n.id)));
+      const id = String(n.id);
+      const role = blastOverlay && !parseClusterId(id) ? blastRole(id, blastOverlay) : null;
+      const dimmed = highlight && !highlight.has(id) && !role;
+      const selected = selectedId === id;
+      const pulsing = pulseId === id;
+      const isCluster = n.kind === 'cluster' || Boolean(parseClusterId(id));
       const lay = layerOf(n.id);
       const meta = lay === 'other' ? LAYER_META.other : LAYER_META[lay];
       const w = nodeBoxWidth(n.label);
@@ -400,21 +416,37 @@ export function ArchitectureGraphView({
 
       ctx.beginPath();
       ctx.roundRect(x, y, w, h, isCluster ? 12 : 8);
-      ctx.fillStyle = dimmed
-        ? colors.nodeFillDim
-        : selected || pulsing
-          ? colors.nodeFillSelected
-          : colors.nodeFill;
+      if (role === 'seed') {
+        ctx.fillStyle = colors.nodeFillSelected;
+      } else if (dimmed) {
+        ctx.fillStyle = colors.nodeFillDim;
+      } else if (selected || pulsing) {
+        ctx.fillStyle = colors.nodeFillSelected;
+      } else {
+        ctx.fillStyle = colors.nodeFill;
+      }
       ctx.fill();
 
-      ctx.strokeStyle = dimmed
-        ? colors.borderDim
-        : n.isHotspot
-          ? colors.hotspot
-          : selected || pulsing
-            ? colors.accent
-            : meta.color;
-      ctx.lineWidth = selected || pulsing ? 2.2 / globalScale : isCluster ? 1.8 / globalScale : 1.2 / globalScale;
+      if (role === 'seed') {
+        ctx.strokeStyle = colors.accent;
+        ctx.lineWidth = 2.6 / globalScale;
+      } else if (role === 'direct') {
+        ctx.strokeStyle = colors.hotspot;
+        ctx.lineWidth = 2.2 / globalScale;
+      } else if (role === 'transitive') {
+        ctx.strokeStyle = meta.color;
+        ctx.lineWidth = 1.8 / globalScale;
+      } else {
+        ctx.strokeStyle = dimmed
+          ? colors.borderDim
+          : n.isHotspot
+            ? colors.hotspot
+            : selected || pulsing
+              ? colors.accent
+              : meta.color;
+        ctx.lineWidth =
+          selected || pulsing ? 2.2 / globalScale : isCluster ? 1.8 / globalScale : 1.2 / globalScale;
+      }
       if (isCluster) ctx.setLineDash([4 / globalScale, 3 / globalScale]);
       ctx.stroke();
       ctx.setLineDash([]);
@@ -429,7 +461,7 @@ export function ArchitectureGraphView({
         ctx.fillText(label, n.x, n.y);
       }
     },
-    [colors, highlight, pulseId, selectedId]
+    [blastOverlay, colors, highlight, pulseId, selectedId]
   );
 
   const paintLink = useCallback(
