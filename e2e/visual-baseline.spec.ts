@@ -2,10 +2,6 @@ import { test, expect } from '@playwright/test';
 import { deriveRepositoryId } from '@repopilot/common';
 import { DEMO_CHIP_LABEL, DEMO_REPO_SLUG } from './routes';
 
-/**
- * Soft visual baselines for shell + flagship surfaces.
- * Update with: yarn test:e2e --update-snapshots e2e/visual-baseline.spec.ts
- */
 const DEMO_REPO_ID = deriveRepositoryId(DEMO_REPO_SLUG);
 
 const shot = {

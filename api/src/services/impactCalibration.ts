@@ -28,10 +28,6 @@ export type ImpactCalibrationCase = {
   };
 };
 
-/**
- * Golden scenarios for impact risk/confidence calibration.
- * Keep these stable — product copy and MCP claims lean on these thresholds.
- */
 export const IMPACT_CALIBRATION_CASES: ImpactCalibrationCase[] = [
   {
     id: 'leaf-quiet',
@@ -127,7 +123,6 @@ export type ImpactCalibrationResult = {
   factors: ImpactRiskFactor[];
 };
 
-/** Evaluate the pure impact signal functions for a calibration case. */
 export function evaluateImpactCalibration(
   input: ImpactCalibrationInput
 ): ImpactCalibrationResult {
@@ -158,7 +153,6 @@ export function evaluateImpactCalibration(
   };
 }
 
-/** Returns failing case ids — empty means calibration still holds. */
 export function assertImpactCalibration(
   cases: ImpactCalibrationCase[] = IMPACT_CALIBRATION_CASES
 ): string[] {

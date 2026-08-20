@@ -15,7 +15,7 @@ export type Differentiator = {
   path?: string;
 };
 
-/** RepoPilot capabilities GitDiagram-style tools do not offer — shared marketing copy. */
+/** RepoPilot capabilities competitors do not offer — shared marketing copy. */
 export const REPO_PILOT_DIFFERENTIATORS: Differentiator[] = [
   {
     id: 'real-graph',

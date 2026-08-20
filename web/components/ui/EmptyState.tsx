@@ -10,7 +10,6 @@ type EmptyStateProps = {
   className?: string;
 };
 
-/** Phase 16 — structured empty placeholder with optional icon and action. */
 export function EmptyState({
   icon: IconComponent,
   title,

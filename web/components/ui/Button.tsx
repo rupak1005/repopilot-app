@@ -39,7 +39,6 @@ function ButtonContent({ icon, iconPosition = 'left', children }: SharedProps) {
   );
 }
 
-/** Phase 1 primitive — Motion spring press with CSS color transitions. */
 export function Button(props: ButtonProps) {
   const tap = useTapMotion();
   const { variant, size, fullWidth, icon, iconPosition, children, className, ...rest } = props;

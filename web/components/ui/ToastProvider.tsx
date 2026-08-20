@@ -28,7 +28,6 @@ const ToastContext = createContext<ToastContextValue | null>(null);
 
 const DEFAULT_DURATION_MS = 4000;
 
-/** Phase 16 — lightweight toast stack (no portal lib). */
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 

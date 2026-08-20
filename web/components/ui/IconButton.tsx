@@ -12,7 +12,6 @@ export type IconButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   children: ReactNode;
 };
 
-/** Phase 2 primitive — icon-only control with Motion spring press. */
 export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
   { label, variant = 'ghost', size = 'md', className, children, type = 'button', ...rest },
   ref

@@ -1,4 +1,3 @@
-/** Four-point sparkle — GitDiagram reference shape. */
 const SPARKLE_PATH =
   'M12 1.5 14.2 9.8 22.5 12 14.2 14.2 12 22.5 9.8 14.2 1.5 12 9.8 9.8Z';
 
@@ -22,7 +21,6 @@ function Sparkle({ className, size, variant }: SparkleProps) {
   );
 }
 
-/** GitDiagram-style sparkle clusters around public pages. */
 export function LandingDecor({ variant = 'full' }: { variant?: 'full' | 'top' }) {
   return (
     <div className="landing-decor" aria-hidden>

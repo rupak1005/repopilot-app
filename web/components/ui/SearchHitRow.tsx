@@ -7,7 +7,6 @@ type SearchHitRowProps = {
   repoFullName?: string | null;
 };
 
-/** Phase 7 — semantic search result row with citation actions. */
 export function SearchHitRow({ hit, repoId, repoFullName }: SearchHitRowProps) {
   return (
     <li className="ui-search-hit">

@@ -33,7 +33,6 @@ export type NavGroupDef = {
   items: NavItemDef[];
 };
 
-/** Phase 2 IA — grouped navigation over existing routes. */
 export const NAV_GROUPS: NavGroupDef[] = [
   {
     id: 'home',

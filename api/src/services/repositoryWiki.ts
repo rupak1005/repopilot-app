@@ -16,7 +16,6 @@ export type WikiPageDetail = WikiPage & {
 
 const MARKDOWN_EXT = /\.(md|mdx)$/i;
 
-/** Classify an indexed markdown path for the Wiki surface. */
 export function classifyWikiPath(filePath: string): WikiPageKind | null {
   if (!MARKDOWN_EXT.test(filePath)) return null;
   const lower = filePath.toLowerCase().replace(/\\/g, '/');
@@ -56,7 +55,6 @@ function kindRank(kind: WikiPageKind): number {
   return 3;
 }
 
-/** List indexed markdown / ADR-style docs for the Wiki surface. */
 export async function listRepositoryWikiPages(args: {
   repositoryId: string;
   revisionSha?: string;
@@ -107,7 +105,6 @@ export async function listRepositoryWikiPages(args: {
   return { revisionSha: revision.revisionSha, pages };
 }
 
-/** Fetch one indexed markdown page by path for inline Wiki reading. */
 export async function getRepositoryWikiPage(args: {
   repositoryId: string;
   path: string;

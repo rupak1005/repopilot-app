@@ -3,7 +3,6 @@ import { nodeBoxWidth, type ForceGraphData, type ForceGraphNode } from './archit
 
 const NODE_H = 44;
 
-/** Context7 force-graph dagre example: pre-layout, pin nodes, cooldownTicks 0. */
 export function layoutWithDagre(data: ForceGraphData): ForceGraphData {
   if (data.nodes.length === 0) {
     return { nodes: [], links: [] };

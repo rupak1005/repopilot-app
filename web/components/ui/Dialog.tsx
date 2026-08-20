@@ -9,7 +9,6 @@ type DialogProps = {
   footer?: ReactNode;
 };
 
-/** Phase 16 — native `<dialog>` modal with neo panel styling. */
 export function Dialog({ open, onClose, title, description, children, footer }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
 

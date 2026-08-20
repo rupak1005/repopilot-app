@@ -1,5 +1,3 @@
-/** Minimal markdown block parse for Wiki — no dependency, React-safe text nodes. */
-
 export type WikiMdBlock =
   | { type: 'h1' | 'h2' | 'h3'; text: string }
   | { type: 'p'; text: string }
@@ -7,7 +5,6 @@ export type WikiMdBlock =
   | { type: 'ul'; items: string[] }
   | { type: 'hr' };
 
-/** Split markdown into renderable blocks (headings, lists, fences, paragraphs). */
 export function parseWikiMarkdown(source: string): WikiMdBlock[] {
   const lines = source.replace(/\r\n/g, '\n').split('\n');
   const blocks: WikiMdBlock[] = [];

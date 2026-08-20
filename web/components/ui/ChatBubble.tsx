@@ -7,7 +7,6 @@ type ChatBubbleProps = {
   meta?: ReactNode;
 };
 
-/** Phase 6 — chat message bubble. */
 export function ChatBubble({ role, children, meta }: ChatBubbleProps) {
   if (role === 'user') {
     return <div className="ui-chat-bubble ui-chat-bubble--user">{children}</div>;

@@ -164,7 +164,6 @@ export type RepositoryFinding = {
   evidence: Array<{ type: string; file: string; lines: [number, number] }>;
 };
 
-/** Latest-review findings across PRs for the Change → Findings surface. */
 export async function listRepositoryFindings(args: {
   repositoryId: string;
   limit?: number;

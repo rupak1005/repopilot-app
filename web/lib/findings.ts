@@ -95,7 +95,6 @@ export function filterFindingsByQuery(findings: RepoFinding[], query: string): R
   });
 }
 
-/** Apply severity → category → text filters in one pass for the Findings board. */
 export function applyFindingsBoardFilters(
   findings: RepoFinding[],
   opts: { severity: FindingSeverityFilter; category: string | null; query: string }

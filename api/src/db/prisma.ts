@@ -13,12 +13,7 @@ export const prismaInteractiveTxOptions = {
   timeout: Number(process.env.PRISMA_TX_TIMEOUT_MS ?? 120_000)
 } as const;
 
-/**
- * Singleton Prisma client for the API process.
- *
- * Phase 1 already uses Prisma with a driver adapter (Prisma 7).
- * Phase 2 extends the schema with repository/file/symbol/import/export tables.
- */
+/** Singleton Prisma client for the API process (Prisma 7 driver adapter). */
 export function getPrisma(): PrismaClient {
   if (prisma) return prisma;
 

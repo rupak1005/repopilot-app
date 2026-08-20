@@ -28,7 +28,6 @@ function fileImpactLink(
   return `${baseHref}/impact?file=${encodeURIComponent(mod)}${rev}`;
 }
 
-/** Lightweight blast-radius map — no canvas dependency. */
 export function ImpactBlastMap({
   target,
   directDependents,

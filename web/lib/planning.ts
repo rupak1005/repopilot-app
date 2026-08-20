@@ -7,7 +7,6 @@ export type PlanningCandidate = {
   reason: string;
 };
 
-/** Turn hotspot rows into ordered change-plan candidates. */
 export function planningCandidatesFromHotspots(
   hotspots: HotspotRow[],
   limit = 12

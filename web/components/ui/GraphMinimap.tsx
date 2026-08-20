@@ -20,7 +20,6 @@ type GraphMinimapProps = {
   onNavigate: (point: GraphPoint) => void;
 };
 
-/** Compact overview of the force-graph world with a clickable viewport frame. */
 export function GraphMinimap({
   nodes,
   selectedId,

@@ -1,4 +1,3 @@
-/** Curated public repos for landing chips and browse defaults (GitDiagram-style). */
 export type ExampleRepo = {
   slug: string;
   label: string;

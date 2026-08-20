@@ -13,7 +13,6 @@ export type NavItemProps = {
   onClick?: () => void;
 };
 
-/** Phase 3 primitive — sidebar nav link with Motion spring press. */
 export function NavItem({ href, label, icon: IconComponent, active = false, onClick }: NavItemProps) {
   const tap = useTapMotion();
 

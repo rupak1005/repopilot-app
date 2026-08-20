@@ -6,7 +6,6 @@ type BentoPanelProps = {
   children: ReactNode;
 };
 
-/** Phase 5 primitive — overview bento panel shell. */
 export function BentoPanel({ title, action, children }: BentoPanelProps) {
   return (
     <section className="ui-bento-panel">

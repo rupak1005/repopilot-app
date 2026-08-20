@@ -26,7 +26,6 @@ export function useTapMotion(scale = 0.98) {
   return tapMotionProps(Boolean(reduced), scale);
 }
 
-/** Phase 9 — page enter props for route transitions. */
 export function usePageEnter() {
   const reduced = useReducedMotion();
   return pageEnterProps(Boolean(reduced));

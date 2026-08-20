@@ -14,7 +14,6 @@ type ChatComposerProps = {
   placeholder?: string;
 };
 
-/** Phase 6 — ask page composer with suggestion chips. */
 export function ChatComposer({
   value,
   onChange,

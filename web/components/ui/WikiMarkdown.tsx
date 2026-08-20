@@ -36,7 +36,6 @@ function Block({ block }: { block: WikiMdBlock }) {
   }
 }
 
-/** Dependency-free markdown renderer for indexed wiki pages. */
 export function WikiMarkdown({ source }: WikiMarkdownProps) {
   const blocks = parseWikiMarkdown(source);
   if (blocks.length === 0) {

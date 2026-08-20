@@ -7,7 +7,7 @@ export type GraphLayoutAlgo = 'dagre' | 'elk';
 
 const elk = new ELK();
 
-/** Layered ELK “System View” — better for hierarchical module graphs than LR dagre. */
+/** Layered ELK layout for System View (vs LR dagre Flow). */
 export async function layoutWithElk(data: ForceGraphData): Promise<ForceGraphData> {
   if (data.nodes.length === 0) {
     return { nodes: [], links: [] };

@@ -23,7 +23,6 @@ type ReviewFindingCardProps = {
   revisionSha?: string | null;
 };
 
-/** File:line citation chip with optional Investigate actions (Phase 7). */
 export function ReviewFindingCard({
   finding,
   repoId,

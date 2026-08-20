@@ -21,7 +21,6 @@ function formatUpdated(iso: string): string {
   }
 }
 
-/** Phase 8 — repository picker card. */
 export function RepoCard({
   fullName,
   owner,

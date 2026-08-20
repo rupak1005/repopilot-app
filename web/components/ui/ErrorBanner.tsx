@@ -8,7 +8,6 @@ type ErrorBannerProps = {
   className?: string;
 };
 
-/** Phase 16 — page-level error alert; keeps legacy `.error-banner` styling. */
 export function ErrorBanner({ children, onDismiss, className }: ErrorBannerProps) {
   const classes = ['ui-error-banner', 'error-banner', className].filter(Boolean).join(' ');
 

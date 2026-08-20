@@ -263,7 +263,6 @@ export function demoSearchResults(query: string): SearchHit[] {
   ).slice(0, 6);
 }
 
-/** Simulated latency so demo interactions feel real. */
 export function demoDelay(ms = 450): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -417,7 +416,6 @@ export function demoPullDetail(pullNumber: number): PullRequestDetail | null {
   };
 }
 
-/** Demo markdown docs for the Wiki surface. */
 export function demoWikiPages(): Array<{
   path: string;
   title: string;
@@ -452,7 +450,6 @@ export function demoWikiPages(): Array<{
   ];
 }
 
-/** Demo CODEOWNERS resolution for Impact ownership chips. */
 export function demoOwnership(path?: string | null): {
   revisionSha: string | null;
   sourcePath: string;
@@ -488,7 +485,6 @@ export function demoOwnership(path?: string | null): {
   };
 }
 
-/** Full markdown body for a demo wiki path (inline reader). */
 export function demoWikiPageDetail(path: string): {
   path: string;
   title: string;
@@ -552,7 +548,6 @@ Prefer small diffs, real fixtures, and no AI mentions in commit messages.
   };
 }
 
-/** Flatten latest demo PR findings for the repo-wide Findings page. */
 export function demoRepoFindings(): Array<
   ReviewFinding & { id: string; pullNumber: number; pullTitle: string; headRevision: string }
 > {

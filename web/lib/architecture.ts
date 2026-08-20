@@ -61,7 +61,6 @@ export function nodeBoxWidth(label: string): number {
   return Math.max(88, Math.min(168, label.length * 6.2 + 28));
 }
 
-/** Collision radius for d3-force forceCollide (Context7 / react-force-graph pattern). */
 export function nodeCollideRadius(node: ForceGraphNode): number {
   return nodeBoxWidth(node.label) / 2 + 10;
 }

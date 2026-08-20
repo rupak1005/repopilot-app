@@ -1,5 +1,3 @@
-/** Minimal CODEOWNERS parse + last-match-wins lookup (GitHub-compatible enough for product UI). */
-
 export type CodeOwnerRule = {
   pattern: string;
   owners: string[];
@@ -8,7 +6,6 @@ export type CodeOwnerRule = {
 
 const OWNER_RE = /^(@[A-Za-z0-9_.\-]+(?:\/[A-Za-z0-9_.\-]+)?|[^\s@]+@[^\s@]+\.[^\s@]+)$/;
 
-/** Parse CODEOWNERS file text into ordered rules (later rules override earlier ones). */
 export function parseCodeOwners(content: string): CodeOwnerRule[] {
   const rules: CodeOwnerRule[] = [];
   const lines = content.replace(/\r\n/g, '\n').split('\n');
@@ -30,7 +27,6 @@ function escapeRegex(value: string): string {
   return value.replace(/[.+^${}()|[\]\\]/g, '\\$&');
 }
 
-/** Convert a CODEOWNERS glob into a RegExp matching a repo-relative path. */
 export function codeOwnerPatternToRegExp(pattern: string): RegExp {
   let source = pattern.replace(/\\/g, '/');
   const anchored = source.startsWith('/');
@@ -76,7 +72,6 @@ export function ruleMatchesPath(pattern: string, filePath: string): boolean {
   }
 }
 
-/** Last matching rule wins (GitHub CODEOWNERS semantics). */
 export function ownersForPath(rules: CodeOwnerRule[], filePath: string): string[] {
   let owners: string[] = [];
   for (const rule of rules) {

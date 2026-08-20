@@ -122,7 +122,7 @@ export function resolveJsModule(
     if (hit) return hit;
   }
 
-  // Common TS path alias: `@/…` → package root or repo root (no full tsconfig parse).
+  // `@/` → package root or repo root when no tsconfig paths apply.
   if (moduleSpecifier.startsWith('@/')) {
     const rest = moduleSpecifier.slice(2);
     for (const base of jsAliasBases(fromFilePath)) {

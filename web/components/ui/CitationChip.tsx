@@ -16,7 +16,6 @@ type CitationChipProps = {
   revisionSha?: string;
 };
 
-/** File:line citation chip with optional Investigate actions (Phase 7). */
 export function CitationChip({
   file,
   lines,

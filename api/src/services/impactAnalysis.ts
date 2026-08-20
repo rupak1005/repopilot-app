@@ -43,7 +43,6 @@ export type ImpactAnalysisResult = {
   summary: string;
 };
 
-/** Detect test modules across TS/JS, Python, and Go — the languages we index. */
 export function isTestFile(filePath: string): boolean {
   const lower = filePath.toLowerCase().split('\\').join('/');
   const base = lower.slice(lower.lastIndexOf('/') + 1);
@@ -72,7 +71,6 @@ export function computeRisk(args: {
   return 'LOW';
 }
 
-/** How much we trust the impact picture (graph coverage + test signal). */
 export function computeImpactConfidence(args: {
   directCount: number;
   transitiveCount: number;

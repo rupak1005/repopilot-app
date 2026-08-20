@@ -1,5 +1,3 @@
-/* Phase 5 — KpiTile primitive */
-
 .ui-kpi-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));

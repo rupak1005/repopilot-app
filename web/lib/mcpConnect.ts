@@ -63,7 +63,6 @@ export const MCP_TOOLS = [
   }
 ] as const;
 
-/** Example tool call text for the current repo context. */
 export function mcpToolExample(
   toolName: (typeof MCP_TOOLS)[number]['name'],
   ctx: McpConnectContext
@@ -87,7 +86,6 @@ export function mcpToolExample(
   }
 }
 
-/** Clipboard-ready get_context_pack call for Impact / Planning handoff. */
 export function mcpContextPackSnippet(
   ctx: McpConnectContext & { filePath: string; question?: string }
 ): string {

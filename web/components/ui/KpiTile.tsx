@@ -9,7 +9,6 @@ type KpiTileProps = {
   tone?: KpiTileTone;
 };
 
-/** Phase 5 primitive — compact metric tile for overview KPI row. */
 export function KpiTile({ label, value, meta, tone = 'default' }: KpiTileProps) {
   return (
     <article className={`ui-kpi-tile ui-kpi-tile--${tone}`}>

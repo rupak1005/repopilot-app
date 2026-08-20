@@ -37,7 +37,6 @@ async function loadCodeOwnersFile(
   return null;
 }
 
-/** Resolve CODEOWNERS for a revision, optionally for one file path. */
 export async function getRepositoryOwnership(args: {
   repositoryId: string;
   revisionSha?: string;

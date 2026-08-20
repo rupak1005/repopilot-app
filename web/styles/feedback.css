@@ -1,5 +1,3 @@
-/* Phase 16 — feedback primitives (empty, error, dialog, toast) */
-
 .ui-empty-state {
   display: flex;
   flex-direction: column;

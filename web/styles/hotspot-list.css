@@ -89,8 +89,6 @@
   color: var(--color-text-muted);
 }
 
-/* Phase 6 — 2D topography */
-
 .ui-topo {
   display: flex;
   flex-direction: column;

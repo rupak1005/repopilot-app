@@ -15,7 +15,6 @@ type StatusBadgeProps = {
   children: ReactNode;
 };
 
-/** Phase 4 primitive — compact status pill for tables and metadata. */
 export function StatusBadge({ variant, children }: StatusBadgeProps) {
   return (
     <span className={`ui-status-badge ui-status-badge--${variant}`}>
