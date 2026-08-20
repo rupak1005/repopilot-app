@@ -1,0 +1,53 @@
+/* Phase 25 — indexed markdown / ADR wiki */
+
+.ui-wiki-page {
+  max-width: min(880px, 100%);
+}
+
+.ui-wiki-list {
+  list-style: none;
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.ui-wiki-card {
+  padding: var(--space-4);
+  border: var(--border-medium);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-sm, none);
+}
+
+.ui-wiki-card__kind {
+  color: var(--color-text-muted);
+}
+
+.ui-wiki-card__title {
+  margin: var(--space-1) 0 var(--space-1);
+  font-size: var(--text-h3, 1.15rem);
+  letter-spacing: -0.02em;
+}
+
+.ui-wiki-card__path {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+}
+
+.ui-wiki-card__excerpt {
+  margin: 0;
+  font-size: var(--text-ui);
+  line-height: 1.45;
+  color: var(--color-text);
+}
+
+.ui-wiki-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  align-items: center;
+}

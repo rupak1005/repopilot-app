@@ -77,6 +77,11 @@ export default function AskPage() {
   }, [repoId]);
 
   useEffect(() => {
+    const seeded = typeof router.query.q === 'string' ? router.query.q.trim() : '';
+    if (seeded) setQuery(seeded);
+  }, [router.query.q]);
+
+  useEffect(() => {
     if (!repoId || !hydrated) return;
     saveAskThread(repoId, messages);
   }, [repoId, messages, hydrated]);

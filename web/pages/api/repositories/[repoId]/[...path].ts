@@ -19,7 +19,8 @@ const ALLOWED_PREFIXES = [
   'co-change',
   'similar-changes',
   'symbols',
-  'findings'
+  'findings',
+  'wiki'
 ];
 
 export default async function handler(

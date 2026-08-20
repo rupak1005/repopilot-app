@@ -29,7 +29,8 @@
 | 22 | Graph minimap | **Done foundation** — overview + click-to-pan |
 | 23 | Graph share deep links | **Done foundation** — `?layout=` + Copy link |
 | 24 | Tsconfig path aliases | **Done foundation** — indexed `paths` at graph build |
-| 25–35 | Remaining | Not started / partial |
+| 25 | Wiki (indexed docs) | **Done foundation** — markdown / ADR board |
+| 26–35 | Remaining | Not started / partial |
 
 ## Phase 5
 
@@ -174,6 +175,13 @@
 - [x] Keep `@/` package-root heuristic as fallback
 - [x] Unit tests for parse / expand / resolve
 
+## Phase 25
+
+- [x] `GET /wiki` — indexed `.md`/`.mdx` pages with ADR/docs/readme kind
+- [x] Wiki page with kind filters, GitHub / Ask / Search exits
+- [x] Demo wiki fixture; revisionSha support via BFF
+- [x] Shared wiki helpers + API/web tests
+
 ## Next action
 
-Phase 25+ (deferred 3D topography, Planning/Wiki depth, Findings polish, impact calibration fixtures).
+Phase 26+ (deferred 3D topography, Planning depth, Findings polish, impact calibration fixtures).

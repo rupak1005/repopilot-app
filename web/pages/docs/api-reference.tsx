@@ -48,6 +48,7 @@ GET /health`}</DocsCode>
             ['POST', '/search/history', 'Search commit messages and PR titles'],
             ['GET', '/similar-changes', 'Find similar historical diffs (?pullNumber=)'],
             ['GET', '/findings', 'Latest-review findings across PRs (?limit=)'],
+            ['GET', '/wiki', 'Indexed markdown / ADR pages (?revisionSha=&limit=)'],
             ['GET', '/pulls', 'List pull requests'],
             ['GET', '/pulls/:number', 'PR details + review'],
             ['POST', '/pulls/:number/review', 'Trigger PR review'],

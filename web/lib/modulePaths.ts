@@ -16,7 +16,7 @@ export function moduleSearchQuery(moduleId: string): string {
 
 export function looksLikeRepoFilePath(moduleId: string): boolean {
   const path = stripModuleAlias(moduleId);
-  return /\.(tsx?|jsx?|mjs|cjs|py|go)$/i.test(path) && !path.includes('://');
+  return /\.(tsx?|jsx?|mjs|cjs|py|go|mdx?)$/i.test(path) && !path.includes('://');
 }
 
 /** Blob URL when we know the path; otherwise in-repo code search for the leaf name. */

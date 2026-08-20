@@ -12,7 +12,7 @@ export const DASHBOARD_PAGES = [
   { nav: 'Dependency Graph', path: '/architecture', expect: /See how your codebase fits together/i },
   { nav: 'Topography', path: '/hotspots', expect: /Topography|Hotspot/i },
   { nav: 'Code Search', path: '/search', expect: /Search/i },
-  { nav: 'Wiki', path: '/wiki', expect: /Wiki|coming soon/i },
+  { nav: 'Wiki', path: '/wiki', expect: /Wiki|ADR|markdown|No markdown/i },
   { nav: 'Impact Analysis', path: '/impact', expect: /Impact/i },
   { nav: 'Ask RepoPilot', path: '/ask', expect: /Ask RepoPilot/i },
   { nav: 'History', path: '/history', expect: /History/i },

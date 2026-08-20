@@ -417,6 +417,41 @@ export function demoPullDetail(pullNumber: number): PullRequestDetail | null {
   };
 }
 
+/** Demo markdown docs for the Wiki surface. */
+export function demoWikiPages(): Array<{
+  path: string;
+  title: string;
+  kind: 'adr' | 'docs' | 'readme' | 'other';
+  excerpt: string;
+}> {
+  return [
+    {
+      path: 'docs/adr/0008-commit-boundary.md',
+      title: 'ADR-008: Commit after ledger write',
+      kind: 'adr',
+      excerpt: 'Move the commit boundary after the ledger write so retries stay idempotent.'
+    },
+    {
+      path: 'docs/architecture.md',
+      title: 'Architecture overview',
+      kind: 'docs',
+      excerpt: 'API syncs the index; the web dashboard consumes graph, impact, and Ask endpoints.'
+    },
+    {
+      path: 'README.md',
+      title: 'RepoPilot',
+      kind: 'readme',
+      excerpt: 'Grounded codebase intelligence for architecture, impact, and agent workflows.'
+    },
+    {
+      path: 'CONTRIBUTING.md',
+      title: 'Contributing',
+      kind: 'other',
+      excerpt: 'Prefer small diffs, real fixtures, and no AI mentions in commit messages.'
+    }
+  ];
+}
+
 /** Flatten latest demo PR findings for the repo-wide Findings page. */
 export function demoRepoFindings(): Array<
   ReviewFinding & { id: string; pullNumber: number; pullTitle: string; headRevision: string }

@@ -51,23 +51,23 @@ export const SURFACE_STUBS: Record<SurfaceStub['id'], SurfaceStub> = {
     id: 'wiki',
     title: 'Wiki',
     lede: 'Living notes for this repository — ADRs, ownership, and how the system fits together.',
-    statusLabel: 'Stub · coming soon',
+    statusLabel: 'Foundation · indexed markdown',
     roadmap: [
-      'Index markdown / ADR docs alongside the dependency graph',
       'Link wiki pages to modules, owners, and Ask citations',
-      'Keep wiki pages revision-aware with the same `?rev=` model'
+      'Inline rendered markdown with revision-aware `?rev=`',
+      'Ownership / CODEOWNERS overlays on wiki pages'
     ],
     related: [
       {
         id: 'ask',
         label: 'Ask RepoPilot',
-        description: 'Grounded Q&A over indexed files until wiki pages land.',
+        description: 'Grounded Q&A over indexed files.',
         path: '/ask'
       },
       {
         id: 'graph',
         label: 'Dependency graph',
-        description: 'Explore real import edges while docs catch up.',
+        description: 'Explore real import edges alongside docs.',
         path: '/architecture'
       },
       {
