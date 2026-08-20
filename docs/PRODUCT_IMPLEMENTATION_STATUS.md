@@ -15,7 +15,8 @@
 | 8 | PR / Change workflow | **Done foundation** — file links, finding filters |
 | 9 | MCP / Integrate | **Done foundation** — tool examples + dashboard links |
 | 10 | History / revisions | **Done foundation** — revisions list + history search |
-| 11–35 | Remaining | Not started / partial |
+| 11 | Settings / indexing | **Done foundation** — index health + re-index |
+| 12–35 | Remaining | Not started / partial |
 
 ## Phase 5
 
@@ -63,6 +64,13 @@
 - [x] Nav + Cmd+K entry under Investigate
 - [ ] Per-revision graph switch (deferred)
 
+## Phase 11
+
+- [x] Index health panel (state, SHA, file/symbol counts, last error)
+- [x] Re-index button wired to `/api/repositories/:id/index` + progress float
+- [x] Copy RepoPilot ID + links to History / MCP
+- [x] IndexHint mentions Settings re-index
+
 ## Next action
 
-Phase 11 (Settings / indexing UX) or revision-scoped graph viewing.
+Phase 12 (Overview polish) or revision-scoped graph viewing.

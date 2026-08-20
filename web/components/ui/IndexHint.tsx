@@ -14,8 +14,9 @@ export function IndexHint({ repoFullName }: IndexHintProps) {
       <pre className="ui-index-hint__code">{`yarn --cwd api build
 ./scripts/index-repo.sh ${slug}`}</pre>
       <p className="ui-index-hint__body">
-        Or enable preview data: add <code>NEXT_PUBLIC_DEMO_MODE=true</code> to{' '}
-        <code>web/.env.local</code> and restart the web app.
+        Or open <strong>Settings</strong> in the dashboard and click <strong>Re-index repository</strong>,
+        or enable preview data with <code>NEXT_PUBLIC_DEMO_MODE=true</code> in{' '}
+        <code>web/.env.local</code>.
       </p>
     </div>
   );
