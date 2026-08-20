@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Crosshair, MagnifyingGlass, Warning } from '@phosphor-icons/react';
+import { MagnifyingGlass, Warning } from '@phosphor-icons/react';
 import { FormEvent, useEffect, useState } from 'react';
 import { BentoPanel } from '../../../components/ui/BentoPanel';
 import { Button } from '../../../components/ui/Button';
@@ -9,6 +9,7 @@ import { ErrorBanner } from '../../../components/ui/ErrorBanner';
 import { ImpactBlastMap } from '../../../components/ui/ImpactBlastMap';
 import { IndexHint } from '../../../components/ui/IndexHint';
 import { KpiTile } from '../../../components/ui/KpiTile';
+import { PageLoading } from '../../../components/ui/Skeleton';
 import { DEMO_REVISIONS, demoDelay, demoFileImpact, demoOwnership, demoPullImpact } from '../../../lib/demoData';
 import { mcpContextPackSnippet } from '../../../lib/mcpConnect';
 import { formatOwnershipLabel, githubOwnerHref, type OwnershipSummary } from '../../../lib/ownership';
@@ -521,7 +522,7 @@ export default function ImpactPage() {
         </form>
 
         {error ? <ErrorBanner>{error}</ErrorBanner> : null}
-        {repoLoading && !result ? <p className="empty-state">Loading repository…</p> : null}
+        {repoLoading && !result ? <PageLoading label="Loading repository…" /> : null}
 
         {fileResult && mode === 'file' && !loading ? (
           <FileImpactView result={fileResult} base={base} repoId={repoId} revisionSha={revisionSha} />
@@ -540,13 +541,7 @@ export default function ImpactPage() {
           <PullImpactView result={pullResult} base={base} repoId={repoId} revisionSha={revisionSha} />
         ) : null}
 
-        {loading ? (
-          <EmptyState
-            icon={Crosshair}
-            title="Analyzing impact…"
-            description="Traversing the dependency graph."
-          />
-        ) : null}
+        {loading ? <PageLoading label="Analyzing impact…" /> : null}
 
         {!loading && !result && !error ? (
           <EmptyState

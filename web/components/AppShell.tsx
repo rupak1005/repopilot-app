@@ -15,8 +15,10 @@ import { GITHUB_SIGN_IN_URL, signOut } from '../lib/auth';
 import { NAV_GROUPS } from '../lib/shellNav';
 import type { NavKey } from '../lib/shellChrome';
 import { CommandPalette } from './ui/CommandPalette';
+import { ErrorBoundary } from './ui/ErrorBoundary';
 import { IconButton } from './ui/IconButton';
 import { NavItem } from './ui/NavItem';
+import { OfflineBanner } from './ui/OfflineBanner';
 import { RepoPicker } from './ui/RepoPicker';
 import { SkipLink } from './ui/SkipLink';
 import { ThemeToggle } from './ui/ThemeToggle';
@@ -231,7 +233,10 @@ export function AppShell({
           className={`canvas${canvasClass ? ` ${canvasClass}` : ''}`}
           tabIndex={-1}
         >
-          {children}
+          <OfflineBanner />
+          <ErrorBoundary name={`nav:${activeNav}`}>
+            {children}
+          </ErrorBoundary>
         </main>
       </div>
 

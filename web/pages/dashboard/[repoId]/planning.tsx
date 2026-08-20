@@ -2,9 +2,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import { Path } from '@phosphor-icons/react';
-import { DashboardLayout, useDashboardContext } from '../../../lib/dashboard';
+import { DashboardLayout, useDashboardContext, useNeedsIndexHint } from '../../../lib/dashboard';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { ErrorBanner } from '../../../components/ui/ErrorBanner';
+import { IndexHint } from '../../../components/ui/IndexHint';
+import { PageLoading } from '../../../components/ui/Skeleton';
 import { DEMO_HOTSPOTS } from '../../../lib/demoData';
 import { isDemoMode } from '../../../lib/demoMode';
 import {
@@ -21,6 +23,7 @@ export default function PlanningPage() {
   const dash = useDashboardContext();
   const repoId = typeof router.query.repoId === 'string' ? router.query.repoId : null;
   const seed = planningSeedFromQuery(router.query.file);
+  const needsIndex = useNeedsIndexHint(repoId);
   const [hotspots, setHotspots] = useState<HotspotRow[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -91,9 +94,11 @@ export default function PlanningPage() {
           </p>
         </div>
 
+        {needsIndex ? <IndexHint repoFullName={repoFullName} /> : null}
+
         {error ? <ErrorBanner onDismiss={() => setError(null)}>{error}</ErrorBanner> : null}
 
-        {loading ? <p className="empty-state">Building change candidates…</p> : null}
+        {loading ? <PageLoading label="Building change candidates…" /> : null}
 
         {!loading && candidates.length === 0 ? (
           <EmptyState

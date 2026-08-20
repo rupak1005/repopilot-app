@@ -2,10 +2,11 @@ import { type FormEvent, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { CircleNotch, ClockCounterClockwise, MagnifyingGlass } from '@phosphor-icons/react';
-import { DashboardLayout, useDashboardContext } from '../../../lib/dashboard';
+import { DashboardLayout, useDashboardContext, useNeedsIndexHint } from '../../../lib/dashboard';
 import { Button } from '../../../components/ui/Button';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { ErrorBanner } from '../../../components/ui/ErrorBanner';
+import { IndexHint } from '../../../components/ui/IndexHint';
 import { InlineSpinner } from '../../../components/ui/InlineSpinner';
 import { SearchHitRow } from '../../../components/ui/SearchHitRow';
 import { DEMO_HISTORY_HITS, demoDelay, demoSearchResults } from '../../../lib/demoData';
@@ -28,6 +29,7 @@ export default function SearchPage() {
   const dash = useDashboardContext();
   const repoId = typeof router.query.repoId === 'string' ? router.query.repoId : null;
   const repoFullName = dash?.repoFullName;
+  const needsIndex = useNeedsIndexHint(repoId);
   const base = repoId ? `/dashboard/${repoId}` : '';
   const queryFromUrl = typeof router.query.q === 'string' ? router.query.q : '';
   const scope = parseSearchScope(router.query.scope);
@@ -159,6 +161,8 @@ export default function SearchPage() {
           <h1>Search</h1>
           <p>Code and git history in one query — files, commits, and pull requests.</p>
         </div>
+
+        {needsIndex ? <IndexHint repoFullName={repoFullName} /> : null}
 
         {error ? <ErrorBanner onDismiss={() => setError(null)}>{error}</ErrorBanner> : null}
 

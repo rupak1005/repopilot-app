@@ -11,13 +11,13 @@ import type {
 import { repoApiPath } from './serverApi';
 import { DemoBanner } from '../components/ui/DemoBanner';
 import { PublicGuestBanner } from '../components/ui/PublicGuestBanner';
-import { IndexHint } from '../components/ui/IndexHint';
 import {
   DEMO_ANALYTICS,
   DEMO_HOTSPOTS,
   DEMO_PULLS
 } from './demoData';
 import { isDemoMode } from './demoMode';
+import { shouldShowIndexHint } from './indexHint';
 import { useIndexStatus } from './indexStatus';
 import { useIndexProgressUi } from './indexProgressUi';
 import { formatLatency } from './metrics';
@@ -174,6 +174,14 @@ export function usePendingIndexJobRepoId(): string | null {
 
 export function useRepoIndexStatus(repoId: string | null) {
   return useIndexStatus(repoId, !isDemoMode(), 1500);
+}
+
+/** Shared “not indexed yet” gate for dashboard pages that don’t own overview fetches. */
+export function useNeedsIndexHint(repoId: string | null): boolean {
+  const { pulls, analytics, hotspots } = useRepoData(repoId);
+  const indexStatus = useRepoIndexStatus(repoId);
+  const pending = usePendingIndexJobRepoId();
+  return shouldShowIndexHint(pulls, hotspots, analytics, indexStatus, repoId, pending);
 }
 
 export { formatLatency };

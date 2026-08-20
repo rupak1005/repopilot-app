@@ -2,9 +2,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import { MagnifyingGlass, Warning } from '@phosphor-icons/react';
-import { DashboardLayout, useDashboardContext } from '../../../lib/dashboard';
+import { DashboardLayout, useDashboardContext, useNeedsIndexHint } from '../../../lib/dashboard';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { ErrorBanner } from '../../../components/ui/ErrorBanner';
+import { IndexHint } from '../../../components/ui/IndexHint';
 import { ReviewFindingCard } from '../../../components/ui/ReviewFindingCard';
 import { demoDelay, demoRepoFindings } from '../../../lib/demoData';
 import { isDemoMode } from '../../../lib/demoMode';
@@ -27,6 +28,7 @@ export default function FindingsPage() {
   const dash = useDashboardContext();
   const repoId = typeof router.query.repoId === 'string' ? router.query.repoId : null;
   const repoFullName = dash?.repoFullName;
+  const needsIndex = useNeedsIndexHint(repoId);
   const severity = parseFindingsSeverity(router.query.severity);
   const queryText = parseFindingsQuery(router.query.q);
   const [findings, setFindings] = useState<RepoFinding[]>([]);
@@ -103,6 +105,8 @@ export default function FindingsPage() {
           <h1>Findings</h1>
           <p>Latest PR review findings — filter, then jump to the PR or cited files.</p>
         </div>
+
+        {needsIndex ? <IndexHint repoFullName={repoFullName} /> : null}
 
         {error ? <ErrorBanner onDismiss={() => setError(null)}>{error}</ErrorBanner> : null}
 

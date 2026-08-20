@@ -6,7 +6,9 @@ import { BentoPanel } from '../../../components/ui/BentoPanel';
 import { Button } from '../../../components/ui/Button';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { ErrorBanner } from '../../../components/ui/ErrorBanner';
-import { DashboardLayout } from '../../../lib/dashboard';
+import { IndexHint } from '../../../components/ui/IndexHint';
+import { PageLoading } from '../../../components/ui/Skeleton';
+import { DashboardLayout, useDashboardContext, useNeedsIndexHint } from '../../../lib/dashboard';
 import { isDemoMode } from '../../../lib/demoMode';
 import { DEMO_HISTORY_HITS, DEMO_REVISIONS } from '../../../lib/demoData';
 import { formatIndexedAt, shortSha, type HistoryHit, type RevisionRow } from '../../../lib/history';
@@ -15,7 +17,9 @@ import { repoApiPath } from '../../../lib/serverApi';
 
 export default function HistoryPage() {
   const router = useRouter();
+  const dash = useDashboardContext();
   const repoId = typeof router.query.repoId === 'string' ? router.query.repoId : null;
+  const needsIndex = useNeedsIndexHint(repoId);
   const [revisions, setRevisions] = useState<RevisionRow[]>([]);
   const [query, setQuery] = useState('');
   const [hits, setHits] = useState<HistoryHit[]>([]);
@@ -101,11 +105,13 @@ export default function HistoryPage() {
           <p>Indexed revisions and commit / PR history search for this repository.</p>
         </div>
 
+        {needsIndex ? <IndexHint repoFullName={dash?.repoFullName} /> : null}
+
         {error ? <ErrorBanner onDismiss={() => setError(null)}>{error}</ErrorBanner> : null}
 
         <BentoPanel title="Indexed revisions">
           {loadingRevs ? (
-            <p className="empty-state">Loading revisions…</p>
+            <PageLoading label="Loading revisions…" />
           ) : revisions.length === 0 ? (
             <EmptyState
               compact

@@ -2,9 +2,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, ArrowSquareOut, BookOpen, MagnifyingGlass } from '@phosphor-icons/react';
-import { DashboardLayout, useDashboardContext } from '../../../lib/dashboard';
+import { DashboardLayout, useDashboardContext, useNeedsIndexHint } from '../../../lib/dashboard';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { ErrorBanner } from '../../../components/ui/ErrorBanner';
+import { IndexHint } from '../../../components/ui/IndexHint';
 import { WikiMarkdown } from '../../../components/ui/WikiMarkdown';
 import { demoDelay, demoWikiPageDetail, demoWikiPages } from '../../../lib/demoData';
 import { isDemoMode } from '../../../lib/demoMode';
@@ -32,6 +33,7 @@ export default function WikiPage() {
   const dash = useDashboardContext();
   const repoId = typeof router.query.repoId === 'string' ? router.query.repoId : null;
   const repoFullName = dash?.repoFullName;
+  const needsIndex = useNeedsIndexHint(repoId);
   const kind = parseWikiKindFilter(router.query.kind);
   const selectedPath = parseWikiPathQuery(router.query.path);
   const revisionSha = parseRevisionQuery(router.query[REVISION_QUERY_KEY]);
@@ -203,6 +205,8 @@ export default function WikiPage() {
             jump to GitHub / Ask / Search.
           </p>
         </div>
+
+        {needsIndex ? <IndexHint repoFullName={repoFullName} /> : null}
 
         {error ? <ErrorBanner onDismiss={() => setError(null)}>{error}</ErrorBanner> : null}
 

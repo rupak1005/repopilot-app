@@ -5,6 +5,8 @@ import { ChatBubble } from '../../../components/ui/ChatBubble';
 import { ChatComposer } from '../../../components/ui/ChatComposer';
 import { CitationChip } from '../../../components/ui/CitationChip';
 import { Dialog } from '../../../components/ui/Dialog';
+import { EmptyState } from '../../../components/ui/EmptyState';
+import { IndexHint } from '../../../components/ui/IndexHint';
 import { ThinkingBubble } from '../../../components/ui/ThinkingBubble';
 import { useToast } from '../../../components/ui/ToastProvider';
 import {
@@ -17,8 +19,9 @@ import {
 import { demoAskResponse, demoDelay } from '../../../lib/demoData';
 import { isDemoMode } from '../../../lib/demoMode';
 import { repoApiPath } from '../../../lib/serverApi';
-import { DashboardLayout, useDashboardContext } from '../../../lib/dashboard';
+import { DashboardLayout, useDashboardContext, useNeedsIndexHint } from '../../../lib/dashboard';
 import { type AskResponse } from '../../../lib/types';
+import { ChatCircleDots } from '@phosphor-icons/react';
 
 const SUGGESTIONS = [
   'What does syncRepository do?',
@@ -62,6 +65,7 @@ export default function AskPage() {
   const dash = useDashboardContext();
   const repoId = typeof router.query.repoId === 'string' ? router.query.repoId : null;
   const repoFullName = dash?.repoFullName;
+  const needsIndex = useNeedsIndexHint(repoId);
   const [query, setQuery] = useState('');
   const [messages, setMessages] = useState<AskMessage[]>([]);
   const [loading, setLoading] = useState(false);
@@ -171,6 +175,8 @@ export default function AskPage() {
   return (
     <DashboardLayout activeNav="ask" canvasClass="canvas--ask">
       <div className="ui-ask-page">
+        {needsIndex ? <IndexHint repoFullName={repoFullName} /> : null}
+
         {!hasHistory && !loading ? (
           <header className="ui-ask-hero">
             <h1>Ask RepoPilot</h1>
@@ -190,11 +196,16 @@ export default function AskPage() {
 
         <div className="ui-ask-thread">
           {!hasHistory && !loading ? (
-            <p className="empty-state ui-ask-hint">
-              {isDemoMode()
-                ? 'Pick a suggestion below or type your own question.'
-                : 'Index first with ./scripts/index-repo.sh owner/repo, or enable NEXT_PUBLIC_DEMO_MODE=true.'}
-            </p>
+            <EmptyState
+              icon={ChatCircleDots}
+              compact
+              title={isDemoMode() ? 'Ask anything about this repo' : 'Ready when your index is'}
+              description={
+                isDemoMode()
+                  ? 'Pick a suggestion below or type your own question.'
+                  : 'Index first with ./scripts/index-repo.sh owner/repo, or enable NEXT_PUBLIC_DEMO_MODE=true.'
+              }
+            />
           ) : null}
 
           {messages.map((message) => {

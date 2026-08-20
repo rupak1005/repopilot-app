@@ -97,7 +97,15 @@ async function bootstrap() {
 
   function parseCorsOrigins(): boolean | string[] {
     const raw = process.env.CORS_ORIGINS?.trim();
-    if (!raw || raw === '*') return true;
+    const isProd = process.env.NODE_ENV === 'production';
+    // Production must never open CORS to *. Local/test may use * for convenience.
+    if (!raw || raw === '*') {
+      if (isProd) {
+        const appUrl = process.env.APP_URL?.trim() || process.env.WEB_ORIGIN?.trim();
+        return appUrl ? [appUrl] : [];
+      }
+      return true;
+    }
     return raw.split(',').map((origin) => origin.trim()).filter(Boolean);
   }
 

@@ -18,18 +18,30 @@ function mockReply() {
 }
 
 describe('requireInternalApiAuth', () => {
-  const original = process.env.INTERNAL_API_SECRET;
+  const originalSecret = process.env.INTERNAL_API_SECRET;
+  const originalNodeEnv = process.env.NODE_ENV;
 
   afterEach(() => {
-    if (original === undefined) delete process.env.INTERNAL_API_SECRET;
-    else process.env.INTERNAL_API_SECRET = original;
+    if (originalSecret === undefined) delete process.env.INTERNAL_API_SECRET;
+    else process.env.INTERNAL_API_SECRET = originalSecret;
+    process.env.NODE_ENV = originalNodeEnv;
   });
 
-  it('allows requests when secret is unset', () => {
+  it('allows requests when secret is unset outside production', () => {
+    process.env.NODE_ENV = 'test';
     delete process.env.INTERNAL_API_SECRET;
     const reply = mockReply();
     expect(requireInternalApiAuth({ headers: {} } as never, reply as never)).toBe(true);
     expect(reply.statusCode).toBe(200);
+  });
+
+  it('rejects when secret is unset in production', () => {
+    process.env.NODE_ENV = 'production';
+    delete process.env.INTERNAL_API_SECRET;
+    const reply = mockReply();
+    expect(requireInternalApiAuth({ headers: {} } as never, reply as never)).toBe(false);
+    expect(reply.statusCode).toBe(503);
+    expect(reply.body).toEqual({ error: 'INTERNAL_API_SECRET is required in production' });
   });
 
   it('rejects missing header when secret is set', () => {
