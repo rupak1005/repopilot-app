@@ -31,6 +31,7 @@ import {
 } from './services/prReview';
 import {
   getRepositoryAnalytics,
+  listRepositoryFindings,
   listReviewHistory
 } from './services/repositoryAnalytics';
 import { ingestRepositoryHistory } from './services/historyIngest';
@@ -430,6 +431,16 @@ async function bootstrap() {
     return listReviewHistory({
       repositoryId: params.repoId,
       pullNumber: Number.isFinite(pullNumber) ? pullNumber : undefined
+    });
+  });
+
+  server.get('/api/v1/repositories/:repoId/findings', async (request) => {
+    const params = request.params as { repoId: string };
+    const query = request.query as { limit?: string };
+    const limit = query.limit ? Number(query.limit) : undefined;
+    return listRepositoryFindings({
+      repositoryId: params.repoId,
+      limit: Number.isFinite(limit) ? limit : undefined
     });
   });
 

@@ -34,7 +34,7 @@ Integrate → MCP
 System → Indexing, Settings
 ```
 
-Missing surfaces: Planning / Wiki stubs shipped (Phase 19); Findings still deferred.
+Missing surfaces: Findings shipped (Phase 20). Planning / Wiki remain stubs until content models land.
 ## Progressive disclosure
 
 - Graph starts with capped overview — good instinct, bad hard cap

@@ -18,6 +18,7 @@ export const DASHBOARD_PAGES = [
   { nav: 'History', path: '/history', expect: /History/i },
   { nav: 'Planning', path: '/planning', expect: /Planning|coming soon/i },
   { nav: 'Pull Requests', path: '/pulls', expect: /Pull Requests/i },
+  { nav: 'Findings', path: '/findings', expect: /Findings/i },
   { nav: 'Settings', path: '/settings', expect: /Settings/i }
 ] as const;
 

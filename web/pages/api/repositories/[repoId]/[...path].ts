@@ -18,7 +18,8 @@ const ALLOWED_PREFIXES = [
   'history',
   'co-change',
   'similar-changes',
-  'symbols'
+  'symbols',
+  'findings'
 ];
 
 export default async function handler(

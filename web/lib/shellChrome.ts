@@ -12,6 +12,7 @@ export type NavKey =
   | 'history'
   | 'planning'
   | 'wiki'
+  | 'findings'
   | 'settings'
   | 'mcp';
 
@@ -104,6 +105,14 @@ const HELP_BY_NAV: Record<NavKey, HelpTip> = {
     docLabel: 'Getting started',
     secondaryHref: '/docs',
     secondaryLabel: 'Product docs'
+  },
+  findings: {
+    title: 'All review findings in one place',
+    body: 'Severity-filtered findings from the latest PR reviews — open a card’s evidence or jump to the PR.',
+    docHref: '/docs/getting-started',
+    docLabel: 'PR review',
+    secondaryHref: '/docs/api-reference',
+    secondaryLabel: 'API reference'
   },
   settings: {
     title: 'Repo + session controls',

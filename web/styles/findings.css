@@ -1,0 +1,43 @@
+/* Phase 20 — repo-wide findings board */
+
+.ui-findings-page {
+  max-width: min(880px, 100%);
+}
+
+.ui-findings-list {
+  list-style: none;
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.ui-findings-item__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.ui-findings-item__pr {
+  font-family: var(--font-mono);
+  font-size: var(--text-ui);
+  font-weight: 700;
+  color: var(--color-link);
+  text-decoration: none;
+}
+
+.ui-findings-item__pr:hover {
+  text-decoration: underline;
+}
+
+.ui-findings-item__title {
+  font-size: var(--text-ui);
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: min(36rem, 100%);
+}

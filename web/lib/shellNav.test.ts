@@ -9,6 +9,7 @@ describe('shellNav', () => {
     expect(keys).toContain('history');
     expect(keys).toContain('planning');
     expect(keys).toContain('wiki');
+    expect(keys).toContain('findings');
   });
 
   it('filters command palette entries by keyword', () => {

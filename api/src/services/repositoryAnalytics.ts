@@ -149,3 +149,119 @@ export async function listReviewHistory(args: {
     findingsCount: row.findingsCount
   }));
 }
+
+export type RepositoryFinding = {
+  id: string;
+  pullNumber: number;
+  pullTitle: string;
+  headRevision: string;
+  title: string;
+  severity: string;
+  category: string;
+  confidence: string;
+  description: string;
+  suggestedAction?: string;
+  evidence: Array<{ type: string; file: string; lines: [number, number] }>;
+};
+
+/** Latest-review findings across PRs for the Change → Findings surface. */
+export async function listRepositoryFindings(args: {
+  repositoryId: string;
+  limit?: number;
+}): Promise<RepositoryFinding[]> {
+  const prisma = getPrisma();
+  const limit = Math.min(Math.max(args.limit ?? 80, 1), 200);
+
+  const findingRows = (await prisma.$queryRawUnsafe(
+    `
+      SELECT
+        f."id",
+        p."number" AS "pullNumber",
+        p."title" AS "pullTitle",
+        r."headRevision",
+        f."title",
+        f."severity",
+        f."category",
+        f."confidence",
+        f."description",
+        f."suggestedAction"
+      FROM "ReviewFinding" f
+      JOIN "PullRequestReview" r ON r."id" = f."reviewId"
+      JOIN "PullRequest" p ON p."id" = r."pullRequestId"
+      WHERE p."repositoryId" = $1
+        AND r."id" IN (
+          SELECT DISTINCT ON (p2."id") r2."id"
+          FROM "PullRequestReview" r2
+          JOIN "PullRequest" p2 ON p2."id" = r2."pullRequestId"
+          WHERE p2."repositoryId" = $1
+          ORDER BY p2."id", r2."startedAt" DESC
+        )
+      ORDER BY
+        CASE UPPER(f."severity")
+          WHEN 'CRITICAL' THEN 0
+          WHEN 'HIGH' THEN 1
+          WHEN 'MEDIUM' THEN 2
+          ELSE 3
+        END,
+        f."title"
+      LIMIT $2
+    `,
+    args.repositoryId,
+    limit
+  )) as Array<{
+    id: string;
+    pullNumber: number;
+    pullTitle: string;
+    headRevision: string;
+    title: string;
+    severity: string;
+    category: string;
+    confidence: string;
+    description: string;
+    suggestedAction: string | null;
+  }>;
+
+  if (findingRows.length === 0) return [];
+
+  const ids = findingRows.map((row) => row.id);
+  const evidenceRows = (await prisma.$queryRawUnsafe(
+    `
+      SELECT "findingId", "type", "filePath", "startLine", "endLine"
+      FROM "ReviewEvidence"
+      WHERE "findingId" = ANY($1::text[])
+      ORDER BY "filePath", "startLine"
+    `,
+    ids
+  )) as Array<{
+    findingId: string;
+    type: string;
+    filePath: string;
+    startLine: number;
+    endLine: number;
+  }>;
+
+  const evidenceByFinding = new Map<string, RepositoryFinding['evidence']>();
+  for (const row of evidenceRows) {
+    const list = evidenceByFinding.get(row.findingId) ?? [];
+    list.push({
+      type: row.type,
+      file: row.filePath,
+      lines: [row.startLine, row.endLine]
+    });
+    evidenceByFinding.set(row.findingId, list);
+  }
+
+  return findingRows.map((row) => ({
+    id: row.id,
+    pullNumber: row.pullNumber,
+    pullTitle: row.pullTitle,
+    headRevision: row.headRevision,
+    title: row.title,
+    severity: row.severity,
+    category: row.category,
+    confidence: row.confidence,
+    description: row.description,
+    suggestedAction: row.suggestedAction ?? undefined,
+    evidence: evidenceByFinding.get(row.id) ?? []
+  }));
+}

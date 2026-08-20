@@ -24,7 +24,8 @@
 | 17 | Universal search | **Done foundation** — code + history scopes |
 | 18 | Impact revision deep links | **Done foundation** — `?rev=` on Impact + citations |
 | 19 | Planning / Wiki stubs | **Done foundation** — nav + roadmap stubs |
-| 20–35 | Remaining | Not started / partial |
+| 20 | Findings surface | **Done foundation** — repo-wide severity board |
+| 21–35 | Remaining | Not started / partial |
 
 ## Phase 5
 
@@ -135,6 +136,13 @@
 - [x] Nav + Cmd+K + help tips for both surfaces
 - [x] Shared `surfaceStubs` helpers + tests
 
+## Phase 20
+
+- [x] `GET /findings` — latest-review findings across PRs
+- [x] Findings page with severity filters (`?severity=`) + PR deep links
+- [x] Demo flatten of PR findings; nav under Change
+- [x] Shared `findings` helpers + API/web tests
+
 ## Next action
 
-Phase 20 (Findings surface) or deferred ELK / 3D topography.
+Phase 21 (ELK hierarchical System View) or deferred 3D topography.

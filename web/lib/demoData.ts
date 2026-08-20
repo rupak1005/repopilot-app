@@ -6,6 +6,7 @@ import type {
   PullRequestDetail,
   PullRequestRow,
   RepositoryAnalytics,
+  ReviewFinding,
   SearchHit,
   SimilarChange
 } from './types';
@@ -414,6 +415,28 @@ export function demoPullDetail(pullNumber: number): PullRequestDetail | null {
         }
       : null
   };
+}
+
+/** Flatten latest demo PR findings for the repo-wide Findings page. */
+export function demoRepoFindings(): Array<
+  ReviewFinding & { id: string; pullNumber: number; pullTitle: string; headRevision: string }
+> {
+  const out: Array<
+    ReviewFinding & { id: string; pullNumber: number; pullTitle: string; headRevision: string }
+  > = [];
+  for (const detail of Object.values(DEMO_PR_DETAILS)) {
+    const findings = detail.latestReview?.findings ?? [];
+    findings.forEach((finding, index) => {
+      out.push({
+        ...finding,
+        id: `demo-${detail.pullNumber}-${index}`,
+        pullNumber: detail.pullNumber,
+        pullTitle: detail.title,
+        headRevision: detail.headRevision
+      });
+    });
+  }
+  return out;
 }
 
 export function demoPullImpact(pullNumber: number): PullImpactSummary | null {

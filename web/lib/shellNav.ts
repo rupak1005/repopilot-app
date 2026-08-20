@@ -13,7 +13,8 @@ import {
   Path,
   Plugs,
   SquaresFour,
-  Terminal
+  Terminal,
+  Warning
 } from '@phosphor-icons/react';
 import type { NavKey } from './shellChrome';
 
@@ -63,7 +64,8 @@ export const NAV_GROUPS: NavGroupDef[] = [
     label: 'Change',
     items: [
       { key: 'planning', href: '/planning', label: 'Planning', icon: Path },
-      { key: 'pulls', href: '/pulls', label: 'Pull Requests', icon: GitPullRequest }
+      { key: 'pulls', href: '/pulls', label: 'Pull Requests', icon: GitPullRequest },
+      { key: 'findings', href: '/findings', label: 'Findings', icon: Warning }
     ]
   },
   {
@@ -146,6 +148,12 @@ export function dashboardCommands(repoId: string): CommandDef[] {
       keywords: ['pr', 'review']
     },
     {
+      id: 'findings',
+      label: 'Open findings',
+      path: `${base}/findings`,
+      keywords: ['severity', 'review', 'risk', 'issues']
+    },
+    {
       id: 'mcp',
       label: 'Copy MCP setup',
       path: `${base}/mcp`,
@@ -195,6 +203,7 @@ export const COMMAND_ICONS: Record<string, Icon> = {
   planning: Path,
   wiki: Notebook,
   pulls: GitPullRequest,
+  findings: Warning,
   mcp: Terminal,
   settings: Gear,
   docs: BookOpen,
