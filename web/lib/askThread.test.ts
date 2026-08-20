@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   askStorageKey,
   clearAskThread,
@@ -9,9 +9,24 @@ import {
 
 describe('askThread storage', () => {
   const repoId = 'test-repo-id';
+  const store: Record<string, string> = {};
+
+  beforeEach(() => {
+    for (const k of Object.keys(store)) delete store[k];
+    vi.stubGlobal('sessionStorage', {
+      getItem: (k: string) => store[k] ?? null,
+      setItem: (k: string, v: string) => {
+        store[k] = v;
+      },
+      removeItem: (k: string) => {
+        delete store[k];
+      }
+    });
+  });
 
   afterEach(() => {
     clearAskThread(repoId);
+    vi.unstubAllGlobals();
   });
 
   it('round-trips messages for a repo', () => {

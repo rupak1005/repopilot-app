@@ -73,6 +73,9 @@ jobs:
           yarn --cwd api prisma generate
           yarn --cwd api prisma migrate deploy
 
+      - name: Build workspace packages
+        run: yarn --cwd common build
+
       - name: Unit tests with coverage
         env:
           TMPDIR: ${{ runner.temp }}
