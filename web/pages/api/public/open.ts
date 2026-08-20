@@ -49,10 +49,6 @@ export default async function handler(
   }
 
   const existing = getSession(req);
-  if (existing?.accessToken && !existing.isPublicGuest) {
-    res.status(409).json({ error: 'Already signed in — use the repository picker instead.' });
-    return;
-  }
 
   let response: Response;
   try {
@@ -90,13 +86,19 @@ export default async function handler(
     return;
   }
 
-  setSessionCookie(
-    res,
-    createPublicGuestSession({
-      fullName: payload.fullName,
-      repositoryId: payload.repositoryId
-    })
-  );
+  if (existing?.accessToken && !existing.isPublicGuest) {
+    existing.selectedRepoFullName = payload.fullName;
+    existing.selectedRepoId = payload.repositoryId;
+    setSessionCookie(res, existing);
+  } else {
+    setSessionCookie(
+      res,
+      createPublicGuestSession({
+        fullName: payload.fullName,
+        repositoryId: payload.repositoryId
+      })
+    );
+  }
 
   res.status(200).json({
     repositoryId: payload.repositoryId,

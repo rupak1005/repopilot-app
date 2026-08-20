@@ -82,7 +82,7 @@ export default function BrowsePage() {
     return () => window.clearTimeout(timer);
   }, [load]);
 
-  async function openDiagram(fullName: string) {
+  async function openRepo(fullName: string) {
     setOpening(fullName);
     setError(null);
     try {
@@ -102,10 +102,10 @@ export default function BrowsePage() {
         startIndexProgress({
           repoId: data.repositoryId,
           fullName: data.fullName ?? fullName,
-          onReady: () => void router.push(`/dashboard/${data.repositoryId}/architecture`)
+          onReady: () => void router.push(`/dashboard/${data.repositoryId}`)
         });
       }
-      void router.push(`/dashboard/${data.repositoryId}/architecture`);
+      void router.push(`/dashboard/${data.repositoryId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not open repository');
       setOpening(null);
@@ -122,9 +122,8 @@ export default function BrowsePage() {
         <header className="browse-hero">
           <h1>Browse public repositories</h1>
           <p>
-            Search GitHub by name, filter by stars, and open an interactive architecture diagram
-            built from real imports — then explore impact, hotspots, Ask, and PR review in the
-            dashboard.
+            Search GitHub by name, filter by stars, and open a repo to index it — then explore
+            impact, hotspots, Ask, and PR review in the dashboard.
           </p>
         </header>
 
@@ -198,9 +197,9 @@ export default function BrowsePage() {
                           size="md"
                           disabled={opening === repo.fullName}
                           icon={<Graph size={16} weight="bold" />}
-                          onClick={() => void openDiagram(repo.fullName)}
+                          onClick={() => void openRepo(repo.fullName)}
                         >
-                          {opening === repo.fullName ? 'Opening…' : 'Open diagram'}
+                          {opening === repo.fullName ? 'Opening…' : 'Open repo'}
                         </Button>
                         <Button
                           href={githubUrl(repo.fullName)}
