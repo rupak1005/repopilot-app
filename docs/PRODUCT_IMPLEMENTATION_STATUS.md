@@ -12,7 +12,8 @@
 | 5 | Impact analysis | **Done foundation** — file / symbol / PR + blast overlay |
 | 6 | Codebase topography | **Done foundation** — 2D map + metrics + lookback |
 | 7 | Ask / Search UX | **Done foundation** — citation Graph / Impact / GitHub |
-| 8–35 | Remaining | Not started / partial |
+| 8 | PR / Change workflow | **Done foundation** — file links, finding filters |
+| 9–35 | Remaining | Not started / partial |
 
 ## Phase 5
 
@@ -39,6 +40,14 @@
 - [ ] History time machine surface (deferred)
 - [ ] Universal search merge (deferred)
 
+## Phase 8
+
+- [x] PR changed files → Impact + Graph (blast) deep links
+- [x] Similar PRs link to pull detail
+- [x] Findings severity filter (All / High / Medium / Low)
+- [x] Test signals link to file impact when path-like
+- [x] Re-fetch live pull impact after manual review
+
 ## Next action
 
-Phase 8 (PR / Change workflow polish) or History surface — ask before committing.
+Phase 9 (MCP / Integrate polish) or History surface.

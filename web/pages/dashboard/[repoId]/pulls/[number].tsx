@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ArrowLeft, GitPullRequest, Warning } from '@phosphor-icons/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { BentoPanel } from '../../../../components/ui/BentoPanel';
 import { Button } from '../../../../components/ui/Button';
 import { EmptyState } from '../../../../components/ui/EmptyState';
@@ -18,6 +18,12 @@ import {
 } from '../../../../lib/demoData';
 import { isDemoMode } from '../../../../lib/demoMode';
 import { DashboardLayout, useDashboardContext } from '../../../../lib/dashboard';
+import { looksLikeRepoFilePath } from '../../../../lib/modulePaths';
+import {
+  countFindingsBySeverity,
+  filterFindingsBySeverity,
+  type FindingSeverityFilter
+} from '../../../../lib/prFindings';
 import { repoApiPath } from '../../../../lib/serverApi';
 import type {
   PullImpactSummary,
@@ -59,6 +65,35 @@ export default function PullDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [reviewing, setReviewing] = useState(false);
+  const [severityFilter, setSeverityFilter] = useState<FindingSeverityFilter>('ALL');
+
+  async function loadPullImpact(activeRepoId: string, n: number, fallbackReview: PullRequestDetail['latestReview']) {
+    try {
+      const impactResponse = await fetch(repoApiPath(activeRepoId, `impact?pullNumber=${n}&depth=2`));
+      if (impactResponse.ok) {
+        const pullImpact = (await impactResponse.json()) as {
+          risk: PullImpactSummary['risk'];
+          directDependents: string[];
+          transitiveDependents: string[];
+          relevantTests: unknown[];
+          analyzedFiles: string[];
+          summary: string;
+        };
+        setImpact({
+          risk: pullImpact.risk,
+          directDependents: pullImpact.directDependents.length,
+          transitiveDependents: pullImpact.transitiveDependents.length,
+          relevantTests: pullImpact.relevantTests.length,
+          changedModules: pullImpact.analyzedFiles.slice(0, 8),
+          note: pullImpact.summary
+        });
+        return;
+      }
+    } catch {
+      /* fall through */
+    }
+    setImpact(deriveImpact(fallbackReview));
+  }
 
   useEffect(() => {
     if (!repoId || !Number.isFinite(pullNumber)) return;
@@ -87,33 +122,7 @@ export default function PullDetailPage() {
         const data = (await response.json()) as PullRequestDetail;
         if (cancelled) return;
         setDetail(data);
-        try {
-          const impactResponse = await fetch(
-            repoApiPath(activeRepoId, `impact?pullNumber=${pullNumber}&depth=2`)
-          );
-          if (impactResponse.ok) {
-            const pullImpact = (await impactResponse.json()) as {
-              risk: PullImpactSummary['risk'];
-              directDependents: string[];
-              transitiveDependents: string[];
-              relevantTests: unknown[];
-              analyzedFiles: string[];
-              summary: string;
-            };
-            setImpact({
-              risk: pullImpact.risk,
-              directDependents: pullImpact.directDependents.length,
-              transitiveDependents: pullImpact.transitiveDependents.length,
-              relevantTests: pullImpact.relevantTests.length,
-              changedModules: pullImpact.analyzedFiles.slice(0, 8),
-              note: pullImpact.summary
-            });
-          } else {
-            setImpact(deriveImpact(data.latestReview));
-          }
-        } catch {
-          setImpact(deriveImpact(data.latestReview));
-        }
+        await loadPullImpact(activeRepoId, pullNumber, data.latestReview);
 
         const similarResponse = await fetch(
           repoApiPath(activeRepoId, `similar-changes?pullNumber=${pullNumber}`)
@@ -167,7 +176,16 @@ export default function PullDetailPage() {
             }
           : prev
       );
-      setImpact(deriveImpact(data));
+      await loadPullImpact(repoId, pullNumber, {
+        reviewId: data.reviewId,
+        status: data.status,
+        outcome: data.outcome,
+        headRevision: data.headRevision,
+        baseRevision: data.baseRevision,
+        summary: data.summary,
+        findings: data.findings
+      });
+      setSeverityFilter('ALL');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Review failed');
     } finally {
@@ -177,7 +195,14 @@ export default function PullDetailPage() {
 
   const review = detail?.latestReview;
   const base = repoId ? `/dashboard/${repoId}` : '';
-
+  const severityCounts = useMemo(
+    () => countFindingsBySeverity(review?.findings ?? []),
+    [review?.findings]
+  );
+  const visibleFindings = useMemo(
+    () => filterFindingsBySeverity(review?.findings ?? [], severityFilter),
+    [review?.findings, severityFilter]
+  );
   return (
     <DashboardLayout activeNav="pulls">
       <div className="canvas-inner ui-pr-detail">
@@ -265,7 +290,21 @@ export default function PullDetailPage() {
                         {impact.changedModules.length > 0 ? (
                           <ul className="ui-impact-panel__modules">
                             {impact.changedModules.map((mod) => (
-                              <li key={mod}>{mod}</li>
+                              <li key={mod}>
+                                {base && looksLikeRepoFilePath(mod) ? (
+                                  <span className="ui-pr-file-actions">
+                                    <Link href={`${base}/impact?file=${encodeURIComponent(mod)}`}>{mod}</Link>
+                                    <Link
+                                      className="ui-pr-file-actions__secondary"
+                                      href={`${base}/architecture?file=${encodeURIComponent(mod)}&blast=1`}
+                                    >
+                                      Graph
+                                    </Link>
+                                  </span>
+                                ) : (
+                                  mod
+                                )}
+                              </li>
                             ))}
                           </ul>
                         ) : null}
@@ -290,7 +329,15 @@ export default function PullDetailPage() {
                         {similar.map((item) => (
                           <li key={item.pullNumber} className="ui-similar-item">
                             <p className="ui-similar-item__title">
-                              PR #{item.pullNumber}: {item.title}
+                              {base ? (
+                                <Link href={`${base}/pulls/${item.pullNumber}`}>
+                                  PR #{item.pullNumber}: {item.title}
+                                </Link>
+                              ) : (
+                                <>
+                                  PR #{item.pullNumber}: {item.title}
+                                </>
+                              )}
                             </p>
                             <p className="ui-similar-item__meta">
                               {item.overlapCount} overlapping file{item.overlapCount === 1 ? '' : 's'}
@@ -307,16 +354,50 @@ export default function PullDetailPage() {
 
                 <BentoPanel title={`Findings (${review.findings.length})`}>
                   {review.findings.length > 0 ? (
-                    <div className="ui-finding-list">
-                      {review.findings.map((finding) => (
-                        <ReviewFindingCard
-                          key={finding.title}
-                          finding={finding}
-                          repoId={repoId}
-                          repoFullName={repoFullName}
+                    <>
+                      <div className="ui-finding-filters" role="tablist" aria-label="Filter findings by severity">
+                        {(
+                          [
+                            ['ALL', 'All'],
+                            ['HIGH', 'High'],
+                            ['MEDIUM', 'Medium'],
+                            ['LOW', 'Low']
+                          ] as const
+                        ).map(([id, label]) => (
+                          <button
+                            key={id}
+                            type="button"
+                            role="tab"
+                            aria-selected={severityFilter === id}
+                            className={`ui-finding-filter${
+                              severityFilter === id ? ' ui-finding-filter--active' : ''
+                            }`}
+                            onClick={() => setSeverityFilter(id)}
+                          >
+                            {label}
+                            <span className="ui-finding-filter__count">{severityCounts[id]}</span>
+                          </button>
+                        ))}
+                      </div>
+                      {visibleFindings.length > 0 ? (
+                        <div className="ui-finding-list">
+                          {visibleFindings.map((finding) => (
+                            <ReviewFindingCard
+                              key={finding.title}
+                              finding={finding}
+                              repoId={repoId}
+                              repoFullName={repoFullName}
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <EmptyState
+                          compact
+                          title="No findings in this bucket"
+                          description="Try another severity filter."
                         />
-                      ))}
-                    </div>
+                      )}
+                    </>
                   ) : (
                     <EmptyState compact icon={GitPullRequest} title="No findings" description="Review passed without flagged issues." />
                   )}
@@ -327,7 +408,13 @@ export default function PullDetailPage() {
                     <div className="ui-test-impact">
                       <ul className="ui-test-signals">
                         {review.summary.testSignals.map((test) => (
-                          <li key={test}>{test}</li>
+                          <li key={test}>
+                            {base && looksLikeRepoFilePath(test) ? (
+                              <Link href={`${base}/impact?file=${encodeURIComponent(test)}`}>{test}</Link>
+                            ) : (
+                              test
+                            )}
+                          </li>
                         ))}
                       </ul>
                     </div>

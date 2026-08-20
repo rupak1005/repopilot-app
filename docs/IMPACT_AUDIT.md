@@ -54,7 +54,7 @@
 1. Surface structured risk factors in UI (centrality, tests, churn, dependents)
 2. Embed Impact Graph view (highlight neighborhood from existing deps API)
 3. Wire similar-changes + ownership when available
-4. Add entry points from Ask citations and PR changed files
+4. Add entry points from Ask citations and PR changed files — **done**
 5. Benchmark fixture set (Phase 24) before claiming calibration
 
 ## Risk
