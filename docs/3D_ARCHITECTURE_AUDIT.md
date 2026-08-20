@@ -1,7 +1,7 @@
 # 3D Architecture Audit
 
 **Updated:** 2026-08-21  
-**Status:** Phase 1 complete — do not install Three.js / R3F until this audit is reviewed  
+**Status:** Phase 1 complete · Phase 2 started (`web/lib/visualizationModel.ts`)  
 **Scope:** Dependency Graph · Impact · Topography · typography · shared visualization model
 
 This audit grounds the “3D Typography + Data Visualization” master prompt against the **shipped** RepoPilot monorepo. It is the required gate before Phase 2 (rendering foundation).
@@ -232,8 +232,8 @@ Phase 2 may begin when product agrees:
 
 ## 11. Suggested first tickets (smallest correct diffs)
 
-1. **`web/lib/visualizationModel.ts`** — `VisualizationNode` / `VisualizationEdge` + adapters from Architecture + Hotspot + Impact blast  
-2. **`docs/3D_VISUAL_LANGUAGE.md`** — risk/churn/centrality channel table  
+1. **`web/lib/visualizationModel.ts`** — done (`VisualizationNode` / `Edge` + Architecture / Hotspot / Impact adapters + scales)
+2. **`docs/3D_VISUAL_LANGUAGE.md`** — done (channel table)
 3. **Hotspots revision note or revision-scoped API** — honesty before topography 3D  
 4. **Architecture inspector:** show edge `kind` + confidence from neighborhood when available  
 5. **Optional spike branch:** R3F canvas that consumes adapter positions only (no product nav change)
