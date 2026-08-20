@@ -26,7 +26,8 @@
 | 19 | Planning / Wiki stubs | **Done foundation** — nav + roadmap stubs |
 | 20 | Findings surface | **Done foundation** — repo-wide severity board |
 | 21 | ELK System View | **Done foundation** — Flow / System layout toggle |
-| 22–35 | Remaining | Not started / partial |
+| 22 | Graph minimap | **Done foundation** — overview + click-to-pan |
+| 23–35 | Remaining | Not started / partial |
 
 ## Phase 5
 
@@ -151,6 +152,12 @@
 - [x] Loading state while System View computes
 - [x] Unit test for pinned ELK positions
 
+## Phase 22
+
+- [x] Interactive ArchitectureGraph minimap (node dots + viewport frame)
+- [x] Camera sync via force-graph `onZoom`; click/Enter to `centerAt`
+- [x] Shared `graphMinimap` helpers + unit tests
+
 ## Next action
 
-Phase 22 (graph minimap) or deferred 3D topography.
+Phase 23+ (deferred 3D topography, Planning/Wiki depth, Findings polish, full tsconfig paths).

@@ -39,6 +39,10 @@ import { blastHighlightSet, blastRole, type BlastOverlay } from '../../lib/blast
 import { layoutWithDagre } from '../../lib/dagreLayout';
 import { layoutWithElk, type GraphLayoutAlgo } from '../../lib/elkLayout';
 import {
+  cameraFromZoomTransform,
+  type MinimapCamera
+} from '../../lib/graphMinimap';
+import {
   directDependentModules,
   dependentModules,
   type ModuleDependencyTraversal
@@ -49,6 +53,7 @@ import { githubModuleUrl, moduleSearchQuery } from '../../lib/modulePaths';
 import { repoApiPath } from '../../lib/serverApi';
 import { impactHref, withRevisionSha } from '../../lib/revisionScope';
 import { toMermaidFlowchart } from '../../lib/mermaidDiagram';
+import { GraphMinimap } from './GraphMinimap';
 import { MermaidDiagram, type MermaidDiagramHandle } from './MermaidDiagram';
 import { IconButton } from './IconButton';
 
@@ -317,6 +322,7 @@ export function ArchitectureGraphView({
   const [pathHint, setPathHint] = useState<string | null>(null);
   const [expandingNeighborhood, setExpandingNeighborhood] = useState(false);
   const [activeCycleIndex, setActiveCycleIndex] = useState<number | null>(null);
+  const [minimapCamera, setMinimapCamera] = useState<MinimapCamera | null>(null);
   const reduceMotion = useReducedMotion();
 
   const filtered = useMemo(() => filterForceGraphData(data, layer), [data, layer]);
@@ -366,6 +372,22 @@ export function ArchitectureGraphView({
       fg.zoomToFit(400, 80);
     }
   }, []);
+
+  const onGraphZoom = useCallback(
+    (transform: { k: number; x: number; y: number }) => {
+      setMinimapCamera(cameraFromZoomTransform(transform, dims.width, dims.height));
+    },
+    [dims.width, dims.height]
+  );
+
+  const navigateMinimap = useCallback(
+    (point: { x: number; y: number }) => {
+      const fg = fgRef.current;
+      const ms = reduceMotion ? 0 : 350;
+      if (fg && typeof fg.centerAt === 'function') fg.centerAt(point.x, point.y, ms);
+    },
+    [reduceMotion]
+  );
 
   const linkCurvature = useCallback((link: LinkObject) => {
     const src = link.source as GraphNode;
@@ -827,6 +849,7 @@ export function ArchitectureGraphView({
           linkDirectionalArrowRelPos={1}
           linkCurvature={linkCurvature}
           onEngineStop={fitGraph}
+          onZoom={onGraphZoom}
           onNodeDragEnd={(node) => {
             const n = node as GraphNode;
             n.fx = n.x;
@@ -852,6 +875,17 @@ export function ArchitectureGraphView({
           linkCanvasObject={paintLink}
         />
       )}
+
+      {renderer === 'interactive' && layoutData.nodes.length > 0 && !loading && !layoutBusy ? (
+        <GraphMinimap
+          nodes={layoutData.nodes}
+          selectedId={selectedId}
+          camera={minimapCamera}
+          viewWidth={dims.width}
+          viewHeight={dims.height}
+          onNavigate={navigateMinimap}
+        />
+      ) : null}
 
       <div className="ui-diagram__toolbar neo-canvas-bar">
         {repoId && !isDemoMode() ? (

@@ -38,7 +38,7 @@
 | Edge provenance with line/confidence | Partial — no DB columns |
 | Progressive neighborhood | Partial — full architecture capped at 80 nodes client-side |
 | Path tracing A→B | Done (`op=shortestPath` + Shift-click) |
-| Minimap / ELK layouts | ELK layered System View done; minimap still missing |
+| Minimap / ELK layouts | ELK layered System View + interactive minimap (click-to-pan) |
 | Deep links (view/selection/zoom) | Partial (`?file=`, `?blast=1`, `?rev=`) |
 | Cycle inspector | Done (`op=cycles` + architecture panel) |
 
@@ -48,6 +48,7 @@
 2. Transitive neighbor expand draws star edges to seed (not true paths)
 3. Symbol “calls” not type-aware
 4. ~~No ELK hierarchical System View~~ → **done** (Flow/System toggle; dagre remains default)
+5. ~~No graph minimap~~ → **done** (Phase 22)
 
 ## Migration plan
 
@@ -55,7 +56,8 @@
 2. **Phase 4 (done foundation):** Directory clustering; `GET …/graph?op=neighborhood`; path-trace UI; module cycle inspector
 3. Resolve TS path aliases at index time (`@/` → file) — **done** (heuristic package-root resolve; full tsconfig paths deferred)
 4. Optional ELK hierarchical System View — **done** (Phase 21)
-5. Evaluate server-only overview for 10k+ node repos
+5. Graph minimap — **done** (Phase 22)
+6. Evaluate server-only overview for 10k+ node repos
 
 ## Risk
 

@@ -307,6 +307,46 @@
   box-shadow: var(--shadow-hard-md);
 }
 
+.ui-diagram-minimap {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 3;
+  cursor: crosshair;
+  outline: none;
+  box-shadow: var(--shadow-hard-sm, 0 2px 8px rgb(0 0 0 / 18%));
+}
+
+.ui-diagram-minimap:focus-visible {
+  outline: 2px solid var(--diagram-accent);
+  outline-offset: 2px;
+}
+
+.ui-diagram-minimap__bg {
+  fill: color-mix(in srgb, var(--color-surface) 88%, transparent);
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+
+.ui-diagram-minimap__node {
+  fill: color-mix(in srgb, var(--color-text) 45%, transparent);
+}
+
+.ui-diagram-minimap__node--hotspot {
+  fill: var(--diagram-hotspot, #d97706);
+}
+
+.ui-diagram-minimap__node--selected {
+  fill: var(--diagram-accent);
+}
+
+.ui-diagram-minimap__frame {
+  fill: color-mix(in srgb, var(--diagram-accent) 14%, transparent);
+  stroke: var(--diagram-accent);
+  stroke-width: 1.5;
+  pointer-events: none;
+}
+
 .ui-diagram__mermaid-viewport {
   position: absolute;
   inset: 0;
