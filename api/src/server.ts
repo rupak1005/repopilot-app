@@ -477,11 +477,22 @@ async function bootstrap() {
 
   server.get('/api/v1/repositories/:repoId/wiki', async (request) => {
     const params = request.params as { repoId: string };
-    const query = request.query as { limit?: string; revisionSha?: string; path?: string };
-    if (typeof query.path === 'string' && query.path.trim()) {
+    const query = request.query as {
+      limit?: string;
+      revisionSha?: string;
+      path?: string | string[];
+    };
+    const pathParam = query.path;
+    const wikiPath =
+      typeof pathParam === 'string'
+        ? pathParam
+        : Array.isArray(pathParam)
+          ? pathParam[pathParam.length - 1]
+          : undefined;
+    if (typeof wikiPath === 'string' && wikiPath.trim()) {
       return getRepositoryWikiPage({
         repositoryId: params.repoId,
-        path: query.path,
+        path: wikiPath,
         revisionSha: query.revisionSha
       });
     }

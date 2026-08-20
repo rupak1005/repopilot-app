@@ -37,3 +37,16 @@ export function repoApiPath(repoId: string, subpath: string): string {
   const clean = subpath.replace(/^\//, '');
   return `/api/repositories/${repoId}/${clean}`;
 }
+
+/**
+ * Catch-all segments for `/api/repositories/:repoId/[...path]`.
+ * Read from the pathname — never `req.query.path` — so a `?path=` query
+ * (wiki / ownership) does not collide with the dynamic route name.
+ */
+export function repositoryProxySubpath(reqUrl: string | undefined, repoId: string): string {
+  const pathname = (reqUrl ?? '').split('?')[0] ?? '';
+  const needle = `/repositories/${repoId}/`;
+  const at = pathname.indexOf(needle);
+  if (at < 0) return '';
+  return pathname.slice(at + needle.length).replace(/^\/+|\/+$/g, '');
+}

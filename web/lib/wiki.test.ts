@@ -33,6 +33,7 @@ describe('wiki', () => {
 
   it('builds reader deep links', () => {
     expect(parseWikiPathQuery('docs/adr/1.md')).toBe('docs/adr/1.md');
+    expect(parseWikiPathQuery('docs%2FAI_PROVIDERS.md')).toBe('docs/AI_PROVIDERS.md');
     expect(wikiHref('r1', { path: 'README.md', revisionSha: 'abc1234' })).toBe(
       '/dashboard/r1/wiki?path=README.md&rev=abc1234'
     );
