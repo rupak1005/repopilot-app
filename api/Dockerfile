@@ -23,5 +23,5 @@ RUN NODE_OPTIONS=--max-old-space-size=1536 yarn --cwd common build \
 
 EXPOSE 3001
 
-# Render injects PORT; migrate then serve. INDEX_INLINE=true runs indexing in-process.
-CMD ["sh", "-c", "yarn --cwd api prisma migrate deploy && yarn --cwd api start"]
+# Render injects PORT. Neon pooler can't hold Prisma migrate advisory locks.
+CMD ["sh", "-c", "PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK=1 yarn --cwd api prisma migrate deploy && yarn --cwd api start"]
