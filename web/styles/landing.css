@@ -5,8 +5,8 @@
   display: flex;
   flex-direction: column;
   background:
-    radial-gradient(120% 80% at 10% -10%, color-mix(in srgb, var(--color-primary-soft) 35%, transparent), transparent 55%),
-    radial-gradient(90% 70% at 100% 0%, color-mix(in srgb, var(--color-surface-muted) 80%, transparent), transparent 50%),
+    radial-gradient(120% 80% at 8% -15%, color-mix(in srgb, var(--color-surface-muted) 90%, transparent), transparent 55%),
+    radial-gradient(90% 70% at 100% 0%, color-mix(in srgb, var(--color-text) 4%, transparent), transparent 45%),
     var(--color-background);
 }
 
