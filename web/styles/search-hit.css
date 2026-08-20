@@ -178,6 +178,52 @@
   font-size: var(--text-micro);
   line-height: 1.55;
   white-space: pre-wrap;
+  color: var(--color-text);
+  overflow-x: auto;
+}
+
+.ui-code-snippet code {
+  font-family: inherit;
+  font-size: inherit;
+  background: transparent;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+}
+
+/* IDE-like token colors on the light neo-brutalist surface */
+.ui-syn--plain {
+  color: var(--color-text);
+}
+
+.ui-syn--keyword {
+  color: var(--color-primary-strong);
+  font-weight: 700;
+}
+
+.ui-syn--string {
+  color: hsl(152 45% 32%);
+}
+
+.ui-syn--comment {
+  color: var(--color-text-subtle);
+  font-style: italic;
+}
+
+.ui-syn--number {
+  color: hsl(24 85% 38%);
+}
+
+.ui-syn--function {
+  color: hsl(210 70% 38%);
+  font-weight: 600;
+}
+
+.ui-syn--type {
+  color: hsl(175 55% 30%);
+}
+
+.ui-syn--punct {
   color: var(--color-text-muted);
 }
 

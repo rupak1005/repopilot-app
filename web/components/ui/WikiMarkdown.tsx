@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { WikiMdBlock } from '../../lib/wikiMarkdown';
 import { parseWikiMarkdown } from '../../lib/wikiMarkdown';
+import { CodeSnippet } from './CodeSnippet';
 
 type WikiMarkdownProps = {
   source: string;
@@ -45,9 +46,12 @@ function Block({ block }: { block: WikiMdBlock }) {
       );
     case 'code':
       return (
-        <pre className="ui-wiki-md__pre" data-lang={block.lang || undefined}>
-          <code>{block.text}</code>
-        </pre>
+        <CodeSnippet
+          className="ui-wiki-md__pre"
+          code={block.text}
+          filePath={block.lang || null}
+          maxLength={12_000}
+        />
       );
     case 'hr':
       return <hr className="ui-wiki-md__hr" />;

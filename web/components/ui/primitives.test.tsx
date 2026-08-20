@@ -160,6 +160,8 @@ describe('SearchHitRow', () => {
     );
     expect(html).toContain('lib/sync.ts:1–5');
     expect(html).toContain('syncRepository');
+    expect(html).toContain('ui-syn--keyword');
+    expect(html).toContain('ui-syn--function');
   });
 });
 

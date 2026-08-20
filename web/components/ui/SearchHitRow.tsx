@@ -1,5 +1,6 @@
 import type { SearchHit } from '../../lib/types';
 import { CitationChip } from './CitationChip';
+import { CodeSnippet } from './CodeSnippet';
 
 type SearchHitRowProps = {
   hit: SearchHit;
@@ -19,7 +20,7 @@ export function SearchHitRow({ hit, repoId, repoFullName }: SearchHitRowProps) {
           repoFullName={repoFullName}
         />
       </div>
-      <pre className="ui-search-hit__snippet">{hit.text.slice(0, 280)}</pre>
+      <CodeSnippet className="ui-search-hit__snippet" code={hit.text} filePath={hit.file} />
     </li>
   );
 }
