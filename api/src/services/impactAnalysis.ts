@@ -1,6 +1,10 @@
 import { getPrisma } from '../db/prisma';
 import { getModuleDependencyTraversal } from './dependencyGraphQueries';
 import { getCoChanges } from './engineeringIntelligence';
+import {
+  buildFileChangesFromRevisions,
+  getPullRequestDetails
+} from './prReview';
 import { resolveRepositoryRevision } from './repositoryRevisions';
 
 export type ImpactRisk = 'LOW' | 'MEDIUM' | 'HIGH';
@@ -442,4 +446,169 @@ async function finalizeImpact(args: {
     checklist: buildChecklist({ risk, directDependents, tests: relevantTests, coChanges }),
     summary
   };
+}
+
+export type PullImpactAnalysisResult = {
+  mode: 'pull';
+  pullNumber: number;
+  title: string;
+  revisionSha: string;
+  risk: ImpactRisk;
+  confidence: ImpactConfidence;
+  riskFactors: ImpactRiskFactor[];
+  changedFiles: string[];
+  analyzedFiles: string[];
+  skippedFiles: number;
+  directDependents: string[];
+  transitiveDependents: string[];
+  relevantTests: ImpactTestRecommendation[];
+  fileRisks: Array<{ filePath: string; risk: ImpactRisk; confidence: ImpactConfidence }>;
+  checklist: string[];
+  summary: string;
+};
+
+const RISK_RANK: Record<ImpactRisk, number> = { LOW: 0, MEDIUM: 1, HIGH: 2 };
+const CONF_RANK: Record<ImpactConfidence, number> = { HIGH: 0, MEDIUM: 1, LOW: 2 };
+
+function maxRisk(a: ImpactRisk, b: ImpactRisk): ImpactRisk {
+  return RISK_RANK[a] >= RISK_RANK[b] ? a : b;
+}
+
+function minConfidence(a: ImpactConfidence, b: ImpactConfidence): ImpactConfidence {
+  return CONF_RANK[a] >= CONF_RANK[b] ? a : b;
+}
+
+/** Aggregate file-level impact across a PR’s changed modules (bounded). */
+export async function analyzePullImpact(args: {
+  repositoryId: string;
+  pullNumber: number;
+  depth?: number;
+  /** Max changed files to analyze individually. */
+  fileLimit?: number;
+}): Promise<PullImpactAnalysisResult | null> {
+  const details = await getPullRequestDetails({
+    repositoryId: args.repositoryId,
+    pullNumber: args.pullNumber
+  });
+  if (!details) return null;
+
+  const fileLimit = Math.max(1, Math.min(args.fileLimit ?? 12, 24));
+  const changes = await buildFileChangesFromRevisions({
+    repositoryId: args.repositoryId,
+    baseRevision: details.baseRevision,
+    headRevision: details.headRevision
+  });
+
+  const changedFiles = changes
+    .filter((change) => change.status !== 'deleted')
+    .map((change) => change.path);
+  const toAnalyze = changedFiles.slice(0, fileLimit);
+  const skippedFiles = Math.max(0, changedFiles.length - toAnalyze.length);
+
+  const fileResults: ImpactAnalysisResult[] = [];
+  for (const filePath of toAnalyze) {
+    const result = await analyzeFileImpact({
+      repositoryId: args.repositoryId,
+      filePath,
+      revisionSha: details.headRevision,
+      depth: args.depth
+    });
+    if (result) fileResults.push(result);
+  }
+
+  const directDependents = [
+    ...new Set(fileResults.flatMap((r) => r.directDependents))
+  ].filter((path) => !changedFiles.includes(path));
+  const transitiveDependents = [
+    ...new Set(fileResults.flatMap((r) => r.transitiveDependents))
+  ].filter((path) => !changedFiles.includes(path) && !directDependents.includes(path));
+  const relevantTests = Array.from(
+    new Map(
+      fileResults.flatMap((r) => r.relevantTests).map((t) => [t.filePath, t] as const)
+    ).values()
+  );
+
+  let risk: ImpactRisk = 'LOW';
+  let confidence: ImpactConfidence = 'HIGH';
+  for (const result of fileResults) {
+    risk = maxRisk(risk, result.risk);
+    confidence = minConfidence(confidence, result.confidence);
+  }
+  if (fileResults.length === 0 && changedFiles.length > 0) {
+    confidence = 'MEDIUM';
+  }
+
+  const highRiskFiles = fileResults.filter((r) => r.risk === 'HIGH').length;
+  const riskFactors = buildRiskFactors({
+    directCount: directDependents.length,
+    transitiveCount: transitiveDependents.length,
+    testCount: relevantTests.length,
+    hotspotScore: Math.max(0, ...fileResults.map((r) => r.hotspot?.score ?? 0)),
+    coChangeCount: fileResults.reduce((sum, r) => sum + r.coChanges.length, 0)
+  });
+  if (highRiskFiles > 0) {
+    riskFactors.unshift({
+      id: 'files',
+      label: 'High-risk changed files',
+      detail: `${highRiskFiles} of ${fileResults.length} analyzed file${fileResults.length === 1 ? '' : 's'} ranked HIGH`,
+      severity: 'danger'
+    });
+  }
+  if (skippedFiles > 0) {
+    riskFactors.push({
+      id: 'truncated',
+      label: 'Partial analysis',
+      detail: `${skippedFiles} changed file${skippedFiles === 1 ? '' : 's'} not analyzed (limit ${fileLimit})`,
+      severity: 'warn'
+    });
+  }
+
+  const checklist = [
+    `Review ${changedFiles.length} changed file${changedFiles.length === 1 ? '' : 's'} in PR #${args.pullNumber}.`,
+    relevantTests.length > 0
+      ? `Run ${relevantTests.length} recommended test file${relevantTests.length === 1 ? '' : 's'}.`
+      : 'Locate or add tests covering the changed modules.',
+    directDependents.length > 0
+      ? `Check ${directDependents.length} direct dependent module${directDependents.length === 1 ? '' : 's'} outside the PR.`
+      : 'No external direct dependents detected for analyzed files.',
+    risk === 'HIGH'
+      ? 'Blast radius is HIGH — prefer smaller PRs or extra review.'
+      : 'Confirm CI and review findings before merge.'
+  ];
+
+  const summary = [
+    `PR #${args.pullNumber} (${details.title}) touches ${changedFiles.length} file${changedFiles.length === 1 ? '' : 's'}.`,
+    `Analyzed ${fileResults.length} module${fileResults.length === 1 ? '' : 's'} → ${directDependents.length} direct / ${transitiveDependents.length} transitive dependents outside the change set.`,
+    relevantTests.length > 0
+      ? `${relevantTests.length} related test file(s) found.`
+      : 'No related test files found for analyzed modules.'
+  ].join(' ');
+
+  return {
+    mode: 'pull',
+    pullNumber: args.pullNumber,
+    title: details.title,
+    revisionSha: details.headRevision,
+    risk,
+    confidence,
+    riskFactors,
+    changedFiles,
+    analyzedFiles: fileResults.map((r) => r.target.filePath),
+    skippedFiles,
+    directDependents,
+    transitiveDependents,
+    relevantTests,
+    fileRisks: fileResults.map((r) => ({
+      filePath: r.target.filePath,
+      risk: r.risk,
+      confidence: r.confidence
+    })),
+    checklist,
+    summary
+  };
+}
+
+/** Pure helper for unit tests — merges per-file risks into a PR risk. */
+export function mergePullRisks(risks: ImpactRisk[]): ImpactRisk {
+  return risks.reduce<ImpactRisk>((acc, risk) => maxRisk(acc, risk), 'LOW');
 }

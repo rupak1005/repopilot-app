@@ -4,7 +4,8 @@ import {
   buildRiskFactors,
   computeImpactConfidence,
   computeRisk,
-  isTestFile
+  isTestFile,
+  mergePullRisks
 } from './impactAnalysis';
 
 describe('analyzeFileImpact', () => {
@@ -51,5 +52,13 @@ describe('buildRiskFactors / confidence', () => {
         hasHotspot: true
       })
     ).toBe('MEDIUM');
+  });
+});
+
+describe('mergePullRisks', () => {
+  it('takes the maximum risk across changed files', () => {
+    expect(mergePullRisks(['LOW', 'MEDIUM', 'LOW'])).toBe('MEDIUM');
+    expect(mergePullRisks(['MEDIUM', 'HIGH'])).toBe('HIGH');
+    expect(mergePullRisks([])).toBe('LOW');
   });
 });

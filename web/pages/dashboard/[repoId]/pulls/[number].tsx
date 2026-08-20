@@ -85,7 +85,33 @@ export default function PullDetailPage() {
         const data = (await response.json()) as PullRequestDetail;
         if (cancelled) return;
         setDetail(data);
-        setImpact(deriveImpact(data.latestReview));
+        try {
+          const impactResponse = await fetch(
+            repoApiPath(activeRepoId, `impact?pullNumber=${pullNumber}&depth=2`)
+          );
+          if (impactResponse.ok) {
+            const pullImpact = (await impactResponse.json()) as {
+              risk: PullImpactSummary['risk'];
+              directDependents: string[];
+              transitiveDependents: string[];
+              relevantTests: unknown[];
+              analyzedFiles: string[];
+              summary: string;
+            };
+            setImpact({
+              risk: pullImpact.risk,
+              directDependents: pullImpact.directDependents.length,
+              transitiveDependents: pullImpact.transitiveDependents.length,
+              relevantTests: pullImpact.relevantTests.length,
+              changedModules: pullImpact.analyzedFiles.slice(0, 8),
+              note: pullImpact.summary
+            });
+          } else {
+            setImpact(deriveImpact(data.latestReview));
+          }
+        } catch {
+          setImpact(deriveImpact(data.latestReview));
+        }
 
         const similarResponse = await fetch(
           repoApiPath(activeRepoId, `similar-changes?pullNumber=${pullNumber}`)
@@ -242,6 +268,14 @@ export default function PullDetailPage() {
                           </ul>
                         ) : null}
                         {impact.note ? <p className="ui-finding-card__desc">{impact.note}</p> : null}
+                        {repoId ? (
+                          <Link
+                            className="ui-diagram__action"
+                            href={`/dashboard/${repoId}/impact?pull=${pullNumber}`}
+                          >
+                            Open full PR impact →
+                          </Link>
+                        ) : null}
                       </div>
                     ) : (
                       <EmptyState compact title="No impact data" description="Run a review to compute impact." />

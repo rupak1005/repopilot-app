@@ -7,33 +7,29 @@
 
 | Phase | Name | Status |
 |------:|------|--------|
-| 0 | Full product audit | **Done** |
-| 1 | Design system foundation | **Done** |
-| 2 | App shell + IA | **Done** |
-| 3 | Context graph foundation | **Done** |
-| 4 | Real dependency graph | **In progress** — clustering, neighborhood, path trace, deep links |
-| 5 | Impact analysis | **In progress** — risk factors, confidence, blast map |
-| 6 | Codebase topography | Not started (hotspot list only) |
-| 7–35 | AI, inspector, history, PR, MCP, eval, … | Not started / partial precursors |
+| 0–3 | Audits, design system, shell, context graph | **Done** |
+| 4 | Real dependency graph | **In progress** (clustering / neighborhood / path / deep links) |
+| 5 | Impact analysis | **In progress** — file + PR modes, risk factors, blast map |
+| 6 | Codebase topography | **Started** — 2D directory landscape on Topography page |
+| 7–35 | Remaining | Not started / partial |
 
-## Phase 4 (continued)
+## Phase 5 (continued)
 
-- [x] Directory clustering + expand/collapse
-- [x] Neighborhood API + inspector expand
-- [x] Shift-click path trace
-- [x] Architecture `?file=` deep link (auto-expands cluster)
-- [x] Edge confidence → dashed uncertain links
-- [ ] ELK / alternate symbol-call views / minimap
+- [x] File impact risk factors + confidence
+- [x] Blast radius map
+- [x] PR impact mode (`GET …/impact?pullNumber=`) aggregating changed files
+- [x] Impact page File / PR tabs; PR detail uses live pull impact
+- [ ] Symbol impact mode
+- [ ] Canvas ArchitectureGraph blast overlay
 
-## Phase 5 (started)
+## Phase 6 (started)
 
-- [x] Structured `riskFactors` + analysis `confidence` on impact API
-- [x] Why-this-risk chips in UI
-- [x] Blast radius map + link back to dependency graph
-- [ ] Symbol / PR impact modes
-- [ ] Canvas blast overlay (reuse ArchitectureGraph)
-- [ ] PR-scoped similar-changes on file impact (API is pull-number today)
+- [x] Rename Hotspots → Topography in nav (Phase 2)
+- [x] Raise hotspot fetch to `topK=40` on topography page
+- [x] 2D topography map: directory clusters sized/colored by hotspot score
+- [ ] Time slider / metric toggles / complexity metrics
+- [ ] Optional 3D mode (explicitly deferred)
 
 ## Next action
 
-Continue Phase 5 (symbol/PR modes) or Phase 6 topography — ask before committing.
+Continue Phase 6 (metrics/time) or Phase 5 symbol impact — **ask before committing**.

@@ -88,3 +88,134 @@
   font-size: var(--text-micro);
   color: var(--color-text-muted);
 }
+
+/* Phase 6 — 2D topography */
+
+.ui-topo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.ui-topo__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-3);
+  min-height: 200px;
+}
+
+.ui-topo__block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 2px;
+  min-height: 88px;
+  padding: var(--space-3);
+  border: var(--border-medium);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+}
+
+.ui-topo__block--w1 {
+  min-height: 72px;
+}
+.ui-topo__block--w2 {
+  min-height: 96px;
+}
+.ui-topo__block--w3 {
+  min-height: 120px;
+}
+.ui-topo__block--w4 {
+  min-height: 148px;
+}
+
+.ui-topo__block--low {
+  border-color: var(--color-success);
+}
+.ui-topo__block--medium {
+  border-color: var(--color-warning, #d97706);
+}
+.ui-topo__block--high {
+  border-color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 8%, var(--color-surface));
+}
+
+.ui-topo__block--selected {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.ui-topo__block-label {
+  font-weight: 800;
+  font-size: var(--text-ui);
+}
+
+.ui-topo__block-score {
+  font-family: var(--font-mono);
+  font-size: var(--text-caption);
+  font-weight: 700;
+}
+
+.ui-topo__block-count {
+  font-size: var(--text-micro);
+  color: var(--color-text-subtle);
+}
+
+.ui-topo__hint {
+  margin: 0;
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+}
+
+.ui-topo__inspector-title {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-body);
+}
+
+.ui-topo__inspector-meta {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+}
+
+.ui-topo__files {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ui-topo__files li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: var(--text-caption);
+}
+
+.ui-topo__files a {
+  color: var(--color-link);
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.ui-topo__files a:hover {
+  text-decoration: underline;
+}
+
+.ui-topo__file-score {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+@media (max-width: 720px) {
+  .ui-topo__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

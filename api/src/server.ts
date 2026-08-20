@@ -48,7 +48,7 @@ import {
   resolveModulePathArg,
   shortestModulePath
 } from './services/contextGraph';
-import { analyzeFileImpact, resolveIndexedFilePath } from './services/impactAnalysis';
+import { analyzeFileImpact, analyzePullImpact, resolveIndexedFilePath } from './services/impactAnalysis';
 import { requireInternalApiAuth } from './middleware/internalAuth';
 import { checkRateLimit, clientIp } from './middleware/rateLimit';
 import {
@@ -629,19 +629,38 @@ async function bootstrap() {
     const params = request.params as { repoId: string };
     const query = request.query as {
       filePath?: string;
+      pullNumber?: string;
       revisionSha?: string;
       depth?: string;
     };
-
-    if (!query.filePath?.trim()) {
-      reply.code(400);
-      return { error: 'filePath is required' };
-    }
 
     const depth = query.depth ? Number(query.depth) : undefined;
     if (query.depth && (!Number.isFinite(depth) || Number(depth) < 1)) {
       reply.code(400);
       return { error: 'depth must be a positive integer' };
+    }
+
+    if (query.pullNumber) {
+      const pullNumber = Number(query.pullNumber);
+      if (!Number.isFinite(pullNumber) || pullNumber < 1) {
+        reply.code(400);
+        return { error: 'pullNumber must be a positive integer' };
+      }
+      const result = await analyzePullImpact({
+        repositoryId: params.repoId,
+        pullNumber,
+        depth
+      });
+      if (!result) {
+        reply.code(404);
+        return { error: 'pull request not found for repository' };
+      }
+      return result;
+    }
+
+    if (!query.filePath?.trim()) {
+      reply.code(400);
+      return { error: 'filePath or pullNumber is required' };
     }
 
     const result = await analyzeFileImpact({

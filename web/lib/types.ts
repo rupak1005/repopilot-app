@@ -99,6 +99,29 @@ export type FileImpactAnalysis = {
   summary: string;
 };
 
+export type PullImpactAnalysis = {
+  mode: 'pull';
+  pullNumber: number;
+  title: string;
+  revisionSha: string;
+  risk: 'LOW' | 'MEDIUM' | 'HIGH';
+  confidence: 'LOW' | 'MEDIUM' | 'HIGH';
+  riskFactors: FileImpactAnalysis['riskFactors'];
+  changedFiles: string[];
+  analyzedFiles: string[];
+  skippedFiles: number;
+  directDependents: string[];
+  transitiveDependents: string[];
+  relevantTests: ImpactTestRecommendation[];
+  fileRisks: Array<{
+    filePath: string;
+    risk: 'LOW' | 'MEDIUM' | 'HIGH';
+    confidence: 'LOW' | 'MEDIUM' | 'HIGH';
+  }>;
+  checklist: string[];
+  summary: string;
+};
+
 export type RepositoryAnalytics = {
   totalReviews: number;
   completedReviews: number;
