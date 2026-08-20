@@ -25,7 +25,23 @@ describe('overview', () => {
   });
 
   it('prompts indexing when not indexed', () => {
-    const pulse = overviewPulse({ indexStatus: null, pullCount: 0, hotspotCount: 0 });
+    const pulse = overviewPulse({
+      indexStatus: {
+        state: 'not_indexed',
+        stage: 'clone',
+        revisionSha: null,
+        fileCount: 0,
+        symbolCount: 0,
+        job: null
+      },
+      pullCount: 0,
+      hotspotCount: 0
+    });
     expect(pulse.headline.toLowerCase()).toContain('not indexed');
+  });
+
+  it('shows checking while status is still loading', () => {
+    const pulse = overviewPulse({ indexStatus: null, pullCount: 0, hotspotCount: 0 });
+    expect(pulse.headline.toLowerCase()).toContain('checking');
   });
 });

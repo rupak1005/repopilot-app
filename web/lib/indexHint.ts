@@ -23,6 +23,8 @@ export function shouldShowIndexHint(
   repoId?: string | null,
   pendingIndexJobRepoId?: string | null
 ): boolean {
+  // Wait for first status poll — null looked like "Indexing" and flashed the empty hint.
+  if (!indexStatus) return false;
   if (isRepoIndexInProgress(repoId ?? null, indexStatus, pendingIndexJobRepoId)) return false;
   return showIndexHint(pulls, hotspots, analytics);
 }

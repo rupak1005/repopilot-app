@@ -52,7 +52,7 @@ describe('isRepoIndexInProgress', () => {
 
 describe('indexStatusLabel', () => {
   it('maps index states to topbar labels', () => {
-    expect(indexStatusLabel(null)).toBe('Indexing');
+    expect(indexStatusLabel(null)).toBe('Checking…');
     expect(
       indexStatusLabel({
         state: 'indexing',

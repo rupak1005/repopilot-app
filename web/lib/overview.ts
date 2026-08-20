@@ -23,7 +23,13 @@ export function overviewPulse(args: {
   hotspotCount: number;
 }): { headline: string; detail: string } {
   const { indexStatus, pullCount, hotspotCount } = args;
-  if (!indexStatus || indexStatus.state === 'not_indexed') {
+  if (!indexStatus) {
+    return {
+      headline: 'Checking index status…',
+      detail: 'Fetching whether this repo has been indexed yet.'
+    };
+  }
+  if (indexStatus.state === 'not_indexed') {
     return {
       headline: 'Repository not indexed yet',
       detail: 'Index from Settings to unlock graph, impact, search, and Ask.'

@@ -215,7 +215,7 @@ export function indexStatusLabel(
   status: RepositoryIndexStatus | null,
   displayPercent?: number | null
 ): string {
-  if (!status) return 'Indexing';
+  if (!status) return 'Checking…';
   switch (status.state) {
     case 'indexing': {
       const pct = displayPercent ?? indexProgressPercent(status);
@@ -228,6 +228,6 @@ export function indexStatusLabel(
     case 'not_indexed':
       return 'Not indexed';
     default:
-      return 'Indexing';
+      return 'Checking…';
   }
 }

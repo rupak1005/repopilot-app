@@ -2,21 +2,19 @@ type IndexHintProps = {
   repoFullName?: string;
 };
 
+/** Empty-index CTA for hosted + local. Prefer Settings; CLI is optional for local API. */
 export function IndexHint({ repoFullName }: IndexHintProps) {
   const slug = repoFullName ?? 'owner/repo';
   return (
     <div className="ui-index-hint">
       <p className="ui-index-hint__title">Repository not indexed yet</p>
       <p className="ui-index-hint__body">
-        Run sync from the repo root to populate pulls, search, ask, and hotspots. Replace the
-        owner/repo with your GitHub slug.
+        Open <strong>Settings</strong> and click <strong>Re-index repository</strong> to clone and
+        parse <code>{slug}</code>. Graph, impact, search, and Ask unlock when indexing finishes.
       </p>
-      <pre className="ui-index-hint__code">{`yarn --cwd api build
-./scripts/index-repo.sh ${slug}`}</pre>
-      <p className="ui-index-hint__body">
-        Or open <strong>Settings</strong> in the dashboard and click <strong>Re-index repository</strong>,
-        or enable preview data with <code>NEXT_PUBLIC_DEMO_MODE=true</code> in{' '}
-        <code>web/.env.local</code>.
+      <p className="ui-index-hint__body ui-index-hint__body--muted">
+        Local API only:{' '}
+        <code className="ui-index-hint__inline">{`./scripts/index-repo.sh ${slug}`}</code>
       </p>
     </div>
   );

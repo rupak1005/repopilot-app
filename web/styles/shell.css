@@ -129,6 +129,7 @@
   align-items: center;
   gap: var(--space-2);
   min-height: 36px;
+  min-width: 36px;
   padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-md);
   border: var(--border-medium);
@@ -144,7 +145,8 @@
   border-color: var(--color-accent);
 }
 
-.topbar-command kbd {
+.topbar-command kbd,
+.topbar-command__kbd {
   font-family: var(--font-mono);
   font-size: var(--text-micro);
   padding: 2px 6px;
@@ -166,11 +168,17 @@
   border-bottom: var(--border-light);
   font-size: var(--text-caption);
   color: var(--color-text-muted);
+  overflow: hidden;
 }
 
 .repo-context-bar__repo {
   font-weight: 700;
   color: var(--color-text);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: min(100%, 28ch);
 }
 
 .repo-context-bar__sep {
@@ -629,6 +637,18 @@ a.topbar-activity__item:hover {
 
   .topbar-actions {
     gap: var(--space-1);
+    min-width: 0;
+  }
+
+  .topbar-command__label,
+  .topbar-command__kbd,
+  .topbar-command kbd {
+    display: none;
+  }
+
+  .topbar-command {
+    justify-content: center;
+    padding: var(--space-1);
   }
 
   .topbar-actions .indexing-pill,
@@ -642,6 +662,16 @@ a.topbar-activity__item:hover {
 
   .topbar-signin--compact .topbar-signin__label {
     display: none;
+  }
+
+  .repo-context-bar {
+    padding: var(--space-2) var(--space-3);
+    gap: var(--space-1) var(--space-2);
+  }
+
+  .repo-context-bar__repo {
+    max-width: 100%;
+    flex: 1 1 auto;
   }
 
   .canvas {

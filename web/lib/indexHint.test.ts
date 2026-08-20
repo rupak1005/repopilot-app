@@ -27,6 +27,10 @@ describe('showIndexHint', () => {
 });
 
 describe('shouldShowIndexHint', () => {
+  it('hides hint while status is still loading', () => {
+    expect(shouldShowIndexHint([], [], emptyAnalytics, null, 'repo-id', null)).toBe(false);
+  });
+
   it('hides hint while indexing', () => {
     expect(
       shouldShowIndexHint([], [], emptyAnalytics, {
