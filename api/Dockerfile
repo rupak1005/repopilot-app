@@ -2,8 +2,8 @@ FROM node:22-alpine
 
 WORKDIR /repo
 
-# Native addons (tree-sitter) need a compiler on Alpine.
-RUN apk add --no-cache python3 make g++ \
+# Native addons (tree-sitter) need a compiler on Alpine; git for repo clones.
+RUN apk add --no-cache python3 make g++ git ca-certificates \
   && corepack enable
 
 # Install dependencies first (better Docker layer caching).
