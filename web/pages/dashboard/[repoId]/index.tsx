@@ -19,14 +19,7 @@ import { IndexHint } from '../../../components/ui/IndexHint';
 import { KpiTile } from '../../../components/ui/KpiTile';
 import { OutcomeIcon } from '../../../components/ui/OutcomeIcon';
 import { StatusBadge, reviewStatusVariant } from '../../../components/ui/StatusBadge';
-import {
-  DashboardLayout,
-  formatLatency,
-  shouldShowIndexHint,
-  usePendingIndexJobRepoId,
-  useRepoData,
-  useRepoIndexStatus
-} from '../../../lib/dashboard';
+import { formatLatency, shouldShowIndexHint, usePendingIndexJobRepoId, useRepoData, useRepoIndexStatus } from '../../../lib/dashboard';
 import { rowLinkProps } from '../../../lib/a11y';
 import { OVERVIEW_ACTIONS, overviewPulse } from '../../../lib/overview';
 
@@ -60,8 +53,7 @@ export default function OverviewPage() {
   });
 
   return (
-    <DashboardLayout activeNav="overview">
-      <div className="canvas-inner">
+    <div className="canvas-inner">
         <div className="page-title-block ui-overview-hero">
           <div>
             <h1>Overview</h1>
@@ -186,6 +178,5 @@ export default function OverviewPage() {
           </BentoPanel>
         </div>
       </div>
-    </DashboardLayout>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { AppShell, type NavKey } from '../components/AppShell';
 import { SeoHead } from '../components/ui/SeoHead';
@@ -28,29 +28,41 @@ type DashboardContext = {
   user: PublicUser;
 };
 
+const DashboardCtx = createContext<DashboardContext | null>(null);
+
+/** Shared auth/repo shell state — only one fetch while DashboardLayout stays mounted. */
 export function useDashboardContext(): DashboardContext | null {
+  return useContext(DashboardCtx);
+}
+
+function useDashboardAuth(): DashboardContext | null {
   const router = useRouter();
   const repoId = typeof router.query.repoId === 'string' ? router.query.repoId : null;
   const [user, setUser] = useState<PublicUser | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     async function load() {
       const response = await fetch('/api/auth/me');
       if (!response.ok) {
         void router.replace('/login');
         return;
       }
-      setUser((await response.json()) as PublicUser);
+      const next = (await response.json()) as PublicUser;
+      if (!cancelled) setUser(next);
     }
     void load();
-  }, [router]);
+    return () => {
+      cancelled = true;
+    };
+    // ponytail: router.replace omitted from deps — identity churn would re-auth-flash
+  }, [repoId]);
 
   if (!repoId || !user) return null;
 
   const repoFullName = user.selectedRepoFullName ?? repoId;
   return { repoId, repoFullName, user };
 }
-
 const DASHBOARD_TITLES: Record<NavKey, string> = {
   overview: 'Overview',
   search: 'Search',
@@ -74,7 +86,7 @@ type DashboardLayoutProps = {
 };
 
 export function DashboardLayout({ activeNav, canvasClass, children }: DashboardLayoutProps) {
-  const ctx = useDashboardContext();
+  const ctx = useDashboardAuth();
   if (!ctx) {
     return (
       <main className="standalone-page">
@@ -85,29 +97,30 @@ export function DashboardLayout({ activeNav, canvasClass, children }: DashboardL
   }
 
   return (
-    <AppShell
-      repoId={ctx.repoId}
-      repoFullName={ctx.repoFullName}
-      userLogin={ctx.user.login}
-      userAvatar={ctx.user.avatarUrl}
-      activeNav={activeNav}
-      canvasClass={canvasClass}
-      demoMode={isDemoMode()}
-      isPublicGuest={ctx.user.isPublicGuest}
-    >
-      <SeoHead
-        title={`${DASHBOARD_TITLES[activeNav]} · ${ctx.repoFullName}`}
-        description={`Indexed view of ${ctx.repoFullName} in RepoPilot.`}
-        path={`/dashboard/${ctx.repoId}`}
-        noIndex
-      />
-      {isDemoMode() ? <DemoBanner /> : null}
-      {ctx.user.isPublicGuest && !isDemoMode() ? <PublicGuestBanner /> : null}
-      {children}
-    </AppShell>
+    <DashboardCtx.Provider value={ctx}>
+      <AppShell
+        repoId={ctx.repoId}
+        repoFullName={ctx.repoFullName}
+        userLogin={ctx.user.login}
+        userAvatar={ctx.user.avatarUrl}
+        activeNav={activeNav}
+        canvasClass={canvasClass}
+        demoMode={isDemoMode()}
+        isPublicGuest={ctx.user.isPublicGuest}
+      >
+        <SeoHead
+          title={`${DASHBOARD_TITLES[activeNav]} · ${ctx.repoFullName}`}
+          description={`Indexed view of ${ctx.repoFullName} in RepoPilot.`}
+          path={`/dashboard/${ctx.repoId}`}
+          noIndex
+        />
+        {isDemoMode() ? <DemoBanner /> : null}
+        {ctx.user.isPublicGuest && !isDemoMode() ? <PublicGuestBanner /> : null}
+        {children}
+      </AppShell>
+    </DashboardCtx.Provider>
   );
 }
-
 export function useRepoData(repoId: string | null) {
   const [pulls, setPulls] = useState<PullRequestRow[]>([]);
   const [analytics, setAnalytics] = useState<RepositoryAnalytics | null>(null);

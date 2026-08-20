@@ -5,6 +5,8 @@ import { AnimatePresence, MotionConfig, motion } from 'motion/react';
 import { ToastProvider } from '../components/ui/ToastProvider';
 import { IndexProgressFloatHost } from '../components/ui/IndexProgressFloat';
 import { IndexProgressProvider } from '../lib/indexProgressUi';
+import { DashboardLayout } from '../lib/dashboard';
+import { resolveDashboardChrome } from '../lib/dashboardChrome';
 import { usePageEnter, pageTransitionKey } from '../lib/motion';
 import { applyTheme, getStoredTheme, hasExplicitThemePreference, syncThemeFromSystem } from '../lib/theme';
 import '../styles/tokens.css';
@@ -47,6 +49,7 @@ import '../styles/focus-audit.css';
 function AnimatedPage({ Component, pageProps }: AppProps) {
   const router = useRouter();
   const enter = usePageEnter();
+  const chrome = resolveDashboardChrome(router.pathname);
 
   useEffect(() => {
     if (hasExplicitThemePreference()) {
@@ -63,13 +66,27 @@ function AnimatedPage({ Component, pageProps }: AppProps) {
     return () => media.removeEventListener('change', onChange);
   }, []);
 
+  const page = <Component {...pageProps} />;
+  // Lift shell here so sidebar nav does not remount AppShell / re-flash auth.
+  const body = chrome ? (
+    <DashboardLayout activeNav={chrome.activeNav} canvasClass={chrome.canvasClass}>
+      {page}
+    </DashboardLayout>
+  ) : (
+    page
+  );
+
   return (
     <MotionConfig reducedMotion="user">
-      <AnimatePresence mode="wait">
-        <motion.div key={pageTransitionKey(router.asPath)} {...enter} style={{ minHeight: '100%' }}>
-          <Component {...pageProps} />
-        </motion.div>
-      </AnimatePresence>
+      {chrome ? (
+        body
+      ) : (
+        <AnimatePresence mode="wait">
+          <motion.div key={pageTransitionKey(router.asPath)} {...enter} style={{ minHeight: '100%' }}>
+            {body}
+          </motion.div>
+        </AnimatePresence>
+      )}
     </MotionConfig>
   );
 }

@@ -2,7 +2,7 @@ import { type FormEvent, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { CircleNotch, ClockCounterClockwise, MagnifyingGlass } from '@phosphor-icons/react';
-import { DashboardLayout, useDashboardContext, useNeedsIndexHint } from '../../../lib/dashboard';
+import { useDashboardContext, useNeedsIndexHint } from '../../../lib/dashboard';
 import { Button } from '../../../components/ui/Button';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { ErrorBanner } from '../../../components/ui/ErrorBanner';
@@ -155,8 +155,7 @@ export default function SearchPage() {
       (scope === 'all' && counts.all === 0));
 
   return (
-    <DashboardLayout activeNav="search">
-      <div className="canvas-inner ui-search-page">
+    <div className="canvas-inner ui-search-page">
         <div className="page-title-block">
           <h1>Search</h1>
           <p>Code and git history in one query — files, commits, and pull requests.</p>
@@ -292,6 +291,5 @@ export default function SearchPage() {
           ) : null}
         </section>
       </div>
-    </DashboardLayout>
   );
 }

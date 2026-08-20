@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { useRouter } from 'next/router';
 import { MagnifyingGlass } from '@phosphor-icons/react';
+import { firstFocusable, trapFocus } from '../../lib/a11y';
 import {
   COMMAND_ICONS,
   dashboardCommands,
@@ -16,6 +17,8 @@ export function CommandPalette({ repoId }: CommandPaletteProps) {
   const router = useRouter();
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const restoreFocusRef = useRef<HTMLElement | null>(null);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
@@ -35,7 +38,9 @@ export function CommandPalette({ repoId }: CommandPaletteProps) {
       if (event.key === 'Escape') {
         event.preventDefault();
         setOpen(false);
+        return;
       }
+      if (dialogRef.current) trapFocus(dialogRef.current, event);
     }
     function onOpenEvent() {
       setOpen(true);
@@ -52,9 +57,15 @@ export function CommandPalette({ repoId }: CommandPaletteProps) {
     if (!open) {
       setQuery('');
       setActiveIndex(0);
+      restoreFocusRef.current?.focus();
+      restoreFocusRef.current = null;
       return;
     }
-    const t = window.setTimeout(() => inputRef.current?.focus(), 0);
+    restoreFocusRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const t = window.setTimeout(() => {
+      (inputRef.current ?? firstFocusable(dialogRef.current))?.focus();
+    }, 0);
     return () => window.clearTimeout(t);
   }, [open]);
 
@@ -92,6 +103,7 @@ export function CommandPalette({ repoId }: CommandPaletteProps) {
         onClick={() => setOpen(false)}
       />
       <div
+        ref={dialogRef}
         className="command-palette__dialog"
         role="dialog"
         aria-modal="true"

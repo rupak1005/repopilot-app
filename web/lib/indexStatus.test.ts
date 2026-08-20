@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { isRepoIndexInProgress, indexProgressPercent, indexStageProgressCap, indexStatusLabel, parseIndexStreamPayload } from './indexStatus';
+import {
+  isIndexStale,
+  isRepoIndexInProgress,
+  indexProgressPercent,
+  indexStageProgressCap,
+  indexStatusLabel,
+  parseIndexStreamPayload
+} from './indexStatus';
 
 describe('parseIndexStreamPayload', () => {
   it('parses SSE data payloads', () => {
@@ -118,5 +125,44 @@ describe('indexProgressPercent', () => {
         job: null
       })
     ).toBe(73);
+  });
+});
+
+describe('isIndexStale', () => {
+  it('uses stale flag or compares SHAs when ready', () => {
+    expect(
+      isIndexStale({
+        state: 'ready',
+        stage: 'ready',
+        revisionSha: 'aaa',
+        remoteHeadSha: 'bbb',
+        stale: true,
+        fileCount: 1,
+        symbolCount: 1,
+        job: null
+      })
+    ).toBe(true);
+    expect(
+      isIndexStale({
+        state: 'ready',
+        stage: 'ready',
+        revisionSha: 'aaa',
+        remoteHeadSha: 'aaa',
+        fileCount: 1,
+        symbolCount: 1,
+        job: null
+      })
+    ).toBe(false);
+    expect(
+      isIndexStale({
+        state: 'indexing',
+        stage: 'parse',
+        revisionSha: 'aaa',
+        remoteHeadSha: 'bbb',
+        fileCount: 1,
+        symbolCount: 0,
+        job: null
+      })
+    ).toBe(false);
   });
 });

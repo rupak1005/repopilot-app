@@ -31,7 +31,10 @@ export function usePageEnter() {
   return pageEnterProps(Boolean(reduced));
 }
 
-/** Path only — query/hash changes must not remount dashboard pages (search, graph, etc.). */
+/** Path only — query/hash changes must not remount. Dashboard routes share one key per repo. */
 export function pageTransitionKey(asPath: string): string {
-  return asPath.replace(/[?#].*$/, '') || '/';
+  const path = asPath.replace(/[?#].*$/, '') || '/';
+  const dash = path.match(/^(\/dashboard\/[^/]+)/);
+  if (dash) return dash[1];
+  return path;
 }

@@ -6,11 +6,21 @@ export type RepositoryIndexStatus = {
   state: 'not_indexed' | 'indexing' | 'ready' | 'failed';
   stage: IndexStage;
   revisionSha: string | null;
+  remoteHeadSha?: string | null;
+  stale?: boolean;
   fileCount: number;
   symbolCount: number;
   moduleDependencyCount?: number;
   job: { lastError: string | null } | null;
 };
+
+/** Client-side mirror of API freshness (tolerates older payloads without stale). */
+export function isIndexStale(status: RepositoryIndexStatus | null | undefined): boolean {
+  if (!status || status.state !== 'ready') return false;
+  if (typeof status.stale === 'boolean') return status.stale;
+  const remote = status.remoteHeadSha;
+  return !!status.revisionSha && !!remote && status.revisionSha !== remote;
+}
 
 export const indexProgressSteps: Array<{ id: Exclude<IndexStage, 'failed'>; label: string }> = [
   { id: 'clone', label: 'Clone repository' },

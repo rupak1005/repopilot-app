@@ -163,8 +163,29 @@ async function bootstrap() {
       });
 
   server.addHook('onRequest', async (request, reply) => {
+    const incoming = request.headers['x-request-id'];
+    const requestId =
+      typeof incoming === 'string' && incoming.trim()
+        ? incoming.trim().slice(0, 64)
+        : request.id;
+    reply.header('x-request-id', requestId);
+    request.log = request.log.child({ requestId });
+  });
+
+  server.addHook('onRequest', async (request, reply) => {
     if (!request.url.startsWith('/api/v1/')) return;
     if (!requireInternalApiAuth(request, reply)) return;
+  });
+
+  server.setErrorHandler((error, request, reply) => {
+    const requestId = (reply.getHeader('x-request-id') as string | undefined) ?? request.id;
+    request.log.error({ err: error, requestId }, 'Unhandled request error');
+    const err = error as { statusCode?: number; message?: string };
+    const statusCode = typeof err.statusCode === 'number' && err.statusCode >= 400 ? err.statusCode : 500;
+    reply.code(statusCode).send({
+      error: statusCode >= 500 ? 'Internal Server Error' : err.message ?? 'Request failed',
+      requestId
+    });
   });
 
   server.get('/health', async (_request, reply) => {

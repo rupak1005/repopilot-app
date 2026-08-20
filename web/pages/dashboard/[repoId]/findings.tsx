@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import { MagnifyingGlass, Warning } from '@phosphor-icons/react';
-import { DashboardLayout, useDashboardContext, useNeedsIndexHint } from '../../../lib/dashboard';
+import { useDashboardContext, useNeedsIndexHint } from '../../../lib/dashboard';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { ErrorBanner } from '../../../components/ui/ErrorBanner';
 import { IndexHint } from '../../../components/ui/IndexHint';
@@ -99,8 +99,7 @@ export default function FindingsPage() {
   }
 
   return (
-    <DashboardLayout activeNav="findings">
-      <div className="canvas-inner ui-findings-page">
+    <div className="canvas-inner ui-findings-page">
         <div className="page-title-block">
           <h1>Findings</h1>
           <p>Latest PR review findings — filter, then jump to the PR or cited files.</p>
@@ -237,6 +236,5 @@ export default function FindingsPage() {
           </ul>
         </section>
       </div>
-    </DashboardLayout>
   );
 }

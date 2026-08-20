@@ -5,7 +5,7 @@ import { ArchitectureGraphView } from '../../../components/ui/ArchitectureGraph'
 import { DifferentiatorsStrip } from '../../../components/ui/DifferentiatorsStrip';
 import { ErrorBanner } from '../../../components/ui/ErrorBanner';
 import { IndexHint } from '../../../components/ui/IndexHint';
-import { DashboardLayout, usePendingIndexJobRepoId, useRepoIndexStatus } from '../../../lib/dashboard';
+import { usePendingIndexJobRepoId, useRepoIndexStatus } from '../../../lib/dashboard';
 import { isRepoIndexInProgress } from '../../../lib/indexStatus';
 import {
   buildArchitectureView,
@@ -302,8 +302,7 @@ export default function ArchitecturePage() {
   const selectedRevisionValue = matchRevisionValue(revisions, revisionSha);
 
   return (
-    <DashboardLayout activeNav="architecture" canvasClass="canvas--diagram">
-      <div className="ui-diagram-page">
+    <div className="ui-diagram-page">
         <header className="ui-diagram-hero">
           <div>
             <p className="ui-diagram-hero__eyebrow label-caps">Repository → diagram</p>
@@ -405,6 +404,5 @@ export default function ArchitecturePage() {
           </div>
         ) : null}
       </div>
-    </DashboardLayout>
   );
 }

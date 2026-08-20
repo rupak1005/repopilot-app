@@ -6,13 +6,7 @@ import { ErrorBanner } from '../../../components/ui/ErrorBanner';
 import { HotspotList } from '../../../components/ui/HotspotList';
 import { IndexHint } from '../../../components/ui/IndexHint';
 import { TopographyMap } from '../../../components/ui/TopographyMap';
-import {
-  DashboardLayout,
-  shouldShowIndexHint,
-  usePendingIndexJobRepoId,
-  useRepoData,
-  useRepoIndexStatus
-} from '../../../lib/dashboard';
+import { shouldShowIndexHint, usePendingIndexJobRepoId, useRepoData, useRepoIndexStatus } from '../../../lib/dashboard';
 import { isDemoMode } from '../../../lib/demoMode';
 import { DEMO_HOTSPOTS } from '../../../lib/demoData';
 import { repoApiPath } from '../../../lib/serverApi';
@@ -99,8 +93,7 @@ export default function HotspotsPage() {
   const windowLabel = windowDays === 365 ? '1 year' : `${windowDays} days`;
 
   return (
-    <DashboardLayout activeNav="hotspots">
-      <div className="canvas-inner ui-topo-page">
+    <div className="canvas-inner ui-topo-page">
         <div className="ui-topo-page__header">
           <div className="page-title-block">
             <h1>Topography</h1>
@@ -144,6 +137,5 @@ export default function HotspotsPage() {
           />
         </BentoPanel>
       </div>
-    </DashboardLayout>
   );
 }

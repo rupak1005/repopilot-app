@@ -34,13 +34,9 @@ describe('pageEnterProps', () => {
 });
 
 describe('pageTransitionKey', () => {
-  it('strips query and hash so shallow URL updates do not remount', () => {
-    expect(pageTransitionKey('/dashboard/r1/search?q=auth&scope=code')).toBe(
-      '/dashboard/r1/search'
-    );
-    expect(pageTransitionKey('/dashboard/r1/architecture?layout=system#n')).toBe(
-      '/dashboard/r1/architecture'
-    );
+  it('strips query/hash and keeps one key per dashboard repo', () => {
+    expect(pageTransitionKey('/dashboard/r1/search?q=auth&scope=code')).toBe('/dashboard/r1');
+    expect(pageTransitionKey('/dashboard/r1/architecture?layout=system#n')).toBe('/dashboard/r1');
     expect(pageTransitionKey('/')).toBe('/');
   });
 });

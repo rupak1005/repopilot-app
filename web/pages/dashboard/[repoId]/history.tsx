@@ -8,7 +8,7 @@ import { EmptyState } from '../../../components/ui/EmptyState';
 import { ErrorBanner } from '../../../components/ui/ErrorBanner';
 import { IndexHint } from '../../../components/ui/IndexHint';
 import { PageLoading } from '../../../components/ui/Skeleton';
-import { DashboardLayout, useDashboardContext, useNeedsIndexHint } from '../../../lib/dashboard';
+import { useDashboardContext, useNeedsIndexHint } from '../../../lib/dashboard';
 import { isDemoMode } from '../../../lib/demoMode';
 import { DEMO_HISTORY_HITS, DEMO_REVISIONS } from '../../../lib/demoData';
 import { formatIndexedAt, shortSha, type HistoryHit, type RevisionRow } from '../../../lib/history';
@@ -98,8 +98,7 @@ export default function HistoryPage() {
   }
 
   return (
-    <DashboardLayout activeNav="history">
-      <div className="canvas-inner ui-history-page">
+    <div className="canvas-inner ui-history-page">
         <div className="page-title-block">
           <h1>History</h1>
           <p>Indexed revisions and commit / PR history search for this repository.</p>
@@ -201,6 +200,5 @@ export default function HistoryPage() {
           )}
         </BentoPanel>
       </div>
-    </DashboardLayout>
   );
 }

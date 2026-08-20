@@ -10,17 +10,8 @@ export async function fetchPublicRepositoryMeta(args: {
   owner: string;
   name: string;
 }): Promise<PublicRepositoryMeta | null> {
-  const headers: Record<string, string> = {
-    Accept: 'application/vnd.github+json',
-    'User-Agent': 'repopilot-public-preview'
-  };
-  const token = process.env.GITHUB_TOKEN?.trim();
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
   const response = await fetch(`https://api.github.com/repos/${args.owner}/${args.name}`, {
-    headers
+    headers: githubHeaders()
   });
 
   if (response.status === 404) return null;
@@ -42,6 +33,25 @@ export async function fetchPublicRepositoryMeta(args: {
     description: data.description ?? null,
     defaultBranch: data.default_branch ?? 'main'
   };
+}
+
+/** Resolve default-branch HEAD SHA (best-effort; null on private/rate-limit/errors). */
+export async function fetchRemoteHeadSha(args: {
+  owner: string;
+  name: string;
+}): Promise<string | null> {
+  const meta = await fetchPublicRepositoryMeta(args);
+  if (!meta) return null;
+
+  const ref = encodeURIComponent(meta.defaultBranch);
+  const response = await fetch(
+    `https://api.github.com/repos/${args.owner}/${args.name}/commits/${ref}`,
+    { headers: githubHeaders() }
+  );
+  if (!response.ok) return null;
+
+  const data = (await response.json()) as { sha?: string };
+  return data.sha?.trim() || null;
 }
 
 export type PublicRepositoryBrowseItem = {

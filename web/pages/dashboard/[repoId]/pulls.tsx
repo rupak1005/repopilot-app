@@ -8,8 +8,7 @@ import { IndexHint } from '../../../components/ui/IndexHint';
 import { OutcomeIcon } from '../../../components/ui/OutcomeIcon';
 import { StatusBadge, reviewStatusVariant } from '../../../components/ui/StatusBadge';
 import { rowLinkProps } from '../../../lib/a11y';
-import { DashboardLayout, shouldShowIndexHint, usePendingIndexJobRepoId, useRepoData, useRepoIndexStatus } from '../../../lib/dashboard';
-
+import { shouldShowIndexHint, usePendingIndexJobRepoId, useRepoData, useRepoIndexStatus } from '../../../lib/dashboard';
 export default function PullsPage() {
   const router = useRouter();
   const repoId = typeof router.query.repoId === 'string' ? router.query.repoId : null;
@@ -27,8 +26,7 @@ export default function PullsPage() {
   const base = repoId ? `/dashboard/${repoId}` : '';
 
   return (
-    <DashboardLayout activeNav="pulls">
-      <div className="canvas-inner">
+    <div className="canvas-inner">
         <div className="page-title-block">
           <h1>Pull Requests</h1>
           <p>Review status and outcomes.</p>
@@ -89,6 +87,5 @@ export default function PullsPage() {
           )}
         </BentoPanel>
       </div>
-    </DashboardLayout>
   );
 }

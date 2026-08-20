@@ -19,7 +19,7 @@ import {
 import { demoAskResponse, demoDelay } from '../../../lib/demoData';
 import { isDemoMode } from '../../../lib/demoMode';
 import { repoApiPath } from '../../../lib/serverApi';
-import { DashboardLayout, useDashboardContext, useNeedsIndexHint } from '../../../lib/dashboard';
+import { useDashboardContext, useNeedsIndexHint } from '../../../lib/dashboard';
 import { type AskResponse } from '../../../lib/types';
 import { ChatCircleDots } from '@phosphor-icons/react';
 
@@ -173,8 +173,8 @@ export default function AskPage() {
   const hasHistory = messages.length > 0;
 
   return (
-    <DashboardLayout activeNav="ask" canvasClass="canvas--ask">
-      <div className="ui-ask-page">
+    <>
+    <div className="ui-ask-page">
         {needsIndex ? <IndexHint repoFullName={repoFullName} /> : null}
 
         {!hasHistory && !loading ? (
@@ -273,6 +273,6 @@ export default function AskPage() {
           </>
         }
       />
-    </DashboardLayout>
+    </>
   );
 }

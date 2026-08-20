@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { isActivationKey, MAIN_CONTENT_ID, rowLinkProps } from './a11y';
+import { focusables, isActivationKey, MAIN_CONTENT_ID, rowLinkProps, trapFocus } from './a11y';
 
 describe('a11y', () => {
   it('exports a stable main content id for skip links', () => {
@@ -22,5 +22,14 @@ describe('a11y', () => {
     props.onKeyDown({ key: ' ', preventDefault: vi.fn() } as never);
     props.onKeyDown({ key: 'a', preventDefault: vi.fn() } as never);
     expect(onActivate).toHaveBeenCalledTimes(3);
+  });
+
+  it('trapFocus ignores non-Tab keys and empty roots', () => {
+    const preventDefault = vi.fn();
+    const emptyRoot = { querySelectorAll: () => [] } as unknown as ParentNode;
+    trapFocus(emptyRoot, { key: 'Escape', shiftKey: false, preventDefault } as unknown as KeyboardEvent);
+    trapFocus(emptyRoot, { key: 'Tab', shiftKey: false, preventDefault } as unknown as KeyboardEvent);
+    expect(preventDefault).not.toHaveBeenCalled();
+    expect(focusables(null)).toEqual([]);
   });
 });

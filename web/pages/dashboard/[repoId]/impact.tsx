@@ -13,14 +13,7 @@ import { PageLoading } from '../../../components/ui/Skeleton';
 import { DEMO_REVISIONS, demoDelay, demoFileImpact, demoOwnership, demoPullImpact } from '../../../lib/demoData';
 import { mcpContextPackSnippet } from '../../../lib/mcpConnect';
 import { formatOwnershipLabel, githubOwnerHref, type OwnershipSummary } from '../../../lib/ownership';
-import {
-  DashboardLayout,
-  shouldShowIndexHint,
-  useDashboardContext,
-  usePendingIndexJobRepoId,
-  useRepoData,
-  useRepoIndexStatus
-} from '../../../lib/dashboard';
+import { shouldShowIndexHint, useDashboardContext, usePendingIndexJobRepoId, useRepoData, useRepoIndexStatus } from '../../../lib/dashboard';
 import { isDemoMode } from '../../../lib/demoMode';
 import { type RevisionRow } from '../../../lib/history';
 import {
@@ -419,8 +412,7 @@ export default function ImpactPage() {
   const selectedRevisionValue = matchRevisionValue(revisions, revisionSha);
 
   return (
-    <DashboardLayout activeNav="impact">
-      <div className="canvas-inner ui-impact-page">
+    <div className="canvas-inner ui-impact-page">
         <div className="page-title-block">
           <h1>Impact</h1>
           <p>What breaks if this module or PR changes — graph traversal plus tests and history.</p>
@@ -563,7 +555,6 @@ export default function ImpactPage() {
           />
         ) : null}
       </div>
-    </DashboardLayout>
   );
 }
 

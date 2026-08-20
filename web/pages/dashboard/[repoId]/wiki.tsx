@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, ArrowSquareOut, BookOpen, MagnifyingGlass } from '@phosphor-icons/react';
-import { DashboardLayout, useDashboardContext, useNeedsIndexHint } from '../../../lib/dashboard';
+import { useDashboardContext, useNeedsIndexHint } from '../../../lib/dashboard';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { ErrorBanner } from '../../../components/ui/ErrorBanner';
 import { IndexHint } from '../../../components/ui/IndexHint';
@@ -143,8 +143,7 @@ export default function WikiPage() {
 
   if (selectedPath) {
     return (
-      <DashboardLayout activeNav="wiki">
-        <div className="canvas-inner ui-wiki-page">
+      <div className="canvas-inner ui-wiki-page">
           <div className="ui-wiki-reader__bar">
             <button type="button" className="ui-diagram__action" onClick={closePage}>
               <ArrowLeft size={14} weight="bold" aria-hidden /> All pages
@@ -191,13 +190,11 @@ export default function WikiPage() {
             </article>
           ) : null}
         </div>
-      </DashboardLayout>
     );
   }
 
   return (
-    <DashboardLayout activeNav="wiki">
-      <div className="canvas-inner ui-wiki-page">
+    <div className="canvas-inner ui-wiki-page">
         <div className="page-title-block">
           <h1>Wiki</h1>
           <p>
@@ -301,6 +298,5 @@ export default function WikiPage() {
           })}
         </ul>
       </div>
-    </DashboardLayout>
   );
 }

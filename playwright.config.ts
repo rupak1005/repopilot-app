@@ -14,7 +14,19 @@ export default defineConfig({
     baseURL,
     trace: 'on-first-retry'
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+      testMatch: /browser-smoke\.spec\.ts/
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+      testMatch: /browser-smoke\.spec\.ts/
+    }
+  ],
   webServer: {
     command: 'yarn --cwd web start',
     url: baseURL,

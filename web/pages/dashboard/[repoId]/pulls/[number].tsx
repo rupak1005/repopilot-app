@@ -17,7 +17,7 @@ import {
   demoSimilarChanges
 } from '../../../../lib/demoData';
 import { isDemoMode } from '../../../../lib/demoMode';
-import { DashboardLayout, useDashboardContext } from '../../../../lib/dashboard';
+import { useDashboardContext } from '../../../../lib/dashboard';
 import { looksLikeRepoFilePath } from '../../../../lib/modulePaths';
 import {
   countFindingsBySeverity,
@@ -204,8 +204,7 @@ export default function PullDetailPage() {
     [review?.findings, severityFilter]
   );
   return (
-    <DashboardLayout activeNav="pulls">
-      <div className="canvas-inner ui-pr-detail">
+    <div className="canvas-inner ui-pr-detail">
         <Link href={`${base}/pulls`} className="ui-pr-detail__back">
           <ArrowLeft size={16} weight="light" aria-hidden />
           Pull requests
@@ -438,6 +437,5 @@ export default function PullDetailPage() {
           </>
         ) : null}
       </div>
-    </DashboardLayout>
   );
 }

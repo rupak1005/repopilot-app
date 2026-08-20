@@ -19,6 +19,7 @@ import { ErrorBoundary } from './ui/ErrorBoundary';
 import { IconButton } from './ui/IconButton';
 import { NavItem } from './ui/NavItem';
 import { OfflineBanner } from './ui/OfflineBanner';
+import { StaleIndexBanner } from './ui/StaleIndexBanner';
 import { RepoPicker } from './ui/RepoPicker';
 import { SkipLink } from './ui/SkipLink';
 import { ThemeToggle } from './ui/ThemeToggle';
@@ -234,6 +235,7 @@ export function AppShell({
           tabIndex={-1}
         >
           <OfflineBanner />
+          <StaleIndexBanner repoId={repoId} status={demoMode ? null : indexStatus} demoMode={demoMode} />
           <ErrorBoundary name={`nav:${activeNav}`}>
             {children}
           </ErrorBoundary>

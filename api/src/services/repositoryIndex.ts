@@ -3,6 +3,7 @@ import { getPrisma } from '../db/prisma';
 import { ensureRepository } from '../repo/persistence';
 import { buildDependencyGraph } from './dependencyGraphBuilder';
 import { cloneOrUpdateRepository, clonePublicRepository } from './githubClone';
+import { fetchRemoteHeadSha } from './githubPublic';
 import { ingestRepositoryHistory } from './historyIngest';
 import { syncRepository } from './repositorySync';
 import {
@@ -17,6 +18,10 @@ export type RepositoryIndexStatus = {
   state: 'not_indexed' | 'indexing' | 'ready' | 'failed';
   stage: 'clone' | 'parse' | 'graph' | 'history' | 'ready' | 'failed';
   revisionSha: string | null;
+  /** Default-branch HEAD on GitHub when comparable; null if unknown/private. */
+  remoteHeadSha: string | null;
+  /** True when ready and indexed SHA ≠ remote HEAD. */
+  stale: boolean;
   fileCount: number;
   symbolCount: number;
   moduleDependencyCount: number;
@@ -27,6 +32,28 @@ export type RepositoryIndexStatus = {
     updatedAt: string;
   } | null;
 };
+
+/** Pure compare for tests + status assembly. */
+export function isIndexBehindRemote(
+  state: RepositoryIndexStatus['state'],
+  revisionSha: string | null,
+  remoteHeadSha: string | null
+): boolean {
+  return state === 'ready' && !!revisionSha && !!remoteHeadSha && revisionSha !== remoteHeadSha;
+}
+
+// ponytail: process-local TTL cache — avoids GitHub on every SSE/poll tick; restart clears.
+const REMOTE_HEAD_TTL_MS = 60_000;
+const remoteHeadCache = new Map<string, { sha: string | null; at: number }>();
+
+async function cachedRemoteHeadSha(owner: string, name: string): Promise<string | null> {
+  const key = `${owner}/${name}`.toLowerCase();
+  const hit = remoteHeadCache.get(key);
+  if (hit && Date.now() - hit.at < REMOTE_HEAD_TTL_MS) return hit.sha;
+  const sha = await fetchRemoteHeadSha({ owner, name });
+  remoteHeadCache.set(key, { sha, at: Date.now() });
+  return sha;
+}
 
 function logEvent(event: string, fields: Record<string, unknown>) {
   console.log(JSON.stringify({ event, ...fields }));
@@ -423,12 +450,26 @@ export async function getRepositoryIndexStatus(
   }
 
   const stage = deriveIndexStage({ state, fileCount, symbolCount, moduleDependencyCount });
+  const revisionSha = latestRevision?.revisionSha ?? null;
+
+  let remoteHeadSha: string | null = null;
+  if (state === 'ready' && revisionSha) {
+    const repo = await getPrisma().repository.findUnique({
+      where: { id: repositoryId },
+      select: { owner: true, name: true }
+    });
+    if (repo?.owner && repo?.name) {
+      remoteHeadSha = await cachedRemoteHeadSha(repo.owner, repo.name);
+    }
+  }
 
   return {
     repositoryId,
     state,
     stage,
-    revisionSha: latestRevision?.revisionSha ?? null,
+    revisionSha,
+    remoteHeadSha,
+    stale: isIndexBehindRemote(state, revisionSha, remoteHeadSha),
     fileCount,
     symbolCount,
     moduleDependencyCount,
