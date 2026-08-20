@@ -30,3 +30,8 @@ export function usePageEnter() {
   const reduced = useReducedMotion();
   return pageEnterProps(Boolean(reduced));
 }
+
+/** Path only — query/hash changes must not remount dashboard pages (search, graph, etc.). */
+export function pageTransitionKey(asPath: string): string {
+  return asPath.replace(/[?#].*$/, '') || '/';
+}

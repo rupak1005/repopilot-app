@@ -5,7 +5,7 @@ import { AnimatePresence, MotionConfig, motion } from 'motion/react';
 import { ToastProvider } from '../components/ui/ToastProvider';
 import { IndexProgressFloatHost } from '../components/ui/IndexProgressFloat';
 import { IndexProgressProvider } from '../lib/indexProgressUi';
-import { usePageEnter } from '../lib/motion';
+import { usePageEnter, pageTransitionKey } from '../lib/motion';
 import { applyTheme, getStoredTheme, hasExplicitThemePreference, syncThemeFromSystem } from '../lib/theme';
 import '../styles/tokens.css';
 import '../styles/neo-panels.css';
@@ -66,7 +66,7 @@ function AnimatedPage({ Component, pageProps }: AppProps) {
   return (
     <MotionConfig reducedMotion="user">
       <AnimatePresence mode="wait">
-        <motion.div key={router.asPath} {...enter} style={{ minHeight: '100%' }}>
+        <motion.div key={pageTransitionKey(router.asPath)} {...enter} style={{ minHeight: '100%' }}>
           <Component {...pageProps} />
         </motion.div>
       </AnimatePresence>

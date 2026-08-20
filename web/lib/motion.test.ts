@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { pageEnterProps, tapMotionProps, TAP_SPRING } from './motion';
+import { pageEnterProps, pageTransitionKey, tapMotionProps, TAP_SPRING } from './motion';
 
 describe('tapMotionProps', () => {
   it('returns spring scale when motion is allowed', () => {
@@ -30,5 +30,17 @@ describe('pageEnterProps', () => {
     const props = pageEnterProps(true);
     expect(props.initial).toBe(false);
     expect(props.transition).toEqual({ duration: 0 });
+  });
+});
+
+describe('pageTransitionKey', () => {
+  it('strips query and hash so shallow URL updates do not remount', () => {
+    expect(pageTransitionKey('/dashboard/r1/search?q=auth&scope=code')).toBe(
+      '/dashboard/r1/search'
+    );
+    expect(pageTransitionKey('/dashboard/r1/architecture?layout=system#n')).toBe(
+      '/dashboard/r1/architecture'
+    );
+    expect(pageTransitionKey('/')).toBe('/');
   });
 });
