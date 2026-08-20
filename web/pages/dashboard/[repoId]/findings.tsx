@@ -101,129 +101,137 @@ export default function FindingsPage() {
       <div className="canvas-inner ui-findings-page">
         <div className="page-title-block">
           <h1>Findings</h1>
-          <p>
-            Review findings from the latest PR reviews — filter by severity, category, or text, then
-            jump to the PR or cited files.
-          </p>
+          <p>Latest PR review findings — filter, then jump to the PR or cited files.</p>
         </div>
 
         {error ? <ErrorBanner onDismiss={() => setError(null)}>{error}</ErrorBanner> : null}
 
-        <form
-          className="ui-findings-search"
-          onSubmit={(event) => {
-            event.preventDefault();
-            replaceFilters({ q: draftQuery });
-          }}
-        >
-          <label className="ui-findings-search__label" htmlFor="findings-q">
-            Search findings
-          </label>
-          <div className="ui-findings-search__row">
-            <MagnifyingGlass size={16} weight="bold" aria-hidden />
-            <input
-              id="findings-q"
-              type="search"
-              value={draftQuery}
-              onChange={(event) => setDraftQuery(event.target.value)}
-              placeholder="Title, file, PR, category…"
-            />
-            <button type="submit" className="ui-diagram__action">
-              Search
-            </button>
-          </div>
-        </form>
-
-        <div className="ui-finding-filters" role="tablist" aria-label="Filter findings by severity">
-          {FINDING_SEVERITY_FILTERS.map((key) => (
-            <button
-              key={key}
-              type="button"
-              role="tab"
-              aria-selected={severity === key}
-              className={`ui-finding-filter${severity === key ? ' ui-finding-filter--active' : ''}`}
-              onClick={() => replaceFilters({ severity: key })}
-            >
-              {key === 'ALL' ? 'All' : key.charAt(0) + key.slice(1).toLowerCase()}
-              <span className="ui-finding-filter__count">{counts[key]}</span>
-            </button>
-          ))}
-        </div>
-
-        {categories.length > 0 ? (
-          <div className="ui-finding-filters" role="tablist" aria-label="Filter findings by category">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={!category}
-              className={`ui-finding-filter${!category ? ' ui-finding-filter--active' : ''}`}
-              onClick={() => replaceFilters({ category: null })}
-            >
-              All categories
-            </button>
-            {categories.map((name) => (
-              <button
-                key={name}
-                type="button"
-                role="tab"
-                aria-selected={category === name}
-                className={`ui-finding-filter${category === name ? ' ui-finding-filter--active' : ''}`}
-                onClick={() => replaceFilters({ category: name })}
-              >
-                {name}
-              </button>
-            ))}
-          </div>
-        ) : null}
-
-        {loading ? <p className="empty-state">Loading findings…</p> : null}
-
-        {!loading && visible.length === 0 ? (
-          <EmptyState
-            icon={Warning}
-            title={findings.length === 0 ? 'No findings yet' : 'No findings match these filters'}
-            description={
-              findings.length === 0
-                ? 'Open a pull request and run a review to populate this board.'
-                : 'Try clearing search, category, or severity.'
-            }
-            action={
-              base ? (
-                <Link className="ui-diagram__action" href={`${base}/pulls`}>
-                  Open pull requests →
-                </Link>
-              ) : undefined
-            }
-          />
-        ) : null}
-
-        <ul className="ui-findings-list">
-          {visible.map((finding) => (
-            <li key={finding.id} className="ui-findings-item">
-              <div className="ui-findings-item__meta">
-                {base ? (
-                  <Link
-                    className="ui-findings-item__pr"
-                    href={`${base}/pulls/${finding.pullNumber}`}
-                  >
-                    #{finding.pullNumber}
-                  </Link>
-                ) : (
-                  <span className="ui-findings-item__pr">#{finding.pullNumber}</span>
-                )}
-                <span className="ui-findings-item__title" title={finding.pullTitle}>
-                  {finding.pullTitle}
-                </span>
-              </div>
-              <ReviewFindingCard
-                finding={finding}
-                repoId={repoId}
-                repoFullName={repoFullName}
-                revisionSha={finding.headRevision}
+        <section className="ui-findings-board" aria-label="Findings filters and results">
+          <form
+            className="ui-findings-search"
+            onSubmit={(event) => {
+              event.preventDefault();
+              replaceFilters({ q: draftQuery });
+            }}
+          >
+            <label className="ui-findings-search__label" htmlFor="findings-q">
+              Search findings
+            </label>
+            <div className="ui-findings-search__row">
+              <MagnifyingGlass size={16} weight="bold" aria-hidden />
+              <input
+                id="findings-q"
+                type="search"
+                value={draftQuery}
+                onChange={(event) => setDraftQuery(event.target.value)}
+                placeholder="Title, file, PR, category…"
               />
-            </li>
-          ))}
-        </ul>
+              <button type="submit" className="ui-findings-search__submit">
+                Search
+              </button>
+            </div>
+          </form>
+
+          <div className="ui-findings-filter-bar">
+            <div className="ui-findings-filter-group">
+              <span className="ui-findings-filter-group__label label-caps">Severity</span>
+              <div className="ui-finding-filters" role="tablist" aria-label="Filter findings by severity">
+                {FINDING_SEVERITY_FILTERS.map((key) => (
+                  <button
+                    key={key}
+                    type="button"
+                    role="tab"
+                    aria-selected={severity === key}
+                    className={`ui-finding-filter${severity === key ? ' ui-finding-filter--active' : ''}`}
+                    onClick={() => replaceFilters({ severity: key })}
+                  >
+                    {key === 'ALL' ? 'All' : key.charAt(0) + key.slice(1).toLowerCase()}
+                    <span className="ui-finding-filter__count">{counts[key]}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {categories.length > 0 ? (
+              <div className="ui-findings-filter-group">
+                <span className="ui-findings-filter-group__label label-caps">Category</span>
+                <div
+                  className="ui-finding-filters"
+                  role="tablist"
+                  aria-label="Filter findings by category"
+                >
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={!category}
+                    className={`ui-finding-filter${!category ? ' ui-finding-filter--active' : ''}`}
+                    onClick={() => replaceFilters({ category: null })}
+                  >
+                    All
+                  </button>
+                  {categories.map((name) => (
+                    <button
+                      key={name}
+                      type="button"
+                      role="tab"
+                      aria-selected={category === name}
+                      className={`ui-finding-filter${
+                        category === name ? ' ui-finding-filter--active' : ''
+                      }`}
+                      onClick={() => replaceFilters({ category: name })}
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          {!loading && findings.length > 0 ? (
+            <p className="ui-findings-summary" aria-live="polite">
+              Showing <strong>{visible.length}</strong> of {findings.length} finding
+              {findings.length === 1 ? '' : 's'}
+            </p>
+          ) : null}
+
+          {loading ? <p className="empty-state">Loading findings…</p> : null}
+
+          {!loading && visible.length === 0 ? (
+            <EmptyState
+              icon={Warning}
+              title={findings.length === 0 ? 'No findings yet' : 'No findings match these filters'}
+              description={
+                findings.length === 0
+                  ? 'Open a pull request and run a review to populate this board.'
+                  : 'Try clearing search, category, or severity.'
+              }
+              action={
+                base ? (
+                  <Link className="ui-diagram__action" href={`${base}/pulls`}>
+                    Open pull requests →
+                  </Link>
+                ) : undefined
+              }
+            />
+          ) : null}
+
+          <ul className="ui-findings-list">
+            {visible.map((finding) => (
+              <li key={finding.id} className="ui-findings-item">
+                <ReviewFindingCard
+                  finding={finding}
+                  repoId={repoId}
+                  repoFullName={repoFullName}
+                  revisionSha={finding.headRevision}
+                  pullNumber={finding.pullNumber}
+                  pullTitle={finding.pullTitle}
+                  pullHref={base ? `${base}/pulls/${finding.pullNumber}` : null}
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
       </div>
     </DashboardLayout>
   );
