@@ -18,7 +18,10 @@ test.describe('demo dashboard — 100% nav coverage', () => {
   for (const route of DASHBOARD_PAGES) {
     test(`renders ${route.nav}`, async ({ page }) => {
       if (route.path) {
-        await page.getByRole('link', { name: route.nav, exact: true }).click();
+        await page
+          .getByRole('navigation')
+          .getByRole('link', { name: route.nav, exact: true })
+          .click();
         await page.waitForURL(`**/dashboard/${DEMO_REPO_ID}${route.path}**`);
       }
       await expect(page.getByText(route.expect).first()).toBeVisible();
@@ -27,12 +30,12 @@ test.describe('demo dashboard — 100% nav coverage', () => {
 
   test('renders dashboard MCP page', async ({ page }) => {
     await page.goto(`/dashboard/${DEMO_REPO_ID}/mcp`);
-    await expect(page.getByRole('heading', { name: /Connect Cursor \/ MCP/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /MCP for agents/i })).toBeVisible();
   });
 
   test('renders pull request detail in demo mode', async ({ page }) => {
     await page.goto(`/dashboard/${DEMO_REPO_ID}/pulls`);
-    await page.getByRole('link', { name: '#42' }).click();
+    await page.getByRole('link', { name: '#42', exact: true }).click();
     await expect(page.getByText(/GitHub OAuth|review|finding/i).first()).toBeVisible();
   });
 

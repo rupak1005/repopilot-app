@@ -22,5 +22,27 @@ describe('parseGithubRepoUrl', () => {
       owner: 'fastapi',
       name: 'fastapi'
     });
+    expect(parseGithubRepoUrl('https://www.github.com/acme/widget.git')).toEqual({
+      owner: 'acme',
+      name: 'widget'
+    });
+    expect(parseGithubRepoUrl('github.com/acme/widget')).toEqual({
+      owner: 'acme',
+      name: 'widget'
+    });
+    expect(parseGithubRepoUrl('https://github.com/acme/widget/tree/main/src')).toEqual({
+      owner: 'acme',
+      name: 'widget'
+    });
+  });
+
+  it('rejects empty, org pages, and non-repo hosts', () => {
+    expect(parseGithubRepoUrl('')).toBeNull();
+    expect(parseGithubRepoUrl('   ')).toBeNull();
+    expect(parseGithubRepoUrl('https://github.com/orgs/acme')).toBeNull();
+    expect(parseGithubRepoUrl('https://github.com/organizations/acme/repos')).toBeNull();
+    expect(parseGithubRepoUrl('https://gitlab.com/acme/widget')).toBeNull();
+    expect(parseGithubRepoUrl('https://github.com/only-owner')).toBeNull();
+    expect(parseGithubRepoUrl('not a url at all !!!')).toBeNull();
   });
 });

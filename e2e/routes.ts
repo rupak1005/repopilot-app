@@ -3,7 +3,7 @@ export const PUBLIC_PAGES = [
   { path: '/', heading: /Understand your repository/i },
   { path: '/browse', heading: /Browse public repositories/i },
   { path: '/login', heading: /Sign in for private repos/i },
-  { path: '/mcp', heading: /Connect Cursor \/ MCP/i }
+  { path: '/mcp', heading: /MCP for agents|Connect Cursor \/ MCP/i }
 ] as const;
 
 /** Every dashboard nav route covered after opening demo mode. */
