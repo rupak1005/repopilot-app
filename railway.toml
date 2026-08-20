@@ -1,0 +1,11 @@
+# API service. Worker is a second Railway service from the same repo
+# with startCommand: yarn --cwd api prisma generate && yarn --cwd api build && yarn --cwd api worker
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "api/Dockerfile"
+
+[deploy]
+startCommand = "yarn --cwd api prisma generate && yarn --cwd api build && yarn --cwd api prisma migrate deploy && yarn --cwd api start"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
