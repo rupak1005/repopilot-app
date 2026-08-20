@@ -1,4 +1,4 @@
-/* Neo-brutalist IconButton */
+/* Neo-brutalist IconButton — flat rest, hard shadow on hover */
 
 .ui-icon-button {
   display: inline-flex;
@@ -6,61 +6,79 @@
   justify-content: center;
   flex-shrink: 0;
   border: var(--border-medium);
+  border-color: var(--color-border-strong);
   border-radius: var(--radius-md);
-  color: var(--color-text-muted);
+  color: var(--color-text);
   background: var(--color-surface);
-  box-shadow: var(--shadow-hard-sm);
+  box-shadow: none;
   cursor: pointer;
   transition:
     background var(--duration-normal) var(--ease-out-expo),
     color var(--duration-normal) var(--ease-out-expo),
-    transform var(--duration-fast) var(--ease-out-expo),
-    box-shadow var(--duration-normal) var(--ease-out-expo);
+    box-shadow var(--duration-normal) var(--ease-out-expo),
+    border-color var(--duration-normal) var(--ease-out-expo),
+    transform var(--duration-fast) var(--ease-out-expo);
 }
 
 .ui-icon-button:focus-visible {
   outline: none;
-  box-shadow: var(--shadow-hard-sm), var(--focus-ring);
+  box-shadow: 2px 2px 0 var(--shadow-color), var(--focus-ring);
 }
 
 .ui-icon-button:hover:not(:disabled) {
-  transform: translate(-1px, -1px);
-  color: var(--color-text);
+  box-shadow: 2px 2px 0 var(--shadow-color);
+  background: color-mix(in srgb, var(--color-primary) 18%, var(--color-surface));
 }
 
 .ui-icon-button:active:not(:disabled) {
-  transform: translate(1px, 1px) scale(0.97);
+  transform: translate(1px, 1px);
   box-shadow: 1px 1px 0 var(--shadow-color);
+  background: color-mix(in srgb, var(--color-primary) 28%, var(--color-surface));
 }
 
 .ui-icon-button:disabled {
-  opacity: 0.45;
+  border-color: color-mix(in srgb, var(--color-border) 70%, var(--color-text-subtle));
+  background: var(--color-surface-muted);
+  color: var(--color-text-subtle);
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
+  opacity: 1;
+}
+
+.ui-icon-button:disabled:hover {
+  box-shadow: none;
+  background: var(--color-surface-muted);
 }
 
 .ui-icon-button--sm {
-  width: 36px;
-  height: 36px;
-  min-height: 36px;
-}
-
-.ui-icon-button--md {
   width: 40px;
   height: 40px;
   min-height: 40px;
 }
 
+.ui-icon-button--md {
+  width: 48px;
+  height: 48px;
+  min-height: 48px;
+}
+
+.ui-icon-button--md:hover:not(:disabled) {
+  box-shadow: var(--shadow-hard-sm);
+}
+
 .ui-icon-button--ghost {
   background: transparent;
   border-color: transparent;
+  color: var(--color-text-muted);
   box-shadow: none;
 }
 
 .ui-icon-button--ghost:hover:not(:disabled) {
+  color: var(--color-text);
   background: var(--color-surface);
-  border-color: var(--color-border-soft);
-  box-shadow: var(--shadow-hard-sm);
+  border-color: var(--color-border-strong);
+  box-shadow: 2px 2px 0 var(--shadow-color);
 }
 
 .ui-icon-button--subtle {
@@ -68,11 +86,10 @@
 }
 
 .ui-icon-button--subtle:hover:not(:disabled) {
-  background: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 22%, var(--color-surface));
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ui-icon-button:hover:not(:disabled),
   .ui-icon-button:active:not(:disabled) {
     transform: none;
   }

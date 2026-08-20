@@ -1,4 +1,5 @@
-/* Neo-brutalist Button primitive */
+/* Neo-brutalist Button — inspired by neo-brutalism-ui-library
+   Flat at rest → hard offset shadow on hover → darker fill on active. */
 
 .ui-button {
   position: relative;
@@ -6,46 +7,64 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  min-height: 44px;
-  border: var(--border-heavy);
+  border: var(--border-medium);
+  border-color: var(--color-border-strong);
   font-family: var(--font-sans);
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.01em;
   cursor: pointer;
   text-decoration: none;
   white-space: nowrap;
-  box-shadow: var(--shadow-hard-md);
+  box-shadow: none;
   transition:
     background var(--duration-normal) var(--ease-out-expo),
     color var(--duration-normal) var(--ease-out-expo),
-    transform var(--duration-fast) var(--ease-out-expo),
-    box-shadow var(--duration-normal) var(--ease-out-expo);
+    box-shadow var(--duration-normal) var(--ease-out-expo),
+    border-color var(--duration-normal) var(--ease-out-expo),
+    transform var(--duration-fast) var(--ease-out-expo);
 }
 
 .ui-button:focus-visible {
   outline: none;
-  box-shadow: var(--shadow-hard-md), var(--focus-ring);
+  box-shadow: var(--shadow-hard-sm), var(--focus-ring);
 }
 
 .ui-button:hover:not(:disabled) {
-  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-hard-sm);
 }
 
 .ui-button:active:not(:disabled) {
-  transform: translate(1px, 1px) scale(0.97);
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--shadow-color);
+}
+
+.ui-button--sm {
+  min-height: 40px;
+  padding: 8px var(--space-4);
+  font-size: var(--text-caption);
+  border-radius: var(--radius-sm);
+}
+
+.ui-button--sm:hover:not(:disabled) {
   box-shadow: 2px 2px 0 var(--shadow-color);
 }
 
 .ui-button--md {
-  padding: 10px var(--space-4);
+  min-height: 48px;
+  padding: 10px var(--space-5);
   font-size: var(--text-ui);
   border-radius: var(--radius-md);
 }
 
 .ui-button--lg {
+  min-height: 56px;
   padding: 12px var(--space-5);
   font-size: var(--text-body);
   border-radius: var(--radius-md);
+}
+
+.ui-button--lg:hover:not(:disabled) {
+  box-shadow: var(--shadow-hard-md);
 }
 
 .ui-button--full {
@@ -61,19 +80,27 @@
   background: var(--color-primary-hover);
 }
 
+.ui-button--primary:active:not(:disabled) {
+  background: color-mix(in srgb, var(--color-primary) 78%, var(--color-border-strong));
+}
+
 .ui-button--secondary {
-  background: var(--color-secondary);
+  background: var(--color-surface);
   color: var(--color-text);
 }
 
 .ui-button--secondary:hover:not(:disabled) {
-  background: var(--color-surface);
+  background: var(--color-surface-muted);
+}
+
+.ui-button--secondary:active:not(:disabled) {
+  background: var(--color-surface-accent);
 }
 
 .ui-button--ghost {
   background: transparent;
   color: var(--color-text-muted);
-  border: var(--border-medium);
+  border-color: var(--color-border);
   box-shadow: none;
 }
 
@@ -90,14 +117,26 @@
 }
 
 .ui-button--danger:hover:not(:disabled) {
-  filter: brightness(1.05);
+  background: color-mix(in srgb, var(--color-danger) 88%, black);
+}
+
+.ui-button--danger:active:not(:disabled) {
+  background: color-mix(in srgb, var(--color-danger) 72%, black);
 }
 
 .ui-button:disabled {
-  opacity: 0.5;
+  border-color: color-mix(in srgb, var(--color-border) 70%, var(--color-text-subtle));
+  background: var(--color-surface-muted);
+  color: var(--color-text-subtle);
   cursor: not-allowed;
   transform: none;
-  box-shadow: var(--shadow-hard-sm);
+  box-shadow: none;
+  opacity: 1;
+}
+
+.ui-button:disabled:hover {
+  box-shadow: none;
+  background: var(--color-surface-muted);
 }
 
 .ui-button__icon {
@@ -111,10 +150,12 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ui-button {
-    transition: background var(--duration-fast) ease, color var(--duration-fast) ease;
+    transition:
+      background var(--duration-fast) ease,
+      color var(--duration-fast) ease,
+      box-shadow var(--duration-fast) ease;
   }
 
-  .ui-button:hover:not(:disabled),
   .ui-button:active:not(:disabled) {
     transform: none;
   }

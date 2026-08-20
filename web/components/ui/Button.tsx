@@ -3,7 +3,7 @@ import { motion, type HTMLMotionProps } from 'motion/react';
 import { useTapMotion } from '../../lib/motion';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
-type ButtonSize = 'md' | 'lg';
+type ButtonSize = 'sm' | 'md' | 'lg';
 
 type SharedProps = {
   variant?: ButtonVariant;
