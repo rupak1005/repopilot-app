@@ -15,6 +15,7 @@ RUN yarn install --frozen-lockfile
 # Build at image-build time — free Render instances OOM if tsc runs at boot.
 COPY common/src ./common/src
 COPY api ./api
+COPY prompts ./prompts
 # Raise heap only for the image build (Render free runtime is ~512MB).
 RUN NODE_OPTIONS=--max-old-space-size=1536 yarn --cwd common build \
   && yarn --cwd api prisma generate \
