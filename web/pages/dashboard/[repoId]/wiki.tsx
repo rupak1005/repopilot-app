@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowSquareOut, BookOpen, MagnifyingGlass } from '@phosphor-icons/react';
+import { ArrowLeft, ArrowSquareOut, BookOpen, MagnifyingGlass } from '@phosphor-icons/react';
 import { DashboardLayout, useDashboardContext } from '../../../lib/dashboard';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { ErrorBanner } from '../../../components/ui/ErrorBanner';
-import { demoDelay, demoWikiPages } from '../../../lib/demoData';
+import { WikiMarkdown } from '../../../components/ui/WikiMarkdown';
+import { demoDelay, demoWikiPageDetail, demoWikiPages } from '../../../lib/demoData';
 import { isDemoMode } from '../../../lib/demoMode';
 import { githubModuleUrl } from '../../../lib/modulePaths';
 import {
@@ -19,8 +20,11 @@ import {
   countWikiPagesByKind,
   filterWikiPages,
   parseWikiKindFilter,
+  parseWikiPathQuery,
+  wikiHref,
   wikiKindLabel,
-  type WikiPage
+  type WikiPage,
+  type WikiPageDetail
 } from '../../../lib/wiki';
 
 export default function WikiPage() {
@@ -29,18 +33,21 @@ export default function WikiPage() {
   const repoId = typeof router.query.repoId === 'string' ? router.query.repoId : null;
   const repoFullName = dash?.repoFullName;
   const kind = parseWikiKindFilter(router.query.kind);
+  const selectedPath = parseWikiPathQuery(router.query.path);
   const revisionSha = parseRevisionQuery(router.query[REVISION_QUERY_KEY]);
   const [pages, setPages] = useState<WikiPage[]>([]);
+  const [detail, setDetail] = useState<WikiPageDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const base = repoId ? `/dashboard/${repoId}` : '';
 
   useEffect(() => {
-    if (!repoId) return;
+    if (!repoId || selectedPath) return;
     let cancelled = false;
     async function load() {
       setLoading(true);
       setError(null);
+      setDetail(null);
       try {
         if (isDemoMode()) {
           await demoDelay(180);
@@ -66,19 +73,124 @@ export default function WikiPage() {
     return () => {
       cancelled = true;
     };
-  }, [repoId, revisionSha]);
+  }, [repoId, revisionSha, selectedPath]);
+
+  useEffect(() => {
+    if (!repoId || !selectedPath) return;
+    let cancelled = false;
+    async function loadDetail() {
+      setLoading(true);
+      setError(null);
+      try {
+        if (isDemoMode()) {
+          await demoDelay(120);
+          if (!cancelled) setDetail(demoWikiPageDetail(selectedPath!));
+          return;
+        }
+        const response = await fetch(
+          repoApiPath(
+            repoId!,
+            withRevisionSha(`wiki?path=${encodeURIComponent(selectedPath!)}`, revisionSha)
+          )
+        );
+        if (!response.ok) throw new Error('Could not load this wiki page.');
+        const data = (await response.json()) as { page?: WikiPageDetail | null };
+        if (!cancelled) setDetail(data.page ?? null);
+      } catch (err) {
+        if (!cancelled) {
+          setDetail(null);
+          setError(err instanceof Error ? err.message : 'Failed to load wiki page');
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    void loadDetail();
+    return () => {
+      cancelled = true;
+    };
+  }, [repoId, revisionSha, selectedPath]);
 
   const counts = useMemo(() => countWikiPagesByKind(pages), [pages]);
   const visible = useMemo(() => filterWikiPages(pages, kind), [pages, kind]);
 
   function setKind(next: typeof kind) {
     if (!repoId) return;
-    const query: Record<string, string> = {};
-    if (next !== 'ALL') query.kind = next;
-    if (revisionSha) query[REVISION_QUERY_KEY] = revisionSha;
-    void router.replace({ pathname: `/dashboard/${repoId}/wiki`, query }, undefined, {
-      shallow: true
-    });
+    void router.replace(
+      wikiHref(repoId, { kind: next, revisionSha }),
+      undefined,
+      { shallow: true }
+    );
+  }
+
+  function openPage(path: string) {
+    if (!repoId) return;
+    void router.push(wikiHref(repoId, { path, kind, revisionSha }));
+  }
+
+  function closePage() {
+    if (!repoId) return;
+    void router.push(wikiHref(repoId, { kind, revisionSha }));
+  }
+
+  const active = detail;
+  const githubHref =
+    repoFullName && (active?.path || selectedPath)
+      ? githubModuleUrl(repoFullName, active?.path ?? selectedPath!, revisionSha ?? undefined)
+      : null;
+
+  if (selectedPath) {
+    return (
+      <DashboardLayout activeNav="wiki">
+        <div className="canvas-inner ui-wiki-page">
+          <div className="ui-wiki-reader__bar">
+            <button type="button" className="ui-diagram__action" onClick={closePage}>
+              <ArrowLeft size={14} weight="bold" aria-hidden /> All pages
+            </button>
+            {githubHref ? (
+              <a className="ui-diagram__action" href={githubHref} target="_blank" rel="noreferrer">
+                GitHub <ArrowSquareOut size={14} weight="bold" aria-hidden />
+              </a>
+            ) : null}
+            {base && active ? (
+              <Link
+                className="ui-diagram__action"
+                href={`${base}/ask?q=${encodeURIComponent(`Summarize ${active.path}`)}`}
+              >
+                Ask
+              </Link>
+            ) : null}
+          </div>
+
+          {error ? <ErrorBanner onDismiss={() => setError(null)}>{error}</ErrorBanner> : null}
+          {loading ? <p className="empty-state">Loading page…</p> : null}
+
+          {!loading && !active ? (
+            <EmptyState
+              icon={BookOpen}
+              title="Page not found in index"
+              description="This path is missing from the indexed revision, or it is not markdown."
+              action={
+                <button type="button" className="ui-diagram__action" onClick={closePage}>
+                  Back to wiki →
+                </button>
+              }
+            />
+          ) : null}
+
+          {active ? (
+            <article className="ui-wiki-reader">
+              <header className="ui-wiki-reader__head">
+                <span className="ui-wiki-card__kind label-caps">{wikiKindLabel(active.kind)}</span>
+                <h1>{active.title}</h1>
+                <p className="ui-wiki-card__path mono">{active.path}</p>
+              </header>
+              <WikiMarkdown source={active.content} />
+            </article>
+          ) : null}
+        </div>
+      </DashboardLayout>
+    );
   }
 
   return (
@@ -87,8 +199,8 @@ export default function WikiPage() {
         <div className="page-title-block">
           <h1>Wiki</h1>
           <p>
-            Indexed markdown and ADRs from this repository — filter by kind, then open on GitHub or
-            ask about a page.
+            Indexed markdown and ADRs from this repository — filter by kind, open a page inline, or
+            jump to GitHub / Ask / Search.
           </p>
         </div>
 
@@ -133,7 +245,7 @@ export default function WikiPage() {
 
         <ul className="ui-wiki-list">
           {visible.map((page) => {
-            const githubHref =
+            const pageGithub =
               repoFullName != null
                 ? githubModuleUrl(repoFullName, page.path, revisionSha ?? undefined)
                 : null;
@@ -145,17 +257,24 @@ export default function WikiPage() {
               : null;
             return (
               <li key={page.path} className="ui-wiki-card">
-                <div className="ui-wiki-card__top">
+                <button
+                  type="button"
+                  className="ui-wiki-card__open"
+                  onClick={() => openPage(page.path)}
+                >
                   <span className="ui-wiki-card__kind label-caps">{wikiKindLabel(page.kind)}</span>
-                  <h2 className="ui-wiki-card__title">{page.title}</h2>
-                  <p className="ui-wiki-card__path mono">{page.path}</p>
-                  {page.excerpt ? <p className="ui-wiki-card__excerpt">{page.excerpt}</p> : null}
-                </div>
+                  <span className="ui-wiki-card__title">{page.title}</span>
+                  <span className="ui-wiki-card__path mono">{page.path}</span>
+                  {page.excerpt ? <span className="ui-wiki-card__excerpt">{page.excerpt}</span> : null}
+                </button>
                 <div className="ui-wiki-card__actions">
-                  {githubHref ? (
+                  <button type="button" className="ui-diagram__action" onClick={() => openPage(page.path)}>
+                    Read
+                  </button>
+                  {pageGithub ? (
                     <a
                       className="ui-diagram__action"
-                      href={githubHref}
+                      href={pageGithub}
                       target="_blank"
                       rel="noreferrer"
                     >

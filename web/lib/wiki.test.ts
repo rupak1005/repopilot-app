@@ -3,6 +3,8 @@ import {
   countWikiPagesByKind,
   filterWikiPages,
   parseWikiKindFilter,
+  parseWikiPathQuery,
+  wikiHref,
   type WikiPage
 } from './wiki';
 
@@ -27,5 +29,12 @@ describe('wiki', () => {
       readme: 1,
       other: 0
     });
+  });
+
+  it('builds reader deep links', () => {
+    expect(parseWikiPathQuery('docs/adr/1.md')).toBe('docs/adr/1.md');
+    expect(wikiHref('r1', { path: 'README.md', revisionSha: 'abc1234' })).toBe(
+      '/dashboard/r1/wiki?path=README.md&rev=abc1234'
+    );
   });
 });

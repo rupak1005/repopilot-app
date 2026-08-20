@@ -10,6 +10,10 @@ export type WikiPage = {
   excerpt: string;
 };
 
+export type WikiPageDetail = WikiPage & {
+  content: string;
+};
+
 const MARKDOWN_EXT = /\.(md|mdx)$/i;
 
 /** Classify an indexed markdown path for the Wiki surface. */
@@ -101,4 +105,52 @@ export async function listRepositoryWikiPages(args: {
   });
 
   return { revisionSha: revision.revisionSha, pages };
+}
+
+/** Fetch one indexed markdown page by path for inline Wiki reading. */
+export async function getRepositoryWikiPage(args: {
+  repositoryId: string;
+  path: string;
+  revisionSha?: string;
+}): Promise<{ revisionSha: string | null; page: WikiPageDetail | null }> {
+  const filePath = args.path.trim().replace(/\\/g, '/');
+  if (!filePath || !classifyWikiPath(filePath)) {
+    return { revisionSha: null, page: null };
+  }
+
+  const revision = await resolveRepositoryRevision({
+    repositoryId: args.repositoryId,
+    revisionSha: args.revisionSha
+  });
+  if (!revision) return { revisionSha: null, page: null };
+
+  const prisma = getPrisma();
+  const rows = (await prisma.$queryRawUnsafe(
+    `
+      SELECT "path", "content"
+      FROM "File"
+      WHERE "revisionId" = $1
+        AND "path" = $2
+      LIMIT 1
+    `,
+    revision.id,
+    filePath
+  )) as Array<{ path: string; content: string }>;
+
+  const row = rows[0];
+  if (!row) return { revisionSha: revision.revisionSha, page: null };
+
+  const kind = classifyWikiPath(row.path);
+  if (!kind) return { revisionSha: revision.revisionSha, page: null };
+
+  return {
+    revisionSha: revision.revisionSha,
+    page: {
+      path: row.path,
+      title: wikiTitleFromContent(row.path, row.content),
+      kind,
+      excerpt: wikiExcerptFromContent(row.content),
+      content: row.content
+    }
+  };
 }

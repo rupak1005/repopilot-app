@@ -7,6 +7,10 @@ export type WikiPage = {
   excerpt: string;
 };
 
+export type WikiPageDetail = WikiPage & {
+  content: string;
+};
+
 export type WikiKindFilter = 'ALL' | WikiPageKind;
 
 export const WIKI_KIND_FILTERS: WikiKindFilter[] = ['ALL', 'adr', 'docs', 'readme', 'other'];
@@ -14,6 +18,24 @@ export const WIKI_KIND_FILTERS: WikiKindFilter[] = ['ALL', 'adr', 'docs', 'readm
 export function parseWikiKindFilter(value: string | string[] | undefined): WikiKindFilter {
   if (value === 'adr' || value === 'docs' || value === 'readme' || value === 'other') return value;
   return 'ALL';
+}
+
+export function parseWikiPathQuery(value: string | string[] | undefined): string | null {
+  if (typeof value !== 'string') return null;
+  const path = value.trim().replace(/\\/g, '/');
+  return path.length > 0 ? path : null;
+}
+
+export function wikiHref(
+  repoId: string,
+  opts: { path?: string | null; kind?: WikiKindFilter; revisionSha?: string | null } = {}
+): string {
+  const params = new URLSearchParams();
+  if (opts.path) params.set('path', opts.path);
+  if (opts.kind && opts.kind !== 'ALL') params.set('kind', opts.kind);
+  if (opts.revisionSha) params.set('rev', opts.revisionSha);
+  const q = params.toString();
+  return q ? `/dashboard/${repoId}/wiki?${q}` : `/dashboard/${repoId}/wiki`;
 }
 
 export function filterWikiPages(pages: WikiPage[], filter: WikiKindFilter): WikiPage[] {

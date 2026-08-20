@@ -54,8 +54,8 @@ export const SURFACE_STUBS: Record<SurfaceStub['id'], SurfaceStub> = {
     statusLabel: 'Foundation · indexed markdown',
     roadmap: [
       'Link wiki pages to modules, owners, and Ask citations',
-      'Inline rendered markdown with revision-aware `?rev=`',
-      'Ownership / CODEOWNERS overlays on wiki pages'
+      'Ownership / CODEOWNERS overlays on wiki pages',
+      'Search within wiki bodies'
     ],
     related: [
       {

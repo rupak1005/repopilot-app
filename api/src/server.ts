@@ -34,7 +34,7 @@ import {
   listRepositoryFindings,
   listReviewHistory
 } from './services/repositoryAnalytics';
-import { listRepositoryWikiPages } from './services/repositoryWiki';
+import { listRepositoryWikiPages, getRepositoryWikiPage } from './services/repositoryWiki';
 import { ingestRepositoryHistory } from './services/historyIngest';
 import {
   findSimilarChanges,
@@ -447,7 +447,14 @@ async function bootstrap() {
 
   server.get('/api/v1/repositories/:repoId/wiki', async (request) => {
     const params = request.params as { repoId: string };
-    const query = request.query as { limit?: string; revisionSha?: string };
+    const query = request.query as { limit?: string; revisionSha?: string; path?: string };
+    if (typeof query.path === 'string' && query.path.trim()) {
+      return getRepositoryWikiPage({
+        repositoryId: params.repoId,
+        path: query.path,
+        revisionSha: query.revisionSha
+      });
+    }
     const limit = query.limit ? Number(query.limit) : undefined;
     return listRepositoryWikiPages({
       repositoryId: params.repoId,

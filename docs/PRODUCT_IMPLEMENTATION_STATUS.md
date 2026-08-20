@@ -31,7 +31,8 @@
 | 24 | Tsconfig path aliases | **Done foundation** — indexed `paths` at graph build |
 | 25 | Wiki (indexed docs) | **Done foundation** — markdown / ADR board |
 | 26 | Planning candidates | **Done foundation** — hotspot → Impact/Graph |
-| 27–35 | Remaining | Not started / partial |
+| 27 | Wiki inline reader | **Done foundation** — `?path=` + markdown render |
+| 28–35 | Remaining | Not started / partial |
 
 ## Phase 5
 
@@ -189,6 +190,12 @@
 - [x] Per-candidate Impact / Graph blast / PRs exits + optional `?file=` seed
 - [x] Shared `planning` helpers + unit tests
 
+## Phase 27
+
+- [x] `GET /wiki?path=` returns full indexed markdown body
+- [x] Wiki inline reader (`?path=` + `?rev=`) with dependency-free markdown blocks
+- [x] Demo page bodies + reader deep links (`wikiHref`)
+
 ## Next action
 
-Phase 27+ (deferred 3D topography, Findings polish, impact calibration fixtures, inline wiki render).
+Phase 28+ (deferred 3D topography, Findings polish, impact calibration fixtures).

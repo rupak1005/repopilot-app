@@ -100,7 +100,7 @@ const HELP_BY_NAV: Record<NavKey, HelpTip> = {
   },
   wiki: {
     title: 'Repo knowledge, indexed',
-    body: 'Wiki lists indexed markdown and ADRs with kind filters — open on GitHub or Ask about a page.',
+    body: 'Wiki lists indexed markdown and ADRs — open a page inline, or jump to GitHub / Ask.',
     docHref: '/docs/getting-started',
     docLabel: 'Getting started',
     secondaryHref: '/docs',

@@ -452,6 +452,70 @@ export function demoWikiPages(): Array<{
   ];
 }
 
+/** Full markdown body for a demo wiki path (inline reader). */
+export function demoWikiPageDetail(path: string): {
+  path: string;
+  title: string;
+  kind: 'adr' | 'docs' | 'readme' | 'other';
+  excerpt: string;
+  content: string;
+} | null {
+  const meta = demoWikiPages().find((page) => page.path === path);
+  if (!meta) return null;
+  const bodies: Record<string, string> = {
+    'docs/adr/0008-commit-boundary.md': `# ADR-008: Commit after ledger write
+
+## Status
+
+Accepted
+
+## Context
+
+Retries after a partial write left the ledger and commit out of sync.
+
+## Decision
+
+Move the commit boundary after the ledger write so retries stay idempotent.
+
+## Consequences
+
+- Reviewers must treat ledger writes as the source of truth
+- Impact analysis should flag callers of the commit helper
+`,
+    'docs/architecture.md': `# Architecture overview
+
+API syncs the index; the web dashboard consumes graph, impact, and Ask endpoints.
+
+## Layers
+
+- \`api/\` — Fastify services and workers
+- \`web/\` — Next.js dashboard
+- \`common/\` — shared IDs and types
+`,
+    'README.md': `# RepoPilot
+
+Grounded codebase intelligence for architecture, impact, and agent workflows.
+
+## Quick start
+
+1. Paste a public GitHub URL
+2. Wait for indexing
+3. Open Graph, Impact, or Ask
+`,
+    'CONTRIBUTING.md': `# Contributing
+
+Prefer small diffs, real fixtures, and no AI mentions in commit messages.
+
+- Run unit tests for touched helpers
+- Keep dashboard BFF allowlists in sync with new API routes
+`
+  };
+  return {
+    ...meta,
+    content: bodies[path] ?? `# ${meta.title}\n\n${meta.excerpt}\n`
+  };
+}
+
 /** Flatten latest demo PR findings for the repo-wide Findings page. */
 export function demoRepoFindings(): Array<
   ReviewFinding & { id: string; pullNumber: number; pullTitle: string; headRevision: string }
