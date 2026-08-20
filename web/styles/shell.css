@@ -622,7 +622,11 @@ a.topbar-activity__item:hover {
 
 @media (max-width: 768px) {
   .sidebar {
-    display: none;
+    display: none !important;
+  }
+
+  .app-shell {
+    overflow-x: clip;
   }
 
   .mobile-nav-toggle {
@@ -636,8 +640,9 @@ a.topbar-activity__item:hover {
   }
 
   .topbar-actions {
-    gap: var(--space-1);
+    gap: 2px;
     min-width: 0;
+    flex-shrink: 0;
   }
 
   .topbar-command__label,
@@ -649,19 +654,48 @@ a.topbar-activity__item:hover {
   .topbar-command {
     justify-content: center;
     padding: var(--space-1);
+    min-width: 40px;
+    min-height: 40px;
   }
 
   .topbar-actions .indexing-pill,
-  .topbar-hide-sm {
-    display: none;
+  .topbar-hide-sm,
+  .topbar-hide-md {
+    display: none !important;
   }
 
   .topbar-signin--compact {
     padding: var(--space-2);
+    min-width: 40px;
+    min-height: 40px;
   }
 
   .topbar-signin--compact .topbar-signin__label {
     display: none;
+  }
+
+  /* Lighter chrome so hard shadows do not stack into a mess. */
+  .topbar .ui-icon-button,
+  .topbar .ui-repo-picker {
+    box-shadow: none;
+  }
+
+  .topbar .ui-icon-button:hover:not(:disabled),
+  .topbar .ui-icon-button:focus-visible {
+    box-shadow: 1px 1px 0 var(--shadow-color);
+  }
+
+  .topbar-popover__panel {
+    position: fixed;
+    top: calc(56px + var(--space-2));
+    left: var(--space-3);
+    right: var(--space-3);
+    width: auto;
+    max-width: none;
+    max-height: min(70vh, 28rem);
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    z-index: calc(var(--z-dropdown) + 2);
   }
 
   .repo-context-bar {
@@ -670,8 +704,12 @@ a.topbar-activity__item:hover {
   }
 
   .repo-context-bar__repo {
-    max-width: 100%;
-    flex: 1 1 auto;
+    max-width: min(52vw, 12rem);
+    flex: 0 1 auto;
+  }
+
+  .repo-context-bar__rev {
+    flex-shrink: 0;
   }
 
   .canvas {
@@ -680,6 +718,7 @@ a.topbar-activity__item:hover {
 
   .shell-main {
     height: 100dvh;
+    min-width: 0;
   }
 
   .mobile-nav-drawer__footer {
@@ -689,15 +728,34 @@ a.topbar-activity__item:hover {
   .ui-quick-actions {
     gap: var(--space-2);
   }
+
+  .ui-overview-hero {
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .command-palette {
+    padding: max(12vh, env(safe-area-inset-top)) var(--space-3) var(--space-3);
+  }
 }
 
 @media (max-width: 480px) {
   .topbar {
     padding: 0 var(--space-2);
+    gap: var(--space-1);
   }
 
   .canvas {
     padding: var(--space-3) var(--space-2);
+  }
+
+  .topbar-hide-xs {
+    display: none !important;
+  }
+
+  .topbar-popover__panel {
+    left: var(--space-2);
+    right: var(--space-2);
   }
 }
 

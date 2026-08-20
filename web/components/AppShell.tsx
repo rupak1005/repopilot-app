@@ -188,13 +188,13 @@ export function AppShell({
               <span className={`pulse-dot${pulseIdle ? ' pulse-dot--idle' : ''}`} aria-hidden />
               <span className="label-caps">{indexLabel}</span>
             </div>
-            <ThemeToggle />
+            <ThemeToggle className="topbar-hide-xs" />
             <TopbarActivity
               repoId={repoId}
               repoFullName={repoFullName}
               indexStatus={demoMode ? null : indexStatus}
             />
-            <TopbarHelp activeNav={activeNav} />
+            <TopbarHelp className="topbar-hide-md" activeNav={activeNav} />
             {!isPublicGuest ? (
               <div className="topbar-account topbar-hide-sm">
                 <img

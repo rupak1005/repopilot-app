@@ -1121,8 +1121,11 @@ export function ArchitectureGraphView({
       <div className="ui-diagram__panel-empty">
         <p className="ui-diagram__panel-empty-title">Select a module</p>
         <p className="ui-diagram__panel-empty-body">
-          Click a cluster to expand it, or a file to inspect. Shift-click two modules to trace an
-          import path.
+          Tap a cluster to expand it, or a file to inspect.
+          <span className="ui-diagram__desktop-only">
+            {' '}
+            Shift-click two modules to trace an import path.
+          </span>
         </p>
         {moduleCycles.length > 0 ? (
           <div className="ui-diagram__cycles">
@@ -1275,7 +1278,11 @@ export function ArchitectureGraphView({
         />
       ) : layoutMode === 'diagram' ? (
         <p className="ui-diagram__hint">
-          Click a cluster to expand, or Shift-click two modules to trace an import path.
+          Tap a cluster to expand.
+          <span className="ui-diagram__desktop-only">
+            {' '}
+            Shift-click two modules to trace an import path.
+          </span>
         </p>
       ) : null}
     </div>

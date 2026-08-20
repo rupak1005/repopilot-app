@@ -70,3 +70,15 @@
   color: var(--color-text);
   box-shadow: var(--shadow-hard-sm);
 }
+
+@media (max-width: 640px) {
+  .ui-demo-banner,
+  .ui-index-hint {
+    padding: var(--space-3);
+    margin-bottom: var(--space-4);
+  }
+
+  .ui-index-hint {
+    box-shadow: var(--shadow-hard-sm);
+  }
+}

@@ -162,9 +162,14 @@
 
 @media (max-width: 768px) {
   .index-progress-float-host {
-    left: var(--space-4);
-    right: var(--space-4);
+    left: var(--space-3);
+    right: var(--space-3);
+    top: calc(56px + var(--space-2));
     width: auto;
+  }
+
+  .index-progress-float {
+    max-width: none;
   }
 }
 
