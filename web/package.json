@@ -16,9 +16,9 @@
     "dagre": "^0.8.5",
     "mermaid": "^11.17.0",
     "motion": "^13.1.0",
-    "next": "*",
-    "react": "*",
-    "react-dom": "*",
+    "next": "16.3.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "react-force-graph-2d": "^1.29.1"
   },
   "devDependencies": {

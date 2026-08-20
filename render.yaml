@@ -1,0 +1,37 @@
+# Free web service only — INDEX_INLINE=true so API runs indexing (no paid worker).
+# Deploy: https://dashboard.render.com/blueprints → New Blueprint → this repo
+services:
+  - type: web
+    name: repopilot-api
+    runtime: docker
+    plan: free
+    region: oregon
+    branch: master
+    dockerfilePath: ./api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: INDEX_INLINE
+        value: "true"
+      - key: EMBEDDING_PROVIDER
+        value: local
+      - key: LLM_PROVIDER
+        value: groq
+      - key: REPO_CLONE_ROOT
+        value: /tmp/repopilot-repos
+      - key: CORS_ORIGINS
+        value: https://repopilot-app.vercel.app,http://localhost:3000
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_CHAT_MODEL
+        sync: false
+      - key: GITHUB_TOKEN
+        sync: false
+      - key: GITHUB_WEBHOOK_SECRET
+        sync: false
+      - key: INTERNAL_API_SECRET
+        sync: false

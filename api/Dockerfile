@@ -15,5 +15,5 @@ COPY api ./api
 
 EXPOSE 3001
 
-CMD ["sh", "-c", "yarn --cwd api prisma generate && yarn --cwd api build && yarn --cwd api start"]
+CMD ["sh", "-c", "yarn --cwd api prisma generate && yarn --cwd api build && yarn --cwd api prisma migrate deploy && yarn --cwd api start"]
 
