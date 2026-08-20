@@ -16,12 +16,12 @@ function project(n: number) {
     confidence: 1
   }));
   const t0 = performance.now();
-  let view = buildArchitectureView(
+  const view = buildArchitectureView(
     { nodes, edges },
     { clusterAbove: 9999, maxFilesPerCluster: n }
   );
-  view = ensureSpikeNodeCount({ nodes: view.nodes, links: view.links }, n);
-  const laid = layoutWithDagre(view);
+  const padded = ensureSpikeNodeCount({ nodes: view.nodes, links: view.links }, n);
+  const laid = layoutWithDagre(padded);
   const viz = visualizationFromLaidOutForceGraph(laid, { scale: 40 });
   return { ms: performance.now() - t0, nodes: viz.nodes.length, edges: viz.edges.length };
 }
