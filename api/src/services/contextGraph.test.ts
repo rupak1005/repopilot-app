@@ -45,4 +45,14 @@ describe('contextGraph', () => {
     expect(bfsShortestPath(adjacency, 'a.ts', 'c.ts')).toEqual(['a.ts', 'b.ts', 'c.ts']);
     expect(bfsShortestPath(adjacency, 'a.ts', 'c.ts', 1)).toBeNull();
   });
+
+  it('ranks neighborhood candidates by score and degree (pure)', () => {
+    const ranked = [
+      { path: 'hub.ts', depth: 1, degree: 10, score: 5 },
+      { path: 'leaf.ts', depth: 1, degree: 1, score: 90 },
+      { path: 'far.ts', depth: 2, degree: 8, score: 5 }
+    ].sort((a, b) => b.score + b.degree * 2 - (a.score + a.degree * 2) || a.depth - b.depth);
+    expect(ranked[0]?.path).toBe('leaf.ts');
+    expect(ranked[1]?.path).toBe('hub.ts');
+  });
 });

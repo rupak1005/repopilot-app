@@ -5,6 +5,15 @@ import { resolveRepositoryRevision } from './repositoryRevisions';
 
 export type ImpactRisk = 'LOW' | 'MEDIUM' | 'HIGH';
 
+export type ImpactConfidence = 'LOW' | 'MEDIUM' | 'HIGH';
+
+export type ImpactRiskFactor = {
+  id: string;
+  label: string;
+  detail: string;
+  severity: 'info' | 'warn' | 'danger';
+};
+
 export type ImpactTestRecommendation = {
   filePath: string;
   reason: string;
@@ -15,6 +24,8 @@ export type ImpactAnalysisResult = {
   target: { filePath: string };
   revisionSha: string;
   risk: ImpactRisk;
+  confidence: ImpactConfidence;
+  riskFactors: ImpactRiskFactor[];
   directDependents: string[];
   transitiveDependents: string[];
   outboundImports: string[];
@@ -52,6 +63,72 @@ export function computeRisk(args: {
   if (someBlast && args.testCount === 0) return 'HIGH';
   if (someBlast) return 'MEDIUM';
   return 'LOW';
+}
+
+/** How much we trust the impact picture (graph coverage + test signal). */
+export function computeImpactConfidence(args: {
+  directCount: number;
+  transitiveCount: number;
+  testCount: number;
+  hasHotspot: boolean;
+}): ImpactConfidence {
+  const blast = args.directCount + args.transitiveCount;
+  if (blast === 0 && !args.hasHotspot) return 'MEDIUM';
+  if (blast >= 3 && args.testCount === 0) return 'MEDIUM';
+  if (blast >= 8 && args.testCount > 0) return 'HIGH';
+  return 'HIGH';
+}
+
+export function buildRiskFactors(args: {
+  directCount: number;
+  transitiveCount: number;
+  testCount: number;
+  hotspotScore: number;
+  coChangeCount: number;
+}): ImpactRiskFactor[] {
+  const factors: ImpactRiskFactor[] = [];
+  if (args.directCount > 0) {
+    factors.push({
+      id: 'direct',
+      label: 'Direct dependents',
+      detail: `${args.directCount} module${args.directCount === 1 ? '' : 's'} import this file`,
+      severity: args.directCount >= 5 ? 'danger' : args.directCount >= 2 ? 'warn' : 'info'
+    });
+  }
+  if (args.transitiveCount > 0) {
+    factors.push({
+      id: 'transitive',
+      label: 'Transitive blast radius',
+      detail: `${args.transitiveCount} downstream module${args.transitiveCount === 1 ? '' : 's'}`,
+      severity: args.transitiveCount >= 10 ? 'danger' : args.transitiveCount >= 3 ? 'warn' : 'info'
+    });
+  }
+  factors.push({
+    id: 'tests',
+    label: args.testCount > 0 ? 'Test coverage signal' : 'Missing tests',
+    detail:
+      args.testCount > 0
+        ? `${args.testCount} related test file${args.testCount === 1 ? '' : 's'} found`
+        : 'No test files import this module or its direct dependents',
+    severity: args.testCount === 0 ? 'danger' : 'info'
+  });
+  if (args.hotspotScore > 0) {
+    factors.push({
+      id: 'churn',
+      label: 'Hotspot churn',
+      detail: `Hotspot score ${args.hotspotScore.toFixed(0)}`,
+      severity: args.hotspotScore >= 40 ? 'danger' : args.hotspotScore >= 15 ? 'warn' : 'info'
+    });
+  }
+  if (args.coChangeCount > 0) {
+    factors.push({
+      id: 'cochange',
+      label: 'Co-change coupling',
+      detail: `${args.coChangeCount} frequently co-changed file${args.coChangeCount === 1 ? '' : 's'}`,
+      severity: args.coChangeCount >= 3 ? 'warn' : 'info'
+    });
+  }
+  return factors;
 }
 
 function buildChecklist(args: {
@@ -318,6 +395,19 @@ async function finalizeImpact(args: {
     hotspotScore: hotspotRow?.score ?? 0,
     testCount: relevantTests.length
   });
+  const confidence = computeImpactConfidence({
+    directCount: directDependents.length,
+    transitiveCount: transitiveDependents.length,
+    testCount: relevantTests.length,
+    hasHotspot: Boolean(hotspotRow && hotspotRow.score > 0)
+  });
+  const riskFactors = buildRiskFactors({
+    directCount: directDependents.length,
+    transitiveCount: transitiveDependents.length,
+    testCount: relevantTests.length,
+    hotspotScore: hotspotRow?.score ?? 0,
+    coChangeCount: coChanges.length
+  });
 
   const summary = [
     `${args.displayPath} has ${directDependents.length} direct and ${transitiveDependents.length} transitive dependent module(s).`,
@@ -335,6 +425,8 @@ async function finalizeImpact(args: {
     target: { filePath: args.displayPath },
     revisionSha: args.revisionSha,
     risk,
+    confidence,
+    riskFactors,
     directDependents,
     transitiveDependents,
     outboundImports,

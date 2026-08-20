@@ -405,6 +405,33 @@ const DEMO_FILE_IMPACT: Record<string, FileImpactAnalysis> = {
     target: { filePath: 'api/src/services/PaymentService.ts' },
     revisionSha: 'demo42abc',
     risk: 'HIGH',
+    confidence: 'HIGH',
+    riskFactors: [
+      {
+        id: 'direct',
+        label: 'Direct dependents',
+        detail: '3 modules import this file',
+        severity: 'warn'
+      },
+      {
+        id: 'transitive',
+        label: 'Transitive blast radius',
+        detail: '3 downstream modules',
+        severity: 'warn'
+      },
+      {
+        id: 'tests',
+        label: 'Test coverage signal',
+        detail: '2 related test files found',
+        severity: 'info'
+      },
+      {
+        id: 'churn',
+        label: 'Hotspot churn',
+        detail: 'Hotspot score 62',
+        severity: 'danger'
+      }
+    ],
     directDependents: [
       'api/src/routes/checkout.ts',
       'api/src/services/subscriptionBilling.ts',
@@ -447,6 +474,27 @@ const DEMO_FILE_IMPACT: Record<string, FileImpactAnalysis> = {
     target: { filePath: 'web/lib/askThread.ts' },
     revisionSha: 'demo38def',
     risk: 'MEDIUM',
+    confidence: 'HIGH',
+    riskFactors: [
+      {
+        id: 'direct',
+        label: 'Direct dependents',
+        detail: '1 module imports this file',
+        severity: 'info'
+      },
+      {
+        id: 'tests',
+        label: 'Test coverage signal',
+        detail: '1 related test file found',
+        severity: 'info'
+      },
+      {
+        id: 'churn',
+        label: 'Hotspot churn',
+        detail: 'Hotspot score 22',
+        severity: 'warn'
+      }
+    ],
     directDependents: ['web/pages/dashboard/[repoId]/ask.tsx'],
     transitiveDependents: ['web/lib/dashboard.tsx'],
     outboundImports: [],

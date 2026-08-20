@@ -7,7 +7,14 @@ import { ErrorBanner } from '../../../components/ui/ErrorBanner';
 import { IndexHint } from '../../../components/ui/IndexHint';
 import { DashboardLayout, usePendingIndexJobRepoId, useRepoIndexStatus } from '../../../lib/dashboard';
 import { isRepoIndexInProgress } from '../../../lib/indexStatus';
-import { toForceGraphData, type ArchitectureGraph } from '../../../lib/architecture';
+import {
+  buildArchitectureView,
+  clusterIdForPrefix,
+  directoryClusterKey,
+  mergeForceGraphData,
+  type ArchitectureGraph,
+  type ForceGraphData
+} from '../../../lib/architecture';
 import { repoApiPath } from '../../../lib/serverApi';
 import { DEMO_ARCHITECTURE } from '../../../lib/demoData';
 import { isDemoMode } from '../../../lib/demoMode';
@@ -23,6 +30,8 @@ export default function ArchitecturePage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
+  const [expandedClusters, setExpandedClusters] = useState<string[]>([]);
+  const [neighborhoodOverlay, setNeighborhoodOverlay] = useState<ForceGraphData | null>(null);
   const prevIndexState = useRef<string | undefined>(undefined);
 
   useEffect(() => {
@@ -73,12 +82,32 @@ export default function ArchitecturePage() {
     };
   }, [repoId, reloadToken]);
 
-  const forceData = useMemo(() => (graph ? toForceGraphData(graph) : null), [graph]);
+  const architectureView = useMemo(
+    () => (graph ? buildArchitectureView(graph, { expandedClusters }) : null),
+    [graph, expandedClusters]
+  );
+  const forceData = useMemo(() => {
+    if (!architectureView) return null;
+    if (!neighborhoodOverlay) return architectureView;
+    return mergeForceGraphData(architectureView, neighborhoodOverlay);
+  }, [architectureView, neighborhoodOverlay]);
   const indexStatus = useRepoIndexStatus(repoId);
   const pendingIndexJobRepoId = usePendingIndexJobRepoId();
   const indexInProgress = isRepoIndexInProgress(repoId, indexStatus, pendingIndexJobRepoId);
   const empty = graph && graph.nodes.length === 0;
   const slug = repoFullName || repoId || '…';
+
+  useEffect(() => {
+    setExpandedClusters([]);
+    setNeighborhoodOverlay(null);
+  }, [graph]);
+
+  useEffect(() => {
+    const file = typeof router.query.file === 'string' ? router.query.file : null;
+    if (!file || !graph || graph.nodes.length <= 60) return;
+    const cid = clusterIdForPrefix(directoryClusterKey(file));
+    setExpandedClusters((prev) => (prev.includes(cid) ? prev : [...prev, cid]));
+  }, [router.query.file, graph]);
 
   useEffect(() => {
     const prev = prevIndexState.current;
@@ -134,10 +163,26 @@ export default function ArchitecturePage() {
         {forceData && forceData.nodes.length > 0 ? (
           <ArchitectureGraphView
             data={forceData}
+            viewMeta={architectureView?.meta}
             repoFullName={repoFullName || undefined}
             repoId={repoId ?? undefined}
             loading={loading}
+            initialSelectedId={
+              typeof router.query.file === 'string' ? router.query.file : null
+            }
+            expandedClusters={expandedClusters}
             onGraphRebuilt={() => setReloadToken((n) => n + 1)}
+            onExpandCluster={(clusterId) => {
+              setExpandedClusters((prev) =>
+                prev.includes(clusterId) ? prev : [...prev, clusterId]
+              );
+            }}
+            onCollapseCluster={(clusterId) => {
+              setExpandedClusters((prev) => prev.filter((id) => id !== clusterId));
+            }}
+            onNeighborhoodLoaded={(extra) => {
+              setNeighborhoodOverlay((prev) => (prev ? mergeForceGraphData(prev, extra) : extra));
+            }}
           />
         ) : loading && !indexInProgress ? (
           <div className="ui-diagram__stage ui-diagram__stage--solo">

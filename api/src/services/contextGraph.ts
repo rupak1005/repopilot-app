@@ -536,3 +536,165 @@ export async function shortestModulePath(args: {
 export function resolveModulePathArg(raw: string): string {
   return filePathFromNodeId(raw) ?? raw;
 }
+
+const DEFAULT_NEIGHBORHOOD_LIMIT = 15;
+const DEFAULT_NEIGHBORHOOD_DEPTH = 2;
+
+type RankedNeighbor = {
+  path: string;
+  depth: number;
+  degree: number;
+  score: number;
+};
+
+/**
+ * Progressive disclosure neighborhood: seed + top-ranked nearby modules with
+ * induced subgraph edges (not star-to-seed for transitive hops).
+ */
+export async function getModuleNeighborhood(args: {
+  repositoryId: string;
+  seedPath?: string;
+  revisionSha?: string;
+  depth?: number;
+  limit?: number;
+}): Promise<
+  | (ContextGraphSlice & {
+      seed: string;
+      truncated: boolean;
+      ranked: Array<{ path: string; depth: number }>;
+    })
+  | null
+> {
+  const revision = await resolveRepositoryRevision({
+    repositoryId: args.repositoryId,
+    revisionSha: args.revisionSha
+  });
+  if (!revision) return null;
+
+  const depthLimit = Math.max(1, Math.min(args.depth ?? DEFAULT_NEIGHBORHOOD_DEPTH, 4));
+  const limit = Math.max(3, Math.min(args.limit ?? DEFAULT_NEIGHBORHOOD_LIMIT, 40));
+  const prisma = getPrisma();
+
+  const edgeRows = (await prisma.$queryRawUnsafe(
+    `
+      SELECT "fromModule", "toModule", "kind", "confidence", "sourceFile", "sourceLine", "detector"
+      FROM "ModuleDependency"
+      WHERE "revisionId" = $1
+    `,
+    revision.id
+  )) as ModuleEdgeRow[];
+
+  const hotspotRows = (await prisma.$queryRawUnsafe(
+    `
+      SELECT "filePath", "score"
+      FROM "ModuleHotspot"
+      WHERE "repositoryId" = $1
+    `,
+    args.repositoryId
+  )) as Array<{ filePath: string; score: number }>;
+  const hotspotMap = new Map(hotspotRows.map((row) => [row.filePath, row.score]));
+
+  const degree = new Map<string, number>();
+  const outbound = new Map<string, string[]>();
+  const inbound = new Map<string, string[]>();
+  for (const edge of edgeRows) {
+    degree.set(edge.fromModule, (degree.get(edge.fromModule) ?? 0) + 1);
+    degree.set(edge.toModule, (degree.get(edge.toModule) ?? 0) + 1);
+    const out = outbound.get(edge.fromModule) ?? [];
+    out.push(edge.toModule);
+    outbound.set(edge.fromModule, out);
+    const inn = inbound.get(edge.toModule) ?? [];
+    inn.push(edge.fromModule);
+    inbound.set(edge.toModule, inn);
+  }
+
+  const allPaths = new Set<string>();
+  for (const edge of edgeRows) {
+    allPaths.add(edge.fromModule);
+    allPaths.add(edge.toModule);
+  }
+  for (const hotspot of hotspotRows) allPaths.add(hotspot.filePath);
+
+  let seed = args.seedPath ? resolveModulePathArg(args.seedPath) : '';
+  if (!seed || !allPaths.has(seed)) {
+    let best = '';
+    let bestScore = -1;
+    for (const path of allPaths) {
+      const score = (hotspotMap.get(path) ?? 0) + (degree.get(path) ?? 0) * 2;
+      if (score > bestScore) {
+        bestScore = score;
+        best = path;
+      }
+    }
+    seed = best;
+  }
+  if (!seed) {
+    return {
+      revisionSha: revision.revisionSha,
+      seed: '',
+      nodes: [],
+      edges: [],
+      truncated: false,
+      ranked: []
+    };
+  }
+
+  const depthOf = new Map<string, number>([[seed, 0]]);
+  const queue = [seed];
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    const d = depthOf.get(current) ?? 0;
+    if (d >= depthLimit) continue;
+    for (const next of [...(outbound.get(current) ?? []), ...(inbound.get(current) ?? [])]) {
+      if (depthOf.has(next)) continue;
+      depthOf.set(next, d + 1);
+      queue.push(next);
+    }
+  }
+
+  const ranked: RankedNeighbor[] = Array.from(depthOf.entries())
+    .filter(([path]) => path !== seed)
+    .map(([path, depth]) => ({
+      path,
+      depth,
+      degree: degree.get(path) ?? 0,
+      score: hotspotMap.get(path) ?? 0
+    }))
+    .sort((a, b) => b.score + b.degree * 2 - (a.score + a.degree * 2) || a.depth - b.depth);
+
+  const kept = new Set<string>([seed]);
+  for (const row of ranked.slice(0, limit)) kept.add(row.path);
+  const truncated = ranked.length > limit;
+
+  const fileRows = (await prisma.$queryRawUnsafe(
+    `
+      SELECT "path"
+      FROM "File"
+      WHERE "revisionId" = $1
+    `,
+    revision.id
+  )) as Array<{ path: string }>;
+  const knownFiles = new Set(fileRows.map((row) => row.path));
+
+  const nodes = Array.from(kept).map((filePath) => {
+    const score = hotspotMap.get(filePath) ?? 0;
+    return fileNode({
+      filePath,
+      knownFiles,
+      isHotspot: score > 0,
+      score
+    });
+  });
+
+  const induced = edgeRows.filter((e) => kept.has(e.fromModule) && kept.has(e.toModule));
+
+  return {
+    revisionSha: revision.revisionSha,
+    seed,
+    nodes,
+    edges: moduleRowsToContextEdges(induced, revision.revisionSha, knownFiles),
+    truncated,
+    ranked: ranked.slice(0, limit).map((r) => ({ path: r.path, depth: r.depth })),
+    meta: { graphDepth: depthLimit }
+  };
+}

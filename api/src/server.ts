@@ -43,6 +43,7 @@ import {
 } from './services/engineeringIntelligence';
 import {
   expandContext,
+  getModuleNeighborhood,
   parseContextGraphView,
   resolveModulePathArg,
   shortestModulePath
@@ -696,11 +697,13 @@ async function bootstrap() {
       op?: string;
       filePath?: string;
       symbolId?: string;
+      seed?: string;
       from?: string;
       to?: string;
       revisionSha?: string;
       depth?: string;
       hopLimit?: string;
+      limit?: string;
     };
 
     if (query.op === 'shortestPath') {
@@ -719,6 +722,31 @@ async function bootstrap() {
         toPath: resolveModulePathArg(query.to),
         revisionSha: query.revisionSha,
         hopLimit
+      });
+      if (!result) {
+        reply.code(404);
+        return { error: 'revision not found for repository' };
+      }
+      return result;
+    }
+
+    if (query.op === 'neighborhood') {
+      const depth = query.depth ? Number(query.depth) : undefined;
+      const limit = query.limit ? Number(query.limit) : undefined;
+      if (query.depth && (!Number.isFinite(depth) || Number(depth) < 1)) {
+        reply.code(400);
+        return { error: 'depth must be a positive integer' };
+      }
+      if (query.limit && (!Number.isFinite(limit) || Number(limit) < 1)) {
+        reply.code(400);
+        return { error: 'limit must be a positive integer' };
+      }
+      const result = await getModuleNeighborhood({
+        repositoryId: params.repoId,
+        seedPath: query.seed ?? query.filePath,
+        revisionSha: query.revisionSha,
+        depth,
+        limit
       });
       if (!result) {
         reply.code(404);

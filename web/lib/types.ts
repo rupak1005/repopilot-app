@@ -82,6 +82,13 @@ export type FileImpactAnalysis = {
   target: { filePath: string };
   revisionSha: string;
   risk: 'LOW' | 'MEDIUM' | 'HIGH';
+  confidence: 'LOW' | 'MEDIUM' | 'HIGH';
+  riskFactors: Array<{
+    id: string;
+    label: string;
+    detail: string;
+    severity: 'info' | 'warn' | 'danger';
+  }>;
   directDependents: string[];
   transitiveDependents: string[];
   outboundImports: string[];

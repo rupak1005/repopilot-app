@@ -51,11 +51,11 @@
 
 ## Migration plan
 
-1. **Phase 3 (in progress):** Persist edge `kind` + provenance on write; introduce stable node URNs (`file:…`, `symbol:…`); bounded `shortestPath` query
-2. **Phase 4:** Server `GET …/graph/neighborhood`; remove client 80-cap via clustering
+1. **Phase 3 (done):** Persist edge `kind` + provenance on write; introduce stable node URNs (`file:…`, `symbol:…`); bounded `shortestPath` query
+2. **Phase 4 (in progress):** Directory clustering replaces client 80-cap; `GET …/graph?op=neighborhood`; path-trace UI via shortestPath
 3. Resolve TS path aliases at index time (`@/` → file)
-4. Add path-trace + cycle inspector UI
-5. Evaluate ELK for hierarchical System View; keep force for exploration
+4. Add cycle inspector UI + ELK hierarchical System View
+5. Evaluate server-only overview for 10k+ node repos
 
 ## Risk
 

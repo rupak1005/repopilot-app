@@ -21,11 +21,15 @@ import {
 import type { ForceGraphMethods, LinkObject, NodeObject } from 'react-force-graph-2d';
 import {
   LAYER_META,
+  clusterIdForPrefix,
   diagramStats,
+  directoryClusterKey,
   filterForceGraphData,
   layerOf,
   neighborsOf,
   nodeBoxWidth,
+  parseClusterId,
+  type ArchitectureViewMeta,
   type DiagramLayer,
   type ForceGraphData,
   type ForceGraphNode
@@ -47,7 +51,7 @@ import { IconButton } from './IconButton';
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), { ssr: false });
 
 type GraphNode = NodeObject & ForceGraphNode;
-type GraphLink = LinkObject<GraphNode>;
+type GraphLink = LinkObject<GraphNode> & { uncertain?: boolean };
 type LayoutMode = 'diagram' | 'split' | 'focus';
 type DiagramRenderer = 'interactive' | 'mermaid';
 
@@ -66,10 +70,16 @@ const LAYOUT_OPTIONS: Array<{ id: LayoutMode; label: string; icon: typeof Square
 
 type ArchitectureGraphProps = {
   data: ForceGraphData;
+  viewMeta?: ArchitectureViewMeta;
   repoFullName?: string;
   repoId?: string;
   loading?: boolean;
+  initialSelectedId?: string | null;
+  expandedClusters?: string[];
   onGraphRebuilt?: () => void;
+  onExpandCluster?: (clusterId: string) => void;
+  onCollapseCluster?: (clusterId: string) => void;
+  onNeighborhoodLoaded?: (extra: ForceGraphData) => void;
 };
 
 type InspectorProps = {
@@ -80,11 +90,15 @@ type InspectorProps = {
   directDependents: string[];
   transitiveDependents: string[];
   outboundImports: string[];
+  pathHint?: string | null;
   repoId?: string;
   repoFullName?: string;
   embedded?: boolean;
   onClose: () => void;
   onSelectModule: (moduleId: string) => void;
+  onExpandNeighborhood?: () => void;
+  onCollapseCluster?: () => void;
+  expandingNeighborhood?: boolean;
 };
 
 function DiagramInspector({
@@ -95,20 +109,31 @@ function DiagramInspector({
   directDependents,
   transitiveDependents,
   outboundImports,
+  pathHint,
   repoId,
   repoFullName,
   embedded = false,
   onClose,
-  onSelectModule
+  onSelectModule,
+  onExpandNeighborhood,
+  onCollapseCluster,
+  expandingNeighborhood = false
 }: InspectorProps) {
+  const isCluster = selectedNode.kind === 'cluster' || Boolean(parseClusterId(selectedNode.id));
   const lay = layerOf(selectedNode.id);
-  const layerLabel = lay === 'other' ? 'Module' : LAYER_META[lay].label;
-  const searchHref = repoId
-    ? `/dashboard/${repoId}/search?q=${encodeURIComponent(moduleSearchQuery(selectedNode.id))}`
-    : null;
-  const impactHref = repoId
-    ? `/dashboard/${repoId}/impact?file=${encodeURIComponent(selectedNode.id)}`
-    : null;
+  const layerLabel = isCluster
+    ? 'Cluster'
+    : lay === 'other'
+      ? 'Module'
+      : LAYER_META[lay].label;
+  const searchHref =
+    repoId && !isCluster
+      ? `/dashboard/${repoId}/search?q=${encodeURIComponent(moduleSearchQuery(selectedNode.id))}`
+      : null;
+  const impactHref =
+    repoId && !isCluster
+      ? `/dashboard/${repoId}/impact?file=${encodeURIComponent(selectedNode.id)}`
+      : null;
 
   async function openOnGitHub() {
     if (!repoFullName?.includes('/')) return;
@@ -176,8 +201,10 @@ function DiagramInspector({
         <div className="ui-diagram__inspector-metrics">
           <span>{inbound} inbound</span>
           <span>{outbound} outbound</span>
+          {selectedNode.memberCount ? <span>{selectedNode.memberCount} files</span> : null}
           {selectedNode.isHotspot ? <span>{selectedNode.score.toFixed(0)} hotspot pts</span> : null}
         </div>
+        {pathHint ? <p className="ui-diagram__inspector-note">{pathHint}</p> : null}
         {neighborsLoading ? (
           <p className="ui-diagram__inspector-note">Loading graph neighbors…</p>
         ) : (
@@ -188,6 +215,23 @@ function DiagramInspector({
           </div>
         )}
         <div className="ui-diagram__inspector-actions">
+          {onCollapseCluster ? (
+            <button type="button" className="ui-diagram__action" onClick={onCollapseCluster}>
+              <Square size={14} weight="bold" aria-hidden />
+              Collapse folder cluster
+            </button>
+          ) : null}
+          {onExpandNeighborhood && !isCluster ? (
+            <button
+              type="button"
+              className="ui-diagram__action"
+              disabled={expandingNeighborhood}
+              onClick={onExpandNeighborhood}
+            >
+              <ShareNetwork size={14} weight="bold" aria-hidden />
+              {expandingNeighborhood ? 'Expanding…' : 'Expand neighborhood'}
+            </button>
+          ) : null}
           {impactHref ? (
             <a className="ui-diagram__action" href={impactHref}>
               <Crosshair size={14} weight="bold" aria-hidden />
@@ -200,7 +244,7 @@ function DiagramInspector({
               Search code
             </a>
           ) : null}
-          {repoFullName?.includes('/') ? (
+          {repoFullName?.includes('/') && !isCluster ? (
             <button type="button" className="ui-diagram__action ui-diagram__action--primary" onClick={() => void openOnGitHub()}>
               <ArrowSquareOut size={14} weight="bold" aria-hidden />
               Open on GitHub
@@ -214,10 +258,16 @@ function DiagramInspector({
 
 export function ArchitectureGraphView({
   data,
+  viewMeta,
   repoFullName,
   repoId,
   loading = false,
-  onGraphRebuilt
+  initialSelectedId = null,
+  expandedClusters = [],
+  onGraphRebuilt,
+  onExpandCluster,
+  onCollapseCluster,
+  onNeighborhoodLoaded
 }: ArchitectureGraphProps) {
   const fgRef = useRef<ForceGraphMethods | undefined>(undefined);
   const mermaidRef = useRef<MermaidDiagramHandle>(null);
@@ -233,6 +283,10 @@ export function ArchitectureGraphView({
   const [pulseId, setPulseId] = useState<string | null>(null);
   const [rebuilding, setRebuilding] = useState(false);
   const [renderer, setRenderer] = useState<DiagramRenderer>('interactive');
+  const [pathStartId, setPathStartId] = useState<string | null>(null);
+  const [pathNodeIds, setPathNodeIds] = useState<Set<string> | null>(null);
+  const [pathHint, setPathHint] = useState<string | null>(null);
+  const [expandingNeighborhood, setExpandingNeighborhood] = useState(false);
 
   const filtered = useMemo(() => filterForceGraphData(data, layer), [data, layer]);
   const layoutData = useMemo(() => layoutWithDagre(filtered), [filtered]);
@@ -257,18 +311,21 @@ export function ArchitectureGraphView({
     );
   }, []);
 
-  const highlight = useMemo(
-    () => (selectedId ? neighborsOf(selectedId, filtered.links) : null),
-    [selectedId, filtered.links]
-  );
+  const highlight = useMemo(() => {
+    if (pathNodeIds && pathNodeIds.size > 0) return pathNodeIds;
+    return selectedId ? neighborsOf(selectedId, filtered.links) : null;
+  }, [pathNodeIds, selectedId, filtered.links]);
 
   useEffect(() => {
     setSelectedId(null);
     setNeighborTraversal(null);
+    setPathStartId(null);
+    setPathNodeIds(null);
+    setPathHint(null);
   }, [layer, data]);
 
   useEffect(() => {
-    if (!selectedId || !repoId || isDemoMode()) {
+    if (!selectedId || !repoId || isDemoMode() || parseClusterId(selectedId)) {
       setNeighborTraversal(null);
       setNeighborsLoading(false);
       return;
@@ -333,15 +390,16 @@ export function ArchitectureGraphView({
       const dimmed = highlight && !highlight.has(String(n.id));
       const selected = selectedId === String(n.id);
       const pulsing = pulseId === String(n.id);
+      const isCluster = n.kind === 'cluster' || Boolean(parseClusterId(String(n.id)));
       const lay = layerOf(n.id);
       const meta = lay === 'other' ? LAYER_META.other : LAYER_META[lay];
       const w = nodeBoxWidth(n.label);
-      const h = 40;
+      const h = isCluster ? 46 : 40;
       const x = n.x - w / 2;
       const y = n.y - h / 2;
 
       ctx.beginPath();
-      ctx.roundRect(x, y, w, h, 8);
+      ctx.roundRect(x, y, w, h, isCluster ? 12 : 8);
       ctx.fillStyle = dimmed
         ? colors.nodeFillDim
         : selected || pulsing
@@ -356,8 +414,10 @@ export function ArchitectureGraphView({
           : selected || pulsing
             ? colors.accent
             : meta.color;
-      ctx.lineWidth = selected || pulsing ? 2.2 / globalScale : 1.2 / globalScale;
+      ctx.lineWidth = selected || pulsing ? 2.2 / globalScale : isCluster ? 1.8 / globalScale : 1.2 / globalScale;
+      if (isCluster) ctx.setLineDash([4 / globalScale, 3 / globalScale]);
       ctx.stroke();
+      ctx.setLineDash([]);
 
       if (globalScale > 0.28) {
         const fontSize = Math.max(8.5 / globalScale, 3.4);
@@ -388,7 +448,9 @@ export function ArchitectureGraphView({
       ctx.lineTo(tgt.x, tgt.y);
       ctx.strokeStyle = active ? colors.linkActive : colors.linkDim;
       ctx.lineWidth = active ? 1.4 : 0.7;
+      if (l.uncertain) ctx.setLineDash([5, 4]);
       ctx.stroke();
+      ctx.setLineDash([]);
     },
     [colors, highlight]
   );
@@ -398,6 +460,7 @@ export function ArchitectureGraphView({
       setSelectedId(id);
       setPulseId(id);
       if (!id || renderer !== 'interactive') return;
+      if (parseClusterId(id)) return;
       const node = layoutData.nodes.find((n) => n.id === id) as GraphNode | undefined;
       if (node?.x != null && node?.y != null) {
         const fg = fgRef.current;
@@ -407,6 +470,104 @@ export function ArchitectureGraphView({
     },
     [renderer, layoutData.nodes]
   );
+
+  useEffect(() => {
+    if (!initialSelectedId) return;
+    setSelectedId(initialSelectedId);
+    setPulseId(initialSelectedId);
+  }, [initialSelectedId]);
+
+  async function tracePath(fromId: string, toId: string) {
+    if (!repoId || isDemoMode()) {
+      setPathHint('Path tracing needs a live indexed repository.');
+      return;
+    }
+    setPathHint('Tracing path…');
+    try {
+      const response = await fetch(
+        repoApiPath(
+          repoId,
+          `graph?op=shortestPath&from=${encodeURIComponent(fromId)}&to=${encodeURIComponent(toId)}`
+        )
+      );
+      if (!response.ok) throw new Error('path unavailable');
+      const payload = (await response.json()) as { path: string[] | null; hops: number };
+      if (!payload.path) {
+        setPathNodeIds(null);
+        setPathHint(`No import path from ${fromId} → ${toId} within hop limit.`);
+        return;
+      }
+      setPathNodeIds(new Set(payload.path));
+      setPathHint(`Path ${payload.hops} hop${payload.hops === 1 ? '' : 's'}: ${payload.path.join(' → ')}`);
+    } catch {
+      setPathHint('Could not trace path.');
+    }
+  }
+
+  async function expandNeighborhood(seed: string) {
+    if (!repoId || isDemoMode() || expandingNeighborhood) return;
+    setExpandingNeighborhood(true);
+    try {
+      const response = await fetch(
+        repoApiPath(
+          repoId,
+          `graph?op=neighborhood&seed=${encodeURIComponent(seed)}&depth=2&limit=15`
+        )
+      );
+      if (!response.ok) throw new Error('neighborhood unavailable');
+      const payload = (await response.json()) as {
+        nodes: Array<{ id: string; label: string; filePath?: string; isHotspot?: boolean; score?: number }>;
+        edges: Array<{ from: string; to: string }>;
+      };
+      const extra: ForceGraphData = {
+        nodes: payload.nodes.map((n) => ({
+          id: n.filePath ?? n.id.replace(/^file:/, ''),
+          label: n.label,
+          val: 4,
+          isHotspot: Boolean(n.isHotspot),
+          score: n.score ?? 0,
+          kind: 'file' as const
+        })),
+        links: payload.edges.map((e) => ({
+          source: e.from.replace(/^(file|module|ext):/, ''),
+          target: e.to.replace(/^(file|module|ext):/, '')
+        }))
+      };
+      onNeighborhoodLoaded?.(extra);
+      setPathHint(
+        payload.nodes.length
+          ? `Merged neighborhood around ${seed} (${payload.nodes.length} modules).`
+          : `No neighborhood for ${seed}.`
+      );
+    } catch {
+      setPathHint('Could not expand neighborhood.');
+    } finally {
+      setExpandingNeighborhood(false);
+    }
+  }
+
+  function handleNodeClick(node: object, event: MouseEvent) {
+    const id = String((node as GraphNode).id);
+    if (parseClusterId(id)) {
+      onExpandCluster?.(id);
+      selectModule(id);
+      setPathHint('Expanded cluster — showing member files.');
+      return;
+    }
+    if (event.shiftKey && pathStartId && pathStartId !== id) {
+      void tracePath(pathStartId, id);
+      selectModule(id);
+      return;
+    }
+    if (event.shiftKey) {
+      setPathStartId(id);
+      setPathNodeIds(null);
+      setPathHint(`Path start set to ${id}. Shift-click another module to trace.`);
+      selectModule(id);
+      return;
+    }
+    selectModule(id);
+  }
 
   function exportPng() {
     const canvas = containerRef.current?.querySelector('canvas');
@@ -448,6 +609,13 @@ export function ArchitectureGraphView({
       score: 0
     };
   }, [selectedId, filtered.nodes]);
+
+  const selectedClusterId = useMemo(() => {
+    if (!selectedId) return null;
+    if (parseClusterId(selectedId)) return selectedId;
+    const cid = clusterIdForPrefix(directoryClusterKey(selectedId));
+    return expandedClusters.includes(cid) ? cid : null;
+  }, [selectedId, expandedClusters]);
 
   const inbound = selectedId
     ? filtered.links.filter(
@@ -539,8 +707,13 @@ export function ArchitectureGraphView({
             n.fx = n.x;
             n.fy = n.y;
           }}
-          onNodeClick={(node) => selectModule(String((node as GraphNode).id))}
-          onBackgroundClick={() => setSelectedId(null)}
+          onNodeClick={(node, event) => handleNodeClick(node, event as unknown as MouseEvent)}
+          onBackgroundClick={() => {
+            setSelectedId(null);
+            setPathStartId(null);
+            setPathNodeIds(null);
+            setPathHint(null);
+          }}
           nodeCanvasObject={paintNode}
           nodePointerAreaPaint={(node, color, ctx) => {
             const n = node as GraphNode;
@@ -626,9 +799,17 @@ export function ArchitectureGraphView({
       </div>
 
       <div className="ui-diagram__stats">
-        <span>{stats.nodes} modules</span>
+        <span>{stats.nodes} nodes</span>
         <span aria-hidden>·</span>
         <span>{stats.edges} deps</span>
+        {viewMeta?.clustered ? (
+          <>
+            <span aria-hidden>·</span>
+            <span>
+              {viewMeta.clusterCount} clusters / {viewMeta.totalFiles} files
+            </span>
+          </>
+        ) : null}
         {stats.hotspots > 0 ? (
           <>
             <span aria-hidden>·</span>
@@ -650,16 +831,29 @@ export function ArchitectureGraphView({
         directDependents={directDependents}
         transitiveDependents={transitiveDependents}
         outboundImports={outboundImports}
+        pathHint={pathHint}
         repoId={repoId}
         repoFullName={repoFullName}
         onClose={() => setSelectedId(null)}
         onSelectModule={selectModule}
+        onExpandNeighborhood={
+          selectedNode.kind === 'cluster' || parseClusterId(selectedNode.id)
+            ? undefined
+            : () => void expandNeighborhood(selectedNode.id)
+        }
+        onCollapseCluster={
+          selectedClusterId && onCollapseCluster
+            ? () => onCollapseCluster(selectedClusterId)
+            : undefined
+        }
+        expandingNeighborhood={expandingNeighborhood}
       />
     ) : showSidePanel ? (
       <div className="ui-diagram__panel-empty">
         <p className="ui-diagram__panel-empty-title">Select a module</p>
         <p className="ui-diagram__panel-empty-body">
-          Click a node in the diagram to inspect dependencies, impact paths, and GitHub links.
+          Click a cluster to expand it, or a file to inspect. Shift-click two modules to trace an
+          import path.
         </p>
       </div>
     ) : null;
@@ -731,16 +925,26 @@ export function ArchitectureGraphView({
           directDependents={directDependents}
           transitiveDependents={transitiveDependents}
           outboundImports={outboundImports}
+          pathHint={pathHint}
           repoId={repoId}
           repoFullName={repoFullName}
           onClose={() => setSelectedId(null)}
           onSelectModule={selectModule}
+          onExpandNeighborhood={
+            selectedNode.kind === 'cluster' || parseClusterId(selectedNode.id)
+              ? undefined
+              : () => void expandNeighborhood(selectedNode.id)
+          }
+          onCollapseCluster={
+            selectedClusterId && onCollapseCluster
+              ? () => onCollapseCluster(selectedClusterId)
+              : undefined
+          }
+          expandingNeighborhood={expandingNeighborhood}
         />
       ) : layoutMode === 'diagram' ? (
         <p className="ui-diagram__hint">
-          {renderer === 'mermaid'
-            ? 'Click a module to inspect dependencies — scroll or drag to pan, wheel to zoom.'
-            : 'Click a module to inspect dependencies — use Split view for side-by-side exploration.'}
+          Click a cluster to expand, or Shift-click two modules to trace an import path.
         </p>
       ) : null}
     </div>

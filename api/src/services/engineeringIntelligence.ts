@@ -43,6 +43,8 @@ export type ArchitectureNode = {
 export type ArchitectureEdge = {
   fromModule: string;
   toModule: string;
+  kind?: string;
+  confidence?: number;
 };
 
 export async function listModuleHotspots(args: {
@@ -333,7 +335,9 @@ export async function getArchitectureGraph(args: {
     })),
     edges: slice.edges.map((edge) => ({
       fromModule: filePathFromNodeId(edge.from) ?? edge.from,
-      toModule: filePathFromNodeId(edge.to) ?? edge.to
+      toModule: filePathFromNodeId(edge.to) ?? edge.to,
+      kind: edge.kind,
+      confidence: edge.provenance.confidence
     }))
   };
 }

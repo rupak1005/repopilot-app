@@ -377,3 +377,114 @@
 .ui-impact-panel__modules a:hover {
   color: var(--color-link-hover);
 }
+
+.ui-impact-factors {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--space-2);
+  margin: 0 0 var(--space-4);
+}
+
+.ui-impact-factor {
+  padding: var(--space-3);
+  border: var(--border-medium);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.ui-impact-factor--warn {
+  border-color: var(--color-warning, #d97706);
+}
+
+.ui-impact-factor--danger {
+  border-color: var(--color-danger);
+}
+
+.ui-impact-factor__label {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-ui);
+  font-weight: 700;
+}
+
+.ui-impact-factor__detail {
+  margin: 0;
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.ui-impact-blast {
+  display: grid;
+  grid-template-columns: 1fr minmax(140px, 0.8fr) 1fr;
+  gap: var(--space-3);
+  align-items: start;
+}
+
+.ui-impact-blast__col ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.ui-impact-blast__col .label-caps {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-subtle);
+}
+
+.ui-impact-blast__col li,
+.ui-impact-blast__empty {
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+}
+
+.ui-impact-blast__col a {
+  color: var(--color-link);
+  text-decoration: none;
+}
+
+.ui-impact-blast__col a:hover {
+  text-decoration: underline;
+}
+
+.ui-impact-blast__muted {
+  opacity: 0.75;
+}
+
+.ui-impact-blast__seed {
+  padding: var(--space-3);
+  border: var(--border-heavy);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+  text-align: center;
+}
+
+.ui-impact-blast__seed .label-caps {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-subtle);
+}
+
+.ui-impact-blast__seed p {
+  margin: 0;
+  font-weight: 700;
+  word-break: break-all;
+}
+
+.ui-impact-blast__link {
+  margin: var(--space-3) 0 0;
+  font-size: var(--text-ui);
+  font-weight: 600;
+}
+
+.ui-impact-blast__link a {
+  color: var(--color-link);
+}
+
+@media (max-width: 720px) {
+  .ui-impact-blast {
+    grid-template-columns: 1fr;
+  }
+}
+

@@ -6,10 +6,17 @@ import { BentoPanel } from '../../../components/ui/BentoPanel';
 import { Button } from '../../../components/ui/Button';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { ErrorBanner } from '../../../components/ui/ErrorBanner';
+import { ImpactBlastMap } from '../../../components/ui/ImpactBlastMap';
 import { IndexHint } from '../../../components/ui/IndexHint';
 import { KpiTile } from '../../../components/ui/KpiTile';
 import { demoDelay, demoFileImpact } from '../../../lib/demoData';
-import { DashboardLayout, shouldShowIndexHint, usePendingIndexJobRepoId, useRepoData, useRepoIndexStatus } from '../../../lib/dashboard';
+import {
+  DashboardLayout,
+  shouldShowIndexHint,
+  usePendingIndexJobRepoId,
+  useRepoData,
+  useRepoIndexStatus
+} from '../../../lib/dashboard';
 import { isDemoMode } from '../../../lib/demoMode';
 import { repoApiPath } from '../../../lib/serverApi';
 import type { FileImpactAnalysis } from '../../../lib/types';
@@ -100,7 +107,10 @@ export default function ImpactPage() {
       <div className="canvas-inner ui-impact-page">
         <div className="page-title-block">
           <h1>Impact</h1>
-          <p>What breaks if you change a module? Deterministic graph traversal plus test and history signals.</p>
+          <p>
+            What breaks if you change a module? Deterministic graph traversal plus test and history
+            signals.
+          </p>
         </div>
 
         {repoError ? <ErrorBanner>{repoError}</ErrorBanner> : null}
@@ -145,12 +155,58 @@ export default function ImpactPage() {
                 value={result.risk}
                 tone={result.risk === 'HIGH' ? 'danger' : result.risk === 'MEDIUM' ? 'warn' : 'success'}
               />
+              <KpiTile
+                label="Confidence"
+                value={result.confidence ?? 'HIGH'}
+                tone={
+                  (result.confidence ?? 'HIGH') === 'HIGH'
+                    ? 'success'
+                    : (result.confidence ?? 'HIGH') === 'MEDIUM'
+                      ? 'warn'
+                      : 'danger'
+                }
+              />
             </div>
+
+            {(result.riskFactors?.length ?? 0) > 0 ? (
+              <div className="ui-impact-factors" aria-label="Why this risk">
+                {result.riskFactors.map((factor) => (
+                  <div
+                    key={factor.id}
+                    className={`ui-impact-factor ui-impact-factor--${factor.severity}`}
+                  >
+                    <p className="ui-impact-factor__label">{factor.label}</p>
+                    <p className="ui-impact-factor__detail">{factor.detail}</p>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            <BentoPanel title="Blast radius map">
+              <ImpactBlastMap
+                target={result.target.filePath}
+                directDependents={result.directDependents}
+                transitiveDependents={result.transitiveDependents}
+                outboundImports={result.outboundImports}
+                baseHref={base}
+              />
+              {base ? (
+                <p className="ui-impact-blast__link">
+                  <Link
+                    href={`${base}/architecture?file=${encodeURIComponent(result.target.filePath)}`}
+                  >
+                    Open in dependency graph →
+                  </Link>
+                </p>
+              ) : null}
+            </BentoPanel>
 
             <div className="ui-pr-detail__grid">
               <BentoPanel title="Blast radius">
                 <div className="ui-impact-panel">
-                  <p className={`ui-impact-panel__risk ui-impact-panel__risk--${result.risk.toLowerCase()}`}>
+                  <p
+                    className={`ui-impact-panel__risk ui-impact-panel__risk--${result.risk.toLowerCase()}`}
+                  >
                     <Warning size={20} weight="fill" aria-hidden />
                     Risk: {result.risk}
                   </p>
@@ -239,7 +295,8 @@ export default function ImpactPage() {
               <BentoPanel title="Hotspot overlay">
                 <div className="ui-impact-panel">
                   <p className="ui-finding-card__desc">
-                    Score {result.hotspot.score.toFixed(0)} · {result.hotspot.changeCount} recent changes
+                    Score {result.hotspot.score.toFixed(0)} · {result.hotspot.changeCount} recent
+                    changes
                   </p>
                   {result.hotspot.reasons.length > 0 ? (
                     <ul className="ui-impact-panel__modules">
@@ -256,7 +313,11 @@ export default function ImpactPage() {
             ) : null}
           </>
         ) : loading ? (
-          <EmptyState icon={Crosshair} title="Analyzing impact…" description="Traversing the dependency graph." />
+          <EmptyState
+            icon={Crosshair}
+            title="Analyzing impact…"
+            description="Traversing the dependency graph."
+          />
         ) : (
           <EmptyState
             icon={MagnifyingGlass}
