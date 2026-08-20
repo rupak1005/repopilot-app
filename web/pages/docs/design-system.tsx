@@ -26,7 +26,10 @@ export default function DocsDesignSystemPage() {
         />
         <p>
           Semantic colors live in <code>web/styles/tokens.css</code>. Light and dark themes swap HSL values on{' '}
-          <code>[data-theme=&quot;dark&quot;]</code>. <code>ThemeToggle</code> persists preference to localStorage.
+          <code>[data-theme=&quot;light&quot;]</code> / <code>[data-theme=&quot;dark&quot;]</code>.{' '}
+          <code>ThemeToggle</code> persists preference to localStorage; until then the OS preference is followed.
+          Surfaces use semantic tokens; ink on primary chips uses <code>--color-on-primary</code> for contrast in both
+          modes.
         </p>
       </DocsSection>
 

@@ -15,6 +15,16 @@ body {
   font-size: var(--text-body);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  transition:
+    background-color var(--duration-normal) var(--ease-out-expo),
+    color var(--duration-normal) var(--ease-out-expo);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html,
+  body {
+    transition: none;
+  }
 }
 
 a {

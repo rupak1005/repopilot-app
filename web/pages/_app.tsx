@@ -6,7 +6,7 @@ import { ToastProvider } from '../components/ui/ToastProvider';
 import { IndexProgressFloatHost } from '../components/ui/IndexProgressFloat';
 import { IndexProgressProvider } from '../lib/indexProgressUi';
 import { usePageEnter } from '../lib/motion';
-import { applyTheme, getStoredTheme } from '../lib/theme';
+import { applyTheme, getStoredTheme, hasExplicitThemePreference, syncThemeFromSystem } from '../lib/theme';
 import '../styles/tokens.css';
 import '../styles/neo-panels.css';
 import '../styles/page-layout.css';
@@ -45,7 +45,18 @@ function AnimatedPage({ Component, pageProps }: AppProps) {
   const enter = usePageEnter();
 
   useEffect(() => {
-    applyTheme(getStoredTheme());
+    if (hasExplicitThemePreference()) {
+      applyTheme(getStoredTheme());
+      return;
+    }
+
+    syncThemeFromSystem();
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const onChange = () => {
+      if (!hasExplicitThemePreference()) syncThemeFromSystem();
+    };
+    media.addEventListener('change', onChange);
+    return () => media.removeEventListener('change', onChange);
   }, []);
 
   return (

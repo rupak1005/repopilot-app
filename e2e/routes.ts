@@ -1,6 +1,6 @@
 /** Every public page route covered by Playwright e2e. */
 export const PUBLIC_PAGES = [
-  { path: '/', heading: /Repository to diagram/i },
+  { path: '/', heading: /Understand your repository/i },
   { path: '/browse', heading: /Browse public repositories/i },
   { path: '/login', heading: /Sign in for private repos/i },
   { path: '/mcp', heading: /Connect Cursor \/ MCP/i }

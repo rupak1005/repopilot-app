@@ -32,7 +32,7 @@ type DifferentiatorsStripProps = {
 };
 
 export function DifferentiatorsStrip({
-  title = 'Beyond the diagram',
+  title = 'Why RepoPilot',
   repoBase,
   showTagline = false,
   className

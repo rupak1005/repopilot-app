@@ -3,7 +3,8 @@
  * Layer A: brand surfaces · Layer B: app UI · Layer C: canvas (see neo-panels.css)
  */
 
-:root {
+:root,
+[data-theme='light'] {
   color-scheme: light;
 
   /* ——— Semantic colors (light) ——— */
@@ -24,6 +25,8 @@
   --color-link: hsl(270 85% 42%);
   --color-link-hover: hsl(270 85% 32%);
   --color-accent: var(--color-link);
+  --color-on-primary: hsl(0 0% 8%);
+  --color-on-danger: hsl(0 0% 100%);
   --color-success: hsl(142 55% 38%);
   --color-warning: hsl(38 92% 42%);
   --color-danger: hsl(0 72% 48%);
@@ -71,7 +74,7 @@
   --on-background: var(--color-text);
   --primary: var(--color-primary);
   --primary-container: var(--color-primary);
-  --on-primary-container: var(--color-text);
+  --on-primary-container: var(--color-on-primary);
   --secondary: var(--color-link);
 
   /* ——— Typography ——— */
@@ -161,6 +164,8 @@
   --color-link: hsl(270 85% 78%);
   --color-link-hover: hsl(270 90% 88%);
   --color-accent: var(--color-link);
+  --color-on-primary: hsl(0 0% 8%);
+  --color-on-danger: hsl(0 0% 100%);
   --color-success: hsl(142 50% 52%);
   --color-warning: hsl(38 90% 58%);
   --color-danger: hsl(0 75% 62%);

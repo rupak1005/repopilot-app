@@ -173,7 +173,7 @@
 }
 
 .landing-decor__sparkle--white path {
-  fill: hsl(0 0% 100%);
+  fill: var(--color-surface);
   stroke: var(--color-border-strong);
   stroke-width: 1.75;
 }
@@ -227,7 +227,7 @@
   font-size: 15px;
   font-weight: 600;
   line-height: 1;
-  color: hsl(0 0% 52%);
+  color: var(--color-text-subtle);
 }
 
 .landing-decor__dot {

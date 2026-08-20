@@ -97,7 +97,7 @@
 }
 
 .ui-impact-panel__risk--medium {
-  color: var(--color-warn, hsl(35 90% 45%));
+  color: var(--color-warning);
 }
 
 .ui-impact-panel__risk--low {

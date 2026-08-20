@@ -87,11 +87,12 @@ export default function LandingPage() {
     >
           <div className="landing-card">
                 <p className="landing-eyebrow">Engineering intelligence</p>
-                <h1>Repository to diagram — and beyond</h1>
+                <h1>Understand your repository — with evidence</h1>
                 <p className="landing-lede">
-                  Real architecture maps from import analysis, plus impact, hotspots, Ask, and PR
-                  review — paste a URL or slug, or swap <span className="mono">hub</span> for{' '}
-                  <span className="mono">pilot</span> in the hostname.
+                  Index your codebase for impact analysis, hotspots, grounded Ask, and PR review —
+                  built from real imports and AST, not LLM sketches. Paste a URL or slug, or swap{' '}
+                  <span className="mono">hub</span> for <span className="mono">pilot</span> in the
+                  hostname.
                 </p>
 
                 <form className="landing-form" onSubmit={(event) => void handleSubmit(event)}>

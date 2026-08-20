@@ -33,7 +33,7 @@
   justify-content: center;
   border-radius: var(--radius-md);
   background: var(--color-primary);
-  color: var(--color-text);
+  color: var(--color-on-primary);
   border: 2px solid var(--color-border-strong);
   box-shadow: var(--shadow-hard-sm);
 }

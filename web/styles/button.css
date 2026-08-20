@@ -54,7 +54,7 @@
 
 .ui-button--primary {
   background: var(--color-primary);
-  color: var(--color-text);
+  color: var(--color-on-primary);
 }
 
 .ui-button--primary:hover:not(:disabled) {
@@ -85,7 +85,7 @@
 
 .ui-button--danger {
   background: var(--color-danger);
-  color: hsl(0 0% 100%);
+  color: var(--color-on-danger);
   border-color: var(--color-border-strong);
 }
 

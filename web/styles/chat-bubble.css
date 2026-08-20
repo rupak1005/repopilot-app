@@ -18,7 +18,7 @@
   background: var(--color-primary);
   border: var(--border-heavy);
   box-shadow: var(--shadow-hard-sm);
-  color: hsl(0 0% 8%);
+  color: var(--color-on-primary);
   font-size: var(--text-ui);
   line-height: 1.55;
 }
