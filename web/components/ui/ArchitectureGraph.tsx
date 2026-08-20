@@ -38,6 +38,7 @@ import {
 } from '../../lib/contextGraph';
 import { useDiagramColors } from '../../lib/diagramTheme';
 import { isDemoMode } from '../../lib/demoMode';
+import { githubModuleUrl, moduleSearchQuery } from '../../lib/modulePaths';
 import { repoApiPath } from '../../lib/serverApi';
 import { toMermaidFlowchart } from '../../lib/mermaidDiagram';
 import { MermaidDiagram, type MermaidDiagramHandle } from './MermaidDiagram';
@@ -71,10 +72,6 @@ type ArchitectureGraphProps = {
   onGraphRebuilt?: () => void;
 };
 
-function githubFileUrl(repoFullName: string, filePath: string): string {
-  return `https://github.com/${repoFullName}/blob/HEAD/${filePath}`;
-}
-
 type InspectorProps = {
   selectedNode: ForceGraphNode;
   inbound: number;
@@ -106,6 +103,33 @@ function DiagramInspector({
 }: InspectorProps) {
   const lay = layerOf(selectedNode.id);
   const layerLabel = lay === 'other' ? 'Module' : LAYER_META[lay].label;
+  const searchHref = repoId
+    ? `/dashboard/${repoId}/search?q=${encodeURIComponent(moduleSearchQuery(selectedNode.id))}`
+    : null;
+  const impactHref = repoId
+    ? `/dashboard/${repoId}/impact?file=${encodeURIComponent(selectedNode.id)}`
+    : null;
+
+  async function openOnGitHub() {
+    if (!repoFullName?.includes('/')) return;
+    let path = selectedNode.id;
+    let revisionSha: string | undefined;
+    if (repoId) {
+      try {
+        const response = await fetch(
+          repoApiPath(repoId, `resolve-path?module=${encodeURIComponent(selectedNode.id)}`)
+        );
+        if (response.ok) {
+          const data = (await response.json()) as { path?: string | null; revisionSha?: string };
+          if (data.path) path = data.path;
+          revisionSha = data.revisionSha;
+        }
+      } catch {
+        // Fall through to alias/search URL.
+      }
+    }
+    window.open(githubModuleUrl(repoFullName, path, revisionSha), '_blank', 'noopener,noreferrer');
+  }
 
   function renderModuleList(label: string, modules: string[], limit?: number) {
     const items = limit ? modules.slice(0, limit) : modules;
@@ -164,34 +188,23 @@ function DiagramInspector({
           </div>
         )}
         <div className="ui-diagram__inspector-actions">
-          {repoId ? (
-            <a
-              className="ui-diagram__action"
-              href={`/dashboard/${repoId}/impact?file=${encodeURIComponent(selectedNode.id)}`}
-            >
+          {impactHref ? (
+            <a className="ui-diagram__action" href={impactHref}>
               <Crosshair size={14} weight="bold" aria-hidden />
               Show impact
             </a>
           ) : null}
-          {repoId ? (
-            <a
-              className="ui-diagram__action"
-              href={`/dashboard/${repoId}/search?q=${encodeURIComponent(selectedNode.id)}`}
-            >
+          {searchHref ? (
+            <a className="ui-diagram__action" href={searchHref}>
               <MagnifyingGlass size={14} weight="bold" aria-hidden />
               Search code
             </a>
           ) : null}
-          {repoFullName ? (
-            <a
-              className="ui-diagram__action ui-diagram__action--primary"
-              href={githubFileUrl(repoFullName, selectedNode.id)}
-              target="_blank"
-              rel="noreferrer"
-            >
+          {repoFullName?.includes('/') ? (
+            <button type="button" className="ui-diagram__action ui-diagram__action--primary" onClick={() => void openOnGitHub()}>
               <ArrowSquareOut size={14} weight="bold" aria-hidden />
               Open on GitHub
-            </a>
+            </button>
           ) : null}
         </div>
       </motion.div>

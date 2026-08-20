@@ -466,9 +466,11 @@
   border: var(--border-medium);
   background: var(--bg-surface);
   color: var(--text-primary);
+  font: inherit;
   font-size: var(--text-ui);
   font-weight: 600;
   text-decoration: none;
+  cursor: pointer;
   transition: border-color 160ms var(--ease-out-expo);
 }
 

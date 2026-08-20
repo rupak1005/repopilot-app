@@ -245,6 +245,8 @@ export async function getModuleDependencyTraversal(args: {
   if (!revision) return null;
 
   const prisma = getPrisma();
+  // Module graph nodes can be unresolved import aliases (e.g. `@/…`) that are not File rows.
+  // Prefer File existence when present; otherwise allow any module that appears in ModuleDependency.
   const fileRows = (await prisma.$queryRawUnsafe(
     `
       SELECT "id"
@@ -258,8 +260,6 @@ export async function getModuleDependencyTraversal(args: {
     revision.id,
     args.filePath
   )) as Array<{ id: string }>;
-  const file = fileRows[0];
-  if (!file) return null;
 
   const rows = (await prisma.$queryRawUnsafe(
     `
@@ -269,6 +269,11 @@ export async function getModuleDependencyTraversal(args: {
     `,
     revision.id
   )) as ModuleDependencyEdge[];
+
+  const inGraph = rows.some(
+    (row) => row.fromModule === args.filePath || row.toModule === args.filePath
+  );
+  if (!fileRows[0] && !inGraph) return null;
 
   const adjacency: Map<string, Set<string>> = new Map();
   const reverseAdjacency: Map<string, Set<string>> = new Map();

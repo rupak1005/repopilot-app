@@ -13,6 +13,7 @@ const ALLOWED_PREFIXES = [
   'search',
   'ask',
   'dependencies',
+  'resolve-path',
   'revisions',
   'history',
   'co-change',

@@ -18,7 +18,8 @@ import {
 } from './services/dependencyGraphQueries';
 import {
   getRepositoryRevisionStatus,
-  listRepositoryRevisions
+  listRepositoryRevisions,
+  resolveRepositoryRevision
 } from './services/repositoryRevisions';
 import { askCodebaseQuestion } from './services/codebaseQa';
 import { searchRepository } from './services/searchIndex';
@@ -44,7 +45,7 @@ import {
   expandContext,
   parseContextGraphView
 } from './services/contextGraph';
-import { analyzeFileImpact } from './services/impactAnalysis';
+import { analyzeFileImpact, resolveIndexedFilePath } from './services/impactAnalysis';
 import { requireInternalApiAuth } from './middleware/internalAuth';
 import { checkRateLimit, clientIp } from './middleware/rateLimit';
 import {
@@ -653,6 +654,37 @@ async function bootstrap() {
     }
 
     return result;
+  });
+
+  server.get('/api/v1/repositories/:repoId/resolve-path', async (request, reply) => {
+    const params = request.params as { repoId: string };
+    const query = request.query as { module?: string; revisionSha?: string };
+    const moduleId = query.module?.trim();
+    if (!moduleId) {
+      reply.code(400);
+      return { error: 'module is required' };
+    }
+
+    const revision = await resolveRepositoryRevision({
+      repositoryId: params.repoId,
+      revisionSha: query.revisionSha
+    });
+    if (!revision) {
+      reply.code(404);
+      return { error: 'revision not found' };
+    }
+
+    const path = await resolveIndexedFilePath({
+      repositoryId: params.repoId,
+      revisionId: revision.id,
+      moduleId
+    });
+
+    return {
+      module: moduleId,
+      path: path ?? null,
+      revisionSha: revision.revisionSha
+    };
   });
 
   server.get('/api/v1/repositories/:repoId/graph', async (request, reply) => {

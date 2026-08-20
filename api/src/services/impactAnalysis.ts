@@ -131,21 +131,13 @@ export async function analyzeFileImpact(args: {
   });
   if (!revision) return null;
 
-  const prisma = getPrisma();
-  const fileRows = (await prisma.$queryRawUnsafe(
-    `
-      SELECT "id"
-      FROM "File"
-      WHERE "repositoryId" = $1
-        AND "revisionId" = $2
-        AND "path" = $3
-      LIMIT 1
-    `,
-    args.repositoryId,
-    revision.id,
-    args.filePath
-  )) as Array<{ id: string }>;
-  if (!fileRows[0]) return null;
+  // Prefer a real File.path when the graph node is an import alias (`@/…`).
+  const resolvedPath = await resolveIndexedFilePath({
+    repositoryId: args.repositoryId,
+    revisionId: revision.id,
+    moduleId: args.filePath
+  });
+  const targetPath = resolvedPath ?? args.filePath;
 
   const traversal = await getModuleDependencyTraversal({
     repositoryId: args.repositoryId,
@@ -153,10 +145,135 @@ export async function analyzeFileImpact(args: {
     revisionSha: args.revisionSha,
     depthLimit: args.depth
   });
-  if (!traversal) return null;
+  if (!traversal) {
+    // Retry with resolved disk path when the alias itself isn't a graph key.
+    if (resolvedPath && resolvedPath !== args.filePath) {
+      const retry = await getModuleDependencyTraversal({
+        repositoryId: args.repositoryId,
+        filePath: resolvedPath,
+        revisionSha: args.revisionSha,
+        depthLimit: args.depth
+      });
+      if (!retry) return null;
+      return finalizeImpact({
+        repositoryId: args.repositoryId,
+        revisionId: revision.id,
+        revisionSha: revision.revisionSha,
+        displayPath: args.filePath,
+        graphPath: resolvedPath,
+        traversal: retry
+      });
+    }
+    return null;
+  }
 
-  const directDependents = traversal.directModuleDependents.map((edge) => edge.fromModule);
-  const transitiveDependents = traversal.transitiveModuleDependents.map((edge) => edge.fromModule);
+  return finalizeImpact({
+    repositoryId: args.repositoryId,
+    revisionId: revision.id,
+    revisionSha: revision.revisionSha,
+    displayPath: args.filePath,
+    graphPath: args.filePath,
+    fileLookupPath: targetPath,
+    traversal
+  });
+}
+
+async function resolveIndexedFilePath(args: {
+  repositoryId: string;
+  revisionId: string;
+  moduleId: string;
+}): Promise<string | null> {
+  const prisma = getPrisma();
+  const exact = (await prisma.$queryRawUnsafe(
+    `
+      SELECT "path"
+      FROM "File"
+      WHERE "repositoryId" = $1
+        AND "revisionId" = $2
+        AND "path" = $3
+      LIMIT 1
+    `,
+    args.repositoryId,
+    args.revisionId,
+    args.moduleId
+  )) as Array<{ path: string }>;
+  if (exact[0]) return exact[0].path;
+
+  const stripped = args.moduleId.replace(/^@\//, '').replace(/^@/, '');
+  if (!stripped || stripped === args.moduleId) return null;
+
+  const candidates = [
+    stripped,
+    `${stripped}.ts`,
+    `${stripped}.tsx`,
+    `${stripped}.js`,
+    `${stripped}.jsx`,
+    `${stripped}/index.ts`,
+    `${stripped}/index.tsx`,
+    `src/${stripped}`,
+    `src/${stripped}.ts`,
+    `src/${stripped}.tsx`,
+    `src/${stripped}.js`,
+    `src/${stripped}.jsx`
+  ];
+
+  const hit = (await prisma.$queryRawUnsafe(
+    `
+      SELECT "path"
+      FROM "File"
+      WHERE "repositoryId" = $1
+        AND "revisionId" = $2
+        AND "path" = ANY($3::text[])
+      LIMIT 1
+    `,
+    args.repositoryId,
+    args.revisionId,
+    candidates
+  )) as Array<{ path: string }>;
+  if (hit[0]) return hit[0].path;
+
+  const fuzzy = (await prisma.$queryRawUnsafe(
+    `
+      SELECT "path"
+      FROM "File"
+      WHERE "repositoryId" = $1
+        AND "revisionId" = $2
+        AND (
+          "path" = $3
+          OR "path" LIKE $4
+          OR "path" LIKE $5
+          OR "path" LIKE $6
+        )
+      ORDER BY LENGTH("path") ASC
+      LIMIT 1
+    `,
+    args.repositoryId,
+    args.revisionId,
+    stripped,
+    `%/${stripped}`,
+    `%/${stripped}.%`,
+    `${stripped}.%`
+  )) as Array<{ path: string }>;
+  return fuzzy[0]?.path ?? null;
+}
+
+export { resolveIndexedFilePath };
+
+async function finalizeImpact(args: {
+  repositoryId: string;
+  revisionId: string;
+  revisionSha: string;
+  displayPath: string;
+  graphPath: string;
+  fileLookupPath?: string;
+  traversal: NonNullable<Awaited<ReturnType<typeof getModuleDependencyTraversal>>>;
+}): Promise<ImpactAnalysisResult> {
+  const prisma = getPrisma();
+  const lookupPath = args.fileLookupPath ?? args.graphPath;
+  const directDependents = args.traversal.directModuleDependents.map((edge) => edge.fromModule);
+  const transitiveDependents = args.traversal.transitiveModuleDependents.map(
+    (edge) => edge.fromModule
+  );
 
   const outboundRows = (await prisma.$queryRawUnsafe(
     `
@@ -165,20 +282,20 @@ export async function analyzeFileImpact(args: {
       WHERE "revisionId" = $1
         AND "fromModule" = $2
     `,
-    revision.id,
-    args.filePath
+    args.revisionId,
+    args.graphPath
   )) as Array<{ toModule: string }>;
   const outboundImports = outboundRows.map((row) => row.toModule);
 
   const relevantTests = await findTestsForModule({
-    revisionId: revision.id,
-    filePath: args.filePath,
+    revisionId: args.revisionId,
+    filePath: lookupPath,
     dependentModules: directDependents
   });
 
   const coChanges = await getCoChanges({
     repositoryId: args.repositoryId,
-    filePath: args.filePath,
+    filePath: lookupPath,
     topK: 5
   });
 
@@ -191,7 +308,7 @@ export async function analyzeFileImpact(args: {
       LIMIT 1
     `,
     args.repositoryId,
-    args.filePath
+    lookupPath
   )) as Array<{ score: number; changeCount: number; reasons: string[] }>;
   const hotspotRow = hotspotRows[0];
 
@@ -203,7 +320,7 @@ export async function analyzeFileImpact(args: {
   });
 
   const summary = [
-    `${args.filePath} has ${directDependents.length} direct and ${transitiveDependents.length} transitive dependent module(s).`,
+    `${args.displayPath} has ${directDependents.length} direct and ${transitiveDependents.length} transitive dependent module(s).`,
     relevantTests.length > 0
       ? `${relevantTests.length} test file(s) import this area.`
       : 'No test files directly import this module.',
@@ -215,8 +332,8 @@ export async function analyzeFileImpact(args: {
     .join(' ');
 
   return {
-    target: { filePath: args.filePath },
-    revisionSha: revision.revisionSha,
+    target: { filePath: args.displayPath },
+    revisionSha: args.revisionSha,
     risk,
     directDependents,
     transitiveDependents,

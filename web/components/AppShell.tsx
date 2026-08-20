@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import {
-  Bell,
   Code,
   Crosshair,
   Flame,
@@ -11,7 +10,6 @@ import {
   Lightning,
   List,
   MagnifyingGlass,
-  Question,
   SquaresFour,
   X
 } from '@phosphor-icons/react';
@@ -25,8 +23,11 @@ import { IconButton } from './ui/IconButton';
 import { NavItem } from './ui/NavItem';
 import { RepoPicker } from './ui/RepoPicker';
 import { ThemeToggle } from './ui/ThemeToggle';
+import { TopbarActivity } from './ui/TopbarActivity';
+import { TopbarHelp } from './ui/TopbarHelp';
+import type { NavKey } from '../lib/shellChrome';
 
-export type NavKey = 'overview' | 'search' | 'ask' | 'pulls' | 'hotspots' | 'architecture' | 'impact' | 'settings';
+export type { NavKey };
 
 type AppShellProps = {
   repoId: string;
@@ -168,12 +169,12 @@ export function AppShell({
               <span className="label-caps">{indexLabel}</span>
             </div>
             <ThemeToggle />
-            <IconButton className="topbar-hide-sm" label="Notifications">
-              <Bell size={18} weight="light" />
-            </IconButton>
-            <IconButton className="topbar-hide-sm" label="Help">
-              <Question size={18} weight="light" />
-            </IconButton>
+            <TopbarActivity
+              repoId={repoId}
+              repoFullName={repoFullName}
+              indexStatus={demoMode ? null : indexStatus}
+            />
+            <TopbarHelp activeNav={activeNav} />
             {!isPublicGuest ? (
               <div className="topbar-account topbar-hide-sm">
                 <img
