@@ -60,7 +60,7 @@ const DASHBOARD_TITLES: Record<NavKey, string> = {
   architecture: 'Dependency Graph',
   impact: 'Impact',
   settings: 'Settings',
-  mcp: 'Cursor / MCP'
+  mcp: 'MCP'
 };
 
 type DashboardLayoutProps = {

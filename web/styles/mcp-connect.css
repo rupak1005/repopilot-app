@@ -105,6 +105,19 @@
   font-size: var(--text-ui);
 }
 
+.mcp-connect__id-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.mcp-connect__copy--inline {
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-micro);
+  box-shadow: none;
+}
+
 .mcp-connect__config {
   padding: var(--space-4);
   border: var(--border-medium);
@@ -159,18 +172,18 @@
   color: var(--color-text-muted);
 }
 
-.mcp-connect__tools ul {
+.mcp-connect__tool-list {
   list-style: none;
   margin: var(--space-3) 0 0;
   padding: 0;
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-3);
 }
 
-.mcp-connect__tools li {
-  display: grid;
-  grid-template-columns: minmax(140px, 1fr) 2fr;
-  gap: var(--space-3);
+.mcp-connect__tool {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
   padding: var(--space-3);
   border: var(--border-medium);
   border-radius: var(--radius-md);
@@ -178,12 +191,35 @@
   font-size: var(--text-ui);
 }
 
-.mcp-connect__tools li span:last-child {
+.mcp-connect__tool-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.mcp-connect__tool-link {
+  font-size: var(--text-micro);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  color: var(--color-link);
+}
+
+.mcp-connect__tool-desc {
   color: var(--color-text-muted);
 }
 
-@media (max-width: 640px) {
-  .mcp-connect__tools li {
-    grid-template-columns: 1fr;
-  }
+.mcp-connect__tool-example {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  overflow-x: auto;
+  border: var(--border-soft-width);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+  font-size: var(--text-micro);
+  line-height: 1.45;
+  color: var(--color-text-muted);
 }

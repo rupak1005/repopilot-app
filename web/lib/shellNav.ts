@@ -61,7 +61,7 @@ export const NAV_GROUPS: NavGroupDef[] = [
   {
     id: 'integrate',
     label: 'Integrate',
-    items: [{ key: 'mcp', href: '/mcp', label: 'Cursor / MCP', icon: Plugs }]
+    items: [{ key: 'mcp', href: '/mcp', label: 'MCP', icon: Plugs }]
   },
   {
     id: 'system',
@@ -121,7 +121,7 @@ export function dashboardCommands(repoId: string): CommandDef[] {
     },
     {
       id: 'mcp',
-      label: 'Copy MCP / Cursor setup',
+      label: 'Copy MCP setup',
       path: `${base}/mcp`,
       keywords: ['cursor', 'claude', 'agent', 'context']
     },

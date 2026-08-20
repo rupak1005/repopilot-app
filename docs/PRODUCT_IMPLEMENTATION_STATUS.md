@@ -12,8 +12,8 @@
 | 5 | Impact analysis | **Done foundation** — file / symbol / PR + blast overlay |
 | 6 | Codebase topography | **Done foundation** — 2D map + metrics + lookback |
 | 7 | Ask / Search UX | **Done foundation** — citation Graph / Impact / GitHub |
-| 8 | PR / Change workflow | **Done foundation** — file links, finding filters |
-| 9–35 | Remaining | Not started / partial |
+| 9 | MCP / Integrate | **Done foundation** — tool examples + dashboard links |
+| 10–35 | Remaining | Not started / partial |
 
 ## Phase 5
 
@@ -48,6 +48,12 @@
 - [x] Test signals link to file impact when path-like
 - [x] Re-fetch live pull impact after manual review
 
+## Phase 9
+
+- [x] MCP tool examples filled with current repo id
+- [x] Per-tool “Open in dashboard” links
+- [x] Copy repo id + clearer agent-oriented copy
+
 ## Next action
 
-Phase 9 (MCP / Integrate polish) or History surface.
+Phase 10 (History / revision time machine) or Settings / indexing UX.

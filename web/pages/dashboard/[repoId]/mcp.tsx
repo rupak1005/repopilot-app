@@ -23,7 +23,7 @@ export default function DashboardMcpPage() {
     <DashboardLayout activeNav="mcp">
       <div className="canvas-inner canvas-inner--narrow">
         <div className="page-title-block">
-          <h1>Connect Cursor / MCP</h1>
+          <h1>MCP for agents</h1>
           <p>
             Give coding agents access to this indexed repository — search, impact, dependencies,
             history, and Ask tools backed by real Postgres data.

@@ -1,0 +1,14 @@
+---
+description: Always commit finished phase work; never mention Cursor in commits
+alwaysApply: true
+---
+
+# Commit workflow
+
+When finishing a phase chunk or cohesive feature:
+
+1. **Always commit** without waiting to be asked.
+2. Commit messages must **never** mention Cursor, Copilot, or AI tooling.
+3. Prefer short why-focused messages (1–2 sentences).
+4. Do not push unless the user asks.
+5. After committing a phase, continue to the next phase unless the user stops you.

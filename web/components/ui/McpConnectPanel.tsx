@@ -1,9 +1,11 @@
+import Link from 'next/link';
 import { useState } from 'react';
 import { Check, Copy } from '@phosphor-icons/react';
 import {
   MCP_SETUP_STEPS,
   MCP_TOOLS,
   buildMcpCursorConfig,
+  mcpToolExample,
   type McpConnectContext
 } from '../../lib/mcpConnect';
 
@@ -12,14 +14,16 @@ type McpConnectPanelProps = {
 };
 
 export function McpConnectPanel({ context }: McpConnectPanelProps) {
-  const [copied, setCopied] = useState(false);
-  const config = buildMcpCursorConfig(context ?? {});
+  const [copied, setCopied] = useState<'config' | 'repoId' | null>(null);
+  const ctx = context ?? {};
+  const config = buildMcpCursorConfig(ctx);
+  const base = ctx.repositoryId ? `/dashboard/${ctx.repositoryId}` : null;
 
-  async function copyConfig() {
+  async function copyText(text: string, kind: 'config' | 'repoId') {
     try {
-      await navigator.clipboard.writeText(config);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
+      await navigator.clipboard.writeText(text);
+      setCopied(kind);
+      window.setTimeout(() => setCopied(null), 2000);
     } catch {
       // ponytail: user can still select the pre block manually
     }
@@ -34,16 +38,30 @@ export function McpConnectPanel({ context }: McpConnectPanelProps) {
             <div>
               <h3>{step.title}</h3>
               <p>{step.body}</p>
-              {step.id === 'env' && context?.repositoryId ? (
+              {step.id === 'env' && ctx.repositoryId ? (
                 <dl className="mcp-connect__ids">
                   <div>
                     <dt>RepoPilot ID</dt>
-                    <dd className="mono">{context.repositoryId}</dd>
+                    <dd className="mcp-connect__id-row">
+                      <span className="mono">{ctx.repositoryId}</span>
+                      <button
+                        type="button"
+                        className="mcp-connect__copy mcp-connect__copy--inline"
+                        onClick={() => void copyText(ctx.repositoryId!, 'repoId')}
+                      >
+                        {copied === 'repoId' ? (
+                          <Check size={14} weight="bold" aria-hidden />
+                        ) : (
+                          <Copy size={14} weight="bold" aria-hidden />
+                        )}
+                        {copied === 'repoId' ? 'Copied' : 'Copy'}
+                      </button>
+                    </dd>
                   </div>
-                  {context.repoSlug ? (
+                  {ctx.repoSlug ? (
                     <div>
                       <dt>GitHub slug</dt>
-                      <dd className="mono">{context.repoSlug}</dd>
+                      <dd className="mono">{ctx.repoSlug}</dd>
                     </div>
                   ) : null}
                 </dl>
@@ -55,26 +73,38 @@ export function McpConnectPanel({ context }: McpConnectPanelProps) {
 
       <div className="mcp-connect__config">
         <div className="mcp-connect__config-head">
-          <h3>Cursor MCP config</h3>
-          <button type="button" className="mcp-connect__copy" onClick={() => void copyConfig()}>
-            {copied ? <Check size={16} weight="bold" aria-hidden /> : <Copy size={16} weight="bold" aria-hidden />}
-            {copied ? 'Copied' : 'Copy JSON'}
+          <h3>MCP server config</h3>
+          <button type="button" className="mcp-connect__copy" onClick={() => void copyText(config, 'config')}>
+            {copied === 'config' ? (
+              <Check size={16} weight="bold" aria-hidden />
+            ) : (
+              <Copy size={16} weight="bold" aria-hidden />
+            )}
+            {copied === 'config' ? 'Copied' : 'Copy JSON'}
           </button>
         </div>
         <pre className="mcp-connect__pre mono">{config}</pre>
         <p className="mcp-connect__hint">
-          Run from your RepoPilot monorepo root. Claude Desktop uses the same JSON under its MCP
-          settings path.
+          Run from your RepoPilot monorepo root. Works with Cursor, Claude Desktop, and other MCP
+          clients that accept the same JSON shape.
         </p>
       </div>
 
       <div className="mcp-connect__tools">
         <h3>Available tools</h3>
-        <ul>
+        <ul className="mcp-connect__tool-list">
           {MCP_TOOLS.map((tool) => (
-            <li key={tool.name}>
-              <span className="mono">{tool.name}</span>
-              <span>{tool.description}</span>
+            <li key={tool.name} className="mcp-connect__tool">
+              <div className="mcp-connect__tool-head">
+                <span className="mono">{tool.name}</span>
+                {base ? (
+                  <Link className="mcp-connect__tool-link" href={`${base}${tool.dashboardPath}`}>
+                    Open in dashboard
+                  </Link>
+                ) : null}
+              </div>
+              <span className="mcp-connect__tool-desc">{tool.description}</span>
+              <pre className="mcp-connect__tool-example mono">{mcpToolExample(tool.name, ctx)}</pre>
             </li>
           ))}
         </ul>
