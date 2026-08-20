@@ -5,7 +5,7 @@
  * Source of truth for evidence remains the Context Graph; this layer is display-only.
  */
 import { fileNodeId } from '@repopilot/common';
-import type { ArchitectureGraph } from './architecture';
+import type { ArchitectureGraph, ForceGraphData } from './architecture';
 import { directoryClusterKey, layerOf } from './architecture';
 import type { BlastOverlay } from './blastOverlay';
 import type { FileImpactAnalysis, HotspotRow } from './types';
@@ -399,4 +399,97 @@ export function visualizationToForceGraphIds(graph: VisualizationGraph): {
       uncertain: e.confidence < 0.9
     }))
   };
+}
+
+/**
+ * Adapter boundary: laid-out ForceGraphData (dagre/ELK x,y) → VisualizationGraph for 2D or 3D.
+ * Does not recompute analysis — only projects layout + metrics into the shared model.
+ */
+export function visualizationFromLaidOutForceGraph(
+  data: ForceGraphData,
+  opts?: {
+    revisionSha?: string | null;
+    /** Divide pixel layout coords for Three.js world units. */
+    scale?: number;
+    /** Lift hotspots on Z. */
+    zFromScore?: boolean;
+  }
+): VisualizationGraph {
+  const scale = opts?.scale ?? 40;
+  const zFromScore = opts?.zFromScore !== false;
+  const maxScore = data.nodes.reduce((m, n) => Math.max(m, n.score ?? 0), 0);
+
+  const nodes: VisualizationNode[] = data.nodes.map((n) => {
+    const isCluster = n.kind === 'cluster' || n.id.startsWith('cluster:');
+    const path = isCluster ? undefined : n.id;
+    const id = isCluster ? n.id : fileNodeId(n.id);
+    const z = zFromScore
+      ? mapMetricToHeight(n.score ?? 0, maxScore || 1, { min: 0, maxHeight: 2.5, kind: 'sqrt' })
+      : 0;
+    return {
+      id,
+      entityType: isCluster ? 'cluster' : 'file',
+      label: n.label,
+      path,
+      position: {
+        x: (n.x ?? 0) / scale,
+        y: -((n.y ?? 0) / scale),
+        z
+      },
+      metrics: {
+        hotspotScore: n.score,
+        risk: n.isHotspot ? Math.max(n.score, 40) : n.score
+      },
+      state: { ...DEFAULT_STATE },
+      evidence: n.isHotspot ? [{ kind: 'hotspot', file: path, note: `score ${n.score}` }] : [],
+      layer: layerOf(n.id)
+    };
+  });
+
+  const idByPath = new Map<string, string>();
+  for (const n of nodes) {
+    if (n.path) idByPath.set(n.path, n.id);
+    idByPath.set(n.id, n.id);
+    // Also map raw force-graph id for clusters
+    if (n.entityType === 'cluster') idByPath.set(n.id, n.id);
+  }
+
+  function resolveEndpoint(raw: string): string | null {
+    if (idByPath.has(raw)) return idByPath.get(raw)!;
+    if (raw.startsWith('cluster:')) return raw;
+    const urn = fileNodeId(raw);
+    return idByPath.get(urn) ?? idByPath.get(raw) ?? null;
+  }
+
+  const edges: VisualizationEdge[] = [];
+  data.links.forEach((link, i) => {
+    const srcRaw = String(link.source);
+    const tgtRaw = String(link.target);
+    const source = resolveEndpoint(srcRaw);
+    const target = resolveEndpoint(tgtRaw);
+    if (!source || !target || source === target) return;
+    edges.push({
+      id: `layout:${source}->${target}:${i}`,
+      source,
+      target,
+      type: 'imports',
+      confidence: link.uncertain ? 0.7 : 1,
+      highlighted: false,
+      evidence: link.uncertain ? [{ kind: 'uncertain' }] : []
+    });
+  });
+
+  return {
+    revisionSha: opts?.revisionSha ?? null,
+    nodes,
+    edges
+  };
+}
+
+export function isViz3dSpikeEnabled(): boolean {
+  // Dedicated route is the isolation boundary; env can disable the page body.
+  if (typeof process === 'undefined') return true;
+  const raw = process.env.NEXT_PUBLIC_VIZ_3D_SPIKE;
+  if (raw === 'false' || raw === '0') return false;
+  return true;
 }

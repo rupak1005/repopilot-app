@@ -18,6 +18,10 @@ describe('resolveDashboardChrome', () => {
       activeNav: 'architecture',
       canvasClass: 'canvas--diagram'
     });
+    expect(resolveDashboardChrome('/dashboard/[repoId]/viz-spike')).toEqual({
+      activeNav: 'architecture',
+      canvasClass: 'canvas--diagram'
+    });
     expect(resolveDashboardChrome('/dashboard/[repoId]/pulls/[number]')).toEqual({
       activeNav: 'pulls'
     });

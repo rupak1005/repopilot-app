@@ -1,7 +1,7 @@
 # 3D Architecture Audit
 
 **Updated:** 2026-08-21  
-**Status:** Phase 1 complete · Phase 2 started (`web/lib/visualizationModel.ts`)  
+**Status:** Phase 1 complete · Phase 2 model shipped · **R3F spike** at `/dashboard/[repoId]/viz-spike` (see `docs/VIZ_SPIKE_3D.md`)  
 **Scope:** Dependency Graph · Impact · Topography · typography · shared visualization model
 
 This audit grounds the “3D Typography + Data Visualization” master prompt against the **shipped** RepoPilot monorepo. It is the required gate before Phase 2 (rendering foundation).

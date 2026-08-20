@@ -26,7 +26,7 @@ const securityHeaders = [
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  transpilePackages: ['mermaid'],
+  transpilePackages: ['mermaid', 'three', '@react-three/fiber', '@react-three/drei'],
   async rewrites() {
     return [
       { source: '/robots.txt', destination: '/api/robots' },

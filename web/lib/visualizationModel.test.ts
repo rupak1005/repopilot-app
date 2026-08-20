@@ -8,8 +8,11 @@ import {
   visualizationFromArchitecture,
   visualizationFromFileImpact,
   visualizationFromHotspots,
+  visualizationFromLaidOutForceGraph,
   visualizationToForceGraphIds
 } from './visualizationModel';
+import { layoutWithDagre } from './dagreLayout';
+import { buildArchitectureView } from './architecture';
 
 describe('metric scales', () => {
   it('maps risk labels and normalizes outliers with sqrt', () => {
@@ -99,5 +102,34 @@ describe('visualizationFromFileImpact', () => {
     expect(viz.nodes.find((n) => n.entityType === 'test')?.path).toBe('api/src/pay.test.ts');
     expect(viz.edges.some((e) => e.type === 'impact' && e.highlighted)).toBe(true);
     expect(viz.edges.some((e) => e.type === 'imports')).toBe(true);
+  });
+});
+
+describe('visualizationFromLaidOutForceGraph', () => {
+  it('keeps dagre positions scaled into the shared viz model', () => {
+    const graph: ArchitectureGraph = {
+      nodes: [
+        { filePath: 'api/src/a.ts', isHotspot: true, score: 80 },
+        { filePath: 'api/src/b.ts', isHotspot: false, score: 10 },
+        { filePath: 'web/c.tsx', isHotspot: false, score: 5 }
+      ],
+      edges: [
+        { fromModule: 'api/src/a.ts', toModule: 'api/src/b.ts', confidence: 1 },
+        { fromModule: 'api/src/b.ts', toModule: 'web/c.tsx', confidence: 0.6 }
+      ]
+    };
+    const view = buildArchitectureView(graph, { clusterAbove: 60 });
+    const laid = layoutWithDagre(view);
+    const viz = visualizationFromLaidOutForceGraph(laid, { revisionSha: 'spike', scale: 40 });
+
+    expect(viz.nodes).toHaveLength(3);
+    expect(viz.edges).toHaveLength(2);
+    expect(viz.edges.some((e) => e.confidence < 0.9)).toBe(true);
+
+    const a = viz.nodes.find((n) => n.path === 'api/src/a.ts');
+    const laidA = laid.nodes.find((n) => n.id === 'api/src/a.ts');
+    expect(a?.position?.x).toBeCloseTo((laidA?.x ?? 0) / 40, 5);
+    expect(a?.position?.y).toBeCloseTo(-((laidA?.y ?? 0) / 40), 5);
+    expect((a?.position?.z ?? 0) > 0).toBe(true);
   });
 });

@@ -21,7 +21,10 @@ export function resolveDashboardChrome(pathname: string): DashboardChrome | null
   }
   if (pathname.startsWith('/dashboard/[repoId]/pulls')) return { activeNav: 'pulls' };
   if (pathname === '/dashboard/[repoId]/hotspots') return { activeNav: 'hotspots' };
-  if (pathname === '/dashboard/[repoId]/architecture') {
+  if (
+    pathname === '/dashboard/[repoId]/architecture' ||
+    pathname === '/dashboard/[repoId]/viz-spike'
+  ) {
     return { activeNav: 'architecture', canvasClass: 'canvas--diagram' };
   }
   if (pathname === '/dashboard/[repoId]/impact') return { activeNav: 'impact' };

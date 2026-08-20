@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
+    "@react-three/drei": "^10.7.8",
+    "@react-three/fiber": "^9.7.0",
     "@repopilot/common": "0.0.0",
     "dagre": "^0.8.5",
     "elkjs": "^0.10.0",
@@ -20,11 +22,13 @@
     "next": "16.3.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-force-graph-2d": "^1.29.1"
+    "react-force-graph-2d": "^1.29.1",
+    "three": "^0.185.1"
   },
   "devDependencies": {
     "@types/dagre": "^0.7.54",
     "@types/react": "*",
-    "@types/react-dom": "*"
+    "@types/react-dom": "*",
+    "@types/three": "^0.185.4"
   }
 }

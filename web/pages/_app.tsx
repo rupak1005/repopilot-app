@@ -34,6 +34,7 @@ import '../styles/landing.css';
 import '../styles/browse.css';
 import '../styles/demo-banner.css';
 import '../styles/architecture.css';
+import '../styles/viz-spike.css';
 import '../styles/pr-detail.css';
 import '../styles/mcp-connect.css';
 import '../styles/history.css';
