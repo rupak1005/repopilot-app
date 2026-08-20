@@ -81,10 +81,19 @@ export function mcpToolExample(
     case 'ask_repository':
       return `ask_repository({ query: "How does login work?", repositoryId: "${repo}" })`;
     case 'get_context_pack':
-      return `get_context_pack({ topic: "authentication", repositoryId: "${repo}" })`;
+      return `get_context_pack({ filePath: "src/auth.ts", question: "what breaks if this changes?", repositoryId: "${repo}" })`;
     default:
       return toolName;
   }
+}
+
+/** Clipboard-ready get_context_pack call for Impact / Planning handoff. */
+export function mcpContextPackSnippet(
+  ctx: McpConnectContext & { filePath: string; question?: string }
+): string {
+  const repo = ctx.repositoryId ?? ctx.repoSlug ?? 'REPO_ID';
+  const question = ctx.question ?? 'what breaks if this file changes?';
+  return `get_context_pack({ filePath: ${JSON.stringify(ctx.filePath)}, question: ${JSON.stringify(question)}, repositoryId: ${JSON.stringify(repo)} })`;
 }
 
 export function buildMcpCursorConfig(ctx: McpConnectContext): string {

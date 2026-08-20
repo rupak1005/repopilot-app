@@ -10,6 +10,7 @@ import { ImpactBlastMap } from '../../../components/ui/ImpactBlastMap';
 import { IndexHint } from '../../../components/ui/IndexHint';
 import { KpiTile } from '../../../components/ui/KpiTile';
 import { DEMO_REVISIONS, demoDelay, demoFileImpact, demoPullImpact } from '../../../lib/demoData';
+import { mcpContextPackSnippet } from '../../../lib/mcpConnect';
 import {
   DashboardLayout,
   shouldShowIndexHint,
@@ -583,6 +584,26 @@ function FileImpactView({
   repoId: string | null;
   revisionSha: string | null;
 }) {
+  const [packHint, setPackHint] = useState<string | null>(null);
+
+  async function copyContextPack() {
+    if (!repoId || typeof navigator === 'undefined' || !navigator.clipboard) return;
+    try {
+      await navigator.clipboard.writeText(
+        mcpContextPackSnippet({
+          repositoryId: repoId,
+          filePath: result.target.filePath,
+          question: `what breaks if ${result.target.filePath} changes?`
+        })
+      );
+      setPackHint('Copied');
+      window.setTimeout(() => setPackHint(null), 1600);
+    } catch {
+      setPackHint('Copy failed');
+      window.setTimeout(() => setPackHint(null), 1600);
+    }
+  }
+
   return (
     <>
       <p className="ui-impact-page__summary">{result.summary}</p>
@@ -666,6 +687,9 @@ function FileImpactView({
               >
                 Plan this change
               </Link>
+              <button type="button" className="ui-diagram__action" onClick={() => void copyContextPack()}>
+                {packHint ?? 'Copy context pack'}
+              </button>
               <Link className="ui-diagram__action" href={`/dashboard/${repoId}/mcp`}>
                 MCP / agents
               </Link>

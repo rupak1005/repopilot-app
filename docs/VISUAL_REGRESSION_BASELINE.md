@@ -24,6 +24,7 @@
 ## Automated coverage today
 
 - Playwright: `e2e/demo-dashboard.spec.ts` (demo mode nav smoke)
+- Playwright: `e2e/visual-baseline.spec.ts` — landing / architecture / impact screenshots (Phase 32)
 - No Percy/Chromatic/storybook visual suite yet
 
 ## Baseline visual DNA to preserve
@@ -44,8 +45,14 @@
 
 ## Process
 
-Until a visual tool is added: store PNGs under `docs/visual-baseline/` (git-LFS optional) and attach to PRs for shell/graph/impact changes.
+Update snapshots with:
+
+```bash
+yarn playwright test e2e/visual-baseline.spec.ts --update-snapshots=changed
+```
+
+Until a hosted visual tool is added, committed Playwright baselines under `e2e/visual-baseline.spec.ts-snapshots/` are the source of truth for shell/graph/impact chrome.
 
 ## Risk
 
-Without tooling, regressions slip — prioritize shell + architecture screenshots in CI later (Phase 26).
+Without tooling, regressions slip — **mitigated** by Phase 32 soft screenshot baselines in CI (`yarn test:e2e`).

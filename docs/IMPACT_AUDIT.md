@@ -46,7 +46,7 @@
 
 1. Impact UI is tabular — does not reuse ArchitectureGraph
 2. Default file seed is demo-flavored
-3. No “Run impacted tests” / context-pack actions
+3. ~~No “Run impacted tests” / context-pack actions~~ → **context-pack copy on Impact handoff (Phase 33)**
 4. Risk explanation is checklist prose, not structured “Why” chips in UI
 
 ## Migration plan

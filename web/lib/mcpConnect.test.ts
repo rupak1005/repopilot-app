@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildMcpCursorConfig, mcpToolExample } from './mcpConnect';
+import { buildMcpCursorConfig, mcpContextPackSnippet, mcpToolExample } from './mcpConnect';
 
 describe('buildMcpCursorConfig', () => {
   it('embeds repository id and slug in MCP JSON', () => {
@@ -20,5 +20,14 @@ describe('mcpToolExample', () => {
   it('fills the current repository id into example calls', () => {
     expect(mcpToolExample('find_impact', { repositoryId: 'r1' })).toContain('r1');
     expect(mcpToolExample('ask_repository', { repositoryId: 'r1' })).toContain('How does login');
+    expect(mcpToolExample('get_context_pack', { repositoryId: 'r1' })).toContain('filePath');
+  });
+});
+
+describe('mcpContextPackSnippet', () => {
+  it('builds a clipboard-ready get_context_pack call', () => {
+    expect(
+      mcpContextPackSnippet({ repositoryId: 'r1', filePath: 'api/src/x.ts' })
+    ).toContain('api/src/x.ts');
   });
 });

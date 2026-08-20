@@ -64,7 +64,7 @@ Missing surfaces: Findings shipped (Phase 20). Wiki foundation shipped (Phase 25
 2. Cmd+K command palette over existing routes
 3. Revision bar: repo + SHA + index state (data already on index status)
 4. Citation actions: open graph / impact / GitHub — **done** (Ask, Search, PR evidence)
-5. Mobile: inspector → bottom sheet for graph/impact
+5. Mobile: inspector → bottom sheet for graph — **done** (Phase 31)
 
 ## Risk
 

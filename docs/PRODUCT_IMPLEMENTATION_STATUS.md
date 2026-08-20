@@ -35,7 +35,10 @@
 | 28 | Findings board polish | **Done foundation** — category + search filters |
 | 29 | Impact calibration | **Done foundation** — golden risk/confidence cases |
 | 30 | Impact handoff | **Done foundation** — Planning / MCP / Graph exits |
-| 31–35 | Remaining | Not started / partial |
+| 31 | Mobile graph sheet | **Done foundation** — inspector bottom sheet |
+| 32 | Visual baseline e2e | **Done foundation** — Playwright screenshots |
+| 33 | Context pack handoff | **Done foundation** — copy `get_context_pack` |
+| 34–35 | Remaining | Not started / partial (deferred 3D) |
 
 ## Phase 5
 
@@ -215,6 +218,21 @@
 
 - [x] Impact file view handoff: Plan this change / MCP / Graph blast
 
+## Phase 31
+
+- [x] Architecture inspector becomes a fixed bottom sheet under 960px
+- [x] Grab handle + safe-area padding for touch
+
+## Phase 32
+
+- [x] Playwright `visual-baseline.spec.ts` for landing / architecture / impact
+- [x] Soft `maxDiffPixelRatio` for CI flake tolerance
+
+## Phase 33
+
+- [x] `mcpContextPackSnippet` + Copy context pack on Impact handoff
+- [x] MCP example uses `filePath` (matches tool schema)
+
 ## Next action
 
-Phase 31+ (deferred 3D topography, visual regression CI, remaining polish).
+Phase 34–35 (deferred 3D topography; optional ownership / CODEOWNERS).
