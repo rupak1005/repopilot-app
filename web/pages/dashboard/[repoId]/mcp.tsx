@@ -20,7 +20,7 @@ export default function DashboardMcpPage() {
   }, []);
 
   return (
-    <DashboardLayout activeNav="overview">
+    <DashboardLayout activeNav="mcp">
       <div className="canvas-inner canvas-inner--narrow">
         <div className="page-title-block">
           <h1>Connect Cursor / MCP</h1>

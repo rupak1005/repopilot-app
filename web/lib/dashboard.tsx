@@ -56,10 +56,11 @@ const DASHBOARD_TITLES: Record<NavKey, string> = {
   search: 'Search',
   ask: 'Ask',
   pulls: 'Pull requests',
-  hotspots: 'Hotspots',
-  architecture: 'Architecture',
+  hotspots: 'Topography',
+  architecture: 'Dependency Graph',
   impact: 'Impact',
-  settings: 'Settings'
+  settings: 'Settings',
+  mcp: 'Cursor / MCP'
 };
 
 type DashboardLayoutProps = {

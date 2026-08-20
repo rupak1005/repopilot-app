@@ -12,6 +12,7 @@ vi.mock('next/link', () => ({
 
 const PHOSPHOR_ICONS = [
   'Bell',
+  'BookOpen',
   'Question',
   'GitBranch',
   'CaretDown',
@@ -24,7 +25,11 @@ const PHOSPHOR_ICONS = [
   'SquaresFour',
   'GitPullRequest',
   'Flame',
-  'Gear'
+  'Gear',
+  'Graph',
+  'Crosshair',
+  'Plugs',
+  'Terminal'
 ] as const;
 
 vi.mock('@phosphor-icons/react', () => {

@@ -1,7 +1,16 @@
 import type { RepositoryIndexStatus } from './indexStatus';
 import { indexStatusLabel } from './indexStatus';
 
-export type NavKey = 'overview' | 'search' | 'ask' | 'pulls' | 'hotspots' | 'architecture' | 'impact' | 'settings';
+export type NavKey =
+  | 'overview'
+  | 'search'
+  | 'ask'
+  | 'pulls'
+  | 'hotspots'
+  | 'architecture'
+  | 'impact'
+  | 'settings'
+  | 'mcp';
 
 export type HelpTip = {
   title: string;
@@ -76,6 +85,14 @@ const HELP_BY_NAV: Record<NavKey, HelpTip> = {
     docLabel: 'MCP setup',
     secondaryHref: '/docs/development',
     secondaryLabel: 'Env & deploy'
+  },
+  mcp: {
+    title: 'Agents on your graph',
+    body: 'Point Cursor or Claude Desktop at RepoPilot MCP so Ask, impact, and search run against this repo’s index.',
+    docHref: '/docs/mcp',
+    docLabel: 'MCP setup',
+    secondaryHref: '/docs/api-reference',
+    secondaryLabel: 'API reference'
   }
 };
 

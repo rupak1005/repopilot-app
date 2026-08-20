@@ -1,31 +1,25 @@
 import Link from 'next/link';
 import {
   Code,
-  Crosshair,
-  Flame,
-  Gear,
-  GitPullRequest,
   GithubLogo,
-  Graph,
-  Lightning,
   List,
   MagnifyingGlass,
-  SquaresFour,
   X
 } from '@phosphor-icons/react';
-import type { Icon } from '@phosphor-icons/react';
 import { useRouter } from 'next/router';
 import { useEffect, useState, type ReactNode } from 'react';
 import { indexStatusLabel, isRepoIndexInProgress, useAnimatedIndexProgress, useIndexStatus } from '../lib/indexStatus';
 import { useIndexProgressUi } from '../lib/indexProgressUi';
 import { GITHUB_SIGN_IN_URL, signOut } from '../lib/auth';
+import { NAV_GROUPS } from '../lib/shellNav';
+import type { NavKey } from '../lib/shellChrome';
+import { CommandPalette } from './ui/CommandPalette';
 import { IconButton } from './ui/IconButton';
 import { NavItem } from './ui/NavItem';
 import { RepoPicker } from './ui/RepoPicker';
 import { ThemeToggle } from './ui/ThemeToggle';
 import { TopbarActivity } from './ui/TopbarActivity';
 import { TopbarHelp } from './ui/TopbarHelp';
-import type { NavKey } from '../lib/shellChrome';
 
 export type { NavKey };
 
@@ -41,16 +35,23 @@ type AppShellProps = {
   children: ReactNode;
 };
 
-const NAV: Array<{ key: NavKey; href: string; label: string; icon: Icon }> = [
-  { key: 'overview', href: '', label: 'Overview', icon: SquaresFour },
-  { key: 'search', href: '/search', label: 'Search', icon: MagnifyingGlass },
-  { key: 'ask', href: '/ask', label: 'Ask RepoPilot', icon: Lightning },
-  { key: 'pulls', href: '/pulls', label: 'Pull Requests', icon: GitPullRequest },
-  { key: 'hotspots', href: '/hotspots', label: 'Hotspots', icon: Flame },
-  { key: 'architecture', href: '/architecture', label: 'Architecture', icon: Graph },
-  { key: 'impact', href: '/impact', label: 'Impact', icon: Crosshair },
-  { key: 'settings', href: '/settings', label: 'Settings', icon: Gear }
-];
+function renderNav(base: string, activeNav: NavKey, onNavigate?: () => void) {
+  return NAV_GROUPS.map((group) => (
+    <div key={group.id} className="sidebar-nav-group">
+      {group.label ? <p className="sidebar-nav-group__label label-caps">{group.label}</p> : null}
+      {group.items.map((item) => (
+        <NavItem
+          key={item.key}
+          href={item.absolute ? item.href : `${base}${item.href}`}
+          label={item.label}
+          icon={item.icon}
+          active={item.key === activeNav}
+          onClick={onNavigate}
+        />
+      ))}
+    </div>
+  ));
+}
 
 export function AppShell({
   repoId,
@@ -85,6 +86,7 @@ export function AppShell({
     .filter(Boolean)
     .join(' ');
   const pulseIdle = !demoMode && indexStatus?.state === 'ready' && !indexInProgress;
+  const revisionShort = indexStatus?.revisionSha?.slice(0, 7) ?? null;
 
   useEffect(() => {
     if (demoMode || !indexStatus || indexStatus.state !== 'indexing') return;
@@ -119,6 +121,10 @@ export function AppShell({
     await signOut('/');
   }
 
+  function openCommandPalette() {
+    window.dispatchEvent(new Event('rp:open-command-palette'));
+  }
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -128,20 +134,12 @@ export function AppShell({
           </div>
           <div>
             <div className="brand-title">RepoPilot</div>
-            <div className="brand-version">v1.2.4</div>
+            <div className="brand-version">Technical Intelligence</div>
           </div>
         </Link>
 
-        <nav className="sidebar-nav">
-          {NAV.map((item) => (
-            <NavItem
-              key={item.key}
-              href={`${base}${item.href}`}
-              label={item.label}
-              icon={item.icon}
-              active={item.key === activeNav}
-            />
-          ))}
+        <nav className="sidebar-nav" aria-label="Primary">
+          {renderNav(base, activeNav)}
         </nav>
       </aside>
 
@@ -164,6 +162,11 @@ export function AppShell({
                 <span className="topbar-signin__label">Connect GitHub</span>
               </Link>
             ) : null}
+            <button type="button" className="topbar-command" onClick={openCommandPalette}>
+              <MagnifyingGlass size={14} weight="bold" aria-hidden />
+              <span className="topbar-command__label">Commands</span>
+              <kbd className="topbar-command__kbd">⌘K</kbd>
+            </button>
             <div className={indexPillClass} title={indexStatus?.job?.lastError ?? undefined}>
               <span className={`pulse-dot${pulseIdle ? ' pulse-dot--idle' : ''}`} />
               <span className="label-caps">{indexLabel}</span>
@@ -195,6 +198,20 @@ export function AppShell({
           </div>
         </header>
 
+        <div className="repo-context-bar" aria-label="Repository context">
+          <span className="repo-context-bar__repo mono">{repoFullName || 'Repository'}</span>
+          <span className="repo-context-bar__sep" aria-hidden>
+            ·
+          </span>
+          <span className="repo-context-bar__rev mono" title={indexStatus?.revisionSha ?? undefined}>
+            {demoMode ? 'demo' : revisionShort ? `rev ${revisionShort}` : 'rev —'}
+          </span>
+          <span className="repo-context-bar__sep" aria-hidden>
+            ·
+          </span>
+          <span className="repo-context-bar__status">{indexLabel}</span>
+        </div>
+
         <div className={`canvas${canvasClass ? ` ${canvasClass}` : ''}`}>{children}</div>
       </div>
 
@@ -219,24 +236,15 @@ export function AppShell({
             </div>
             <div>
               <div className="brand-title">RepoPilot</div>
-              <div className="brand-version">v1.2.4</div>
+              <div className="brand-version">Technical Intelligence</div>
             </div>
           </Link>
           <IconButton label="Close navigation menu" onClick={() => setMobileNavOpen(false)}>
             <X size={18} weight="light" />
           </IconButton>
         </div>
-        <nav className="sidebar-nav">
-          {NAV.map((item) => (
-            <NavItem
-              key={item.key}
-              href={`${base}${item.href}`}
-              label={item.label}
-              icon={item.icon}
-              active={item.key === activeNav}
-              onClick={() => setMobileNavOpen(false)}
-            />
-          ))}
+        <nav className="sidebar-nav" aria-label="Primary">
+          {renderNav(base, activeNav, () => setMobileNavOpen(false))}
         </nav>
         <div className="mobile-nav-drawer__footer">
           <div className={indexPillClass} title={indexStatus?.job?.lastError ?? undefined}>
@@ -267,6 +275,8 @@ export function AppShell({
           )}
         </div>
       </aside>
+
+      <CommandPalette repoId={repoId} />
     </div>
   );
 }
