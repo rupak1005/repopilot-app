@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { outcomeIcon, parseRepoSlug } from './types';
+import { parseRepoSlug } from './types';
 
 describe('parseRepoSlug', () => {
   it('splits owner and name', () => {
@@ -8,14 +8,5 @@ describe('parseRepoSlug', () => {
 
   it('handles bare repo name', () => {
     expect(parseRepoSlug('widget')).toEqual({ owner: 'widget', name: 'widget' });
-  });
-});
-
-describe('outcomeIcon', () => {
-  it('maps review outcomes to symbols', () => {
-    expect(outcomeIcon('PASS')).toBe('✓');
-    expect(outcomeIcon('WARN')).toBe('⚠');
-    expect(outcomeIcon('FAIL')).toBe('✕');
-    expect(outcomeIcon(null)).toBe('…');
   });
 });

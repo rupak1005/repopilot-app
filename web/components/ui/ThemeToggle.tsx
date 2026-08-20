@@ -5,11 +5,9 @@ import { IconButton } from './IconButton';
 
 type ThemeToggleProps = {
   className?: string;
-  /** Text button for public header vs icon-only in dashboard */
-  variant?: 'icon' | 'pill';
 };
 
-export function ThemeToggle({ className, variant = 'icon' }: ThemeToggleProps) {
+export function ThemeToggle({ className }: ThemeToggleProps) {
   const [theme, setTheme] = useState<ThemeMode>('light');
 
   useEffect(() => {
@@ -21,20 +19,6 @@ export function ThemeToggle({ className, variant = 'icon' }: ThemeToggleProps) {
   }
 
   const label = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
-
-  if (variant === 'pill') {
-    return (
-      <button
-        type="button"
-        className={`public-theme-toggle${className ? ` ${className}` : ''}`}
-        onClick={handleToggle}
-        aria-label={label}
-      >
-        {theme === 'dark' ? <Sun size={16} weight="bold" aria-hidden /> : <Moon size={16} weight="bold" aria-hidden />}
-        <span>{theme === 'dark' ? 'Light' : 'Dark'}</span>
-      </button>
-    );
-  }
 
   return (
     <IconButton className={className} label={label} onClick={handleToggle}>

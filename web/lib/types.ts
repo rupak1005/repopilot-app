@@ -120,19 +120,6 @@ export type AskResponse = {
   citations: Array<{ file: string; lines: [number, number] }>;
 };
 
-export function outcomeIcon(outcome: string | null): string {
-  switch (outcome) {
-    case 'PASS':
-      return '✓';
-    case 'WARN':
-      return '⚠';
-    case 'FAIL':
-      return '✕';
-    default:
-      return '…';
-  }
-}
-
 export function parseRepoSlug(fullName: string): { owner: string; name: string } {
   const [owner, name] = fullName.split('/');
   return { owner: owner ?? '', name: name ?? fullName };

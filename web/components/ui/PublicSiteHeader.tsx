@@ -7,7 +7,7 @@ import type { PublicUser } from '../../lib/session';
 import { ThemeToggle } from './ThemeToggle';
 
 type PublicSiteHeaderProps = {
-  active?: 'home' | 'browse' | 'login' | 'repos';
+  active?: 'home' | 'browse' | 'docs' | 'login' | 'repos';
 };
 
 export function PublicSiteHeader({ active }: PublicSiteHeaderProps) {
@@ -42,20 +42,26 @@ export function PublicSiteHeader({ active }: PublicSiteHeaderProps) {
 
       <nav className="public-header__nav" aria-label="Site">
         <Link
+          href="/docs"
+          className={`public-header__link${active === 'docs' ? ' public-header__link--active' : ''}`}
+        >
+          Docs
+        </Link>
+        <Link
           href="/browse"
           className={`public-header__link${active === 'browse' ? ' public-header__link--active' : ''}`}
         >
           Browse
         </Link>
         {user?.selectedRepoId ? (
-          <Link
-            href={`/dashboard/${user.selectedRepoId}`}
-            className="public-header__link public-header__link--cta"
-          >
+          <Link href={`/dashboard/${user.selectedRepoId}`} className="public-header__link">
             Dashboard
           </Link>
         ) : hasGitHub ? (
-          <Link href="/repos" className="public-header__link public-header__link--cta">
+          <Link
+            href="/repos"
+            className={`public-header__link${active === 'repos' ? ' public-header__link--active' : ''}`}
+          >
             Repositories
           </Link>
         ) : null}
@@ -67,11 +73,7 @@ export function PublicSiteHeader({ active }: PublicSiteHeaderProps) {
               ) : null}
               <span>{user?.login}</span>
             </span>
-            <button
-              type="button"
-              className="public-header__link public-header__link--cta"
-              onClick={() => void signOut('/')}
-            >
+            <button type="button" className="public-header__signout" onClick={() => void signOut('/')}>
               <SignOut size={16} weight="bold" aria-hidden />
               Log out
             </button>
@@ -79,13 +81,13 @@ export function PublicSiteHeader({ active }: PublicSiteHeaderProps) {
         ) : (
           <Link
             href={GITHUB_SIGN_IN_URL}
-            className={`public-header__link public-header__link--cta${active === 'login' ? ' public-header__link--active' : ''}`}
+            className={`public-header__cta${active === 'login' ? ' public-header__cta--active' : ''}`}
           >
             <GithubLogo size={16} weight="fill" aria-hidden />
             {signedIn ? 'Connect GitHub' : 'Sign in'}
           </Link>
         )}
-        <ThemeToggle variant="pill" />
+        <ThemeToggle />
       </nav>
     </header>
   );

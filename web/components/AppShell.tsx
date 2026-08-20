@@ -121,7 +121,7 @@ export function AppShell({
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div className="sidebar-brand">
+        <Link href="/" className="sidebar-brand">
           <div className="brand-mark">
             <Code size={18} weight="light" aria-hidden />
           </div>
@@ -129,7 +129,7 @@ export function AppShell({
             <div className="brand-title">RepoPilot</div>
             <div className="brand-version">v1.2.4</div>
           </div>
-        </div>
+        </Link>
 
         <nav className="sidebar-nav">
           {NAV.map((item) => (
@@ -212,7 +212,7 @@ export function AppShell({
         aria-hidden={!mobileNavOpen}
       >
         <div className="mobile-nav-drawer__header">
-          <div className="sidebar-brand mobile-nav-drawer__brand">
+          <Link href="/" className="sidebar-brand mobile-nav-drawer__brand">
             <div className="brand-mark">
               <Code size={18} weight="light" aria-hidden />
             </div>
@@ -220,7 +220,7 @@ export function AppShell({
               <div className="brand-title">RepoPilot</div>
               <div className="brand-version">v1.2.4</div>
             </div>
-          </div>
+          </Link>
           <IconButton label="Close navigation menu" onClick={() => setMobileNavOpen(false)}>
             <X size={18} weight="light" />
           </IconButton>

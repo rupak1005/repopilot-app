@@ -11,14 +11,19 @@
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
     "test": "turbo run test",
+    "test:coverage": "vitest run --coverage --config vitest.config.ts",
+    "test:e2e": "playwright test",
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
-    "setup:test": "bash scripts/setup-and-test.sh"
+    "setup:test": "bash scripts/setup-and-test.sh",
+    "ci": "yarn lint && yarn type-check && yarn build && yarn test:coverage && yarn test:e2e"
   },
   "devDependencies": {
+    "@playwright/test": "^1.55.0",
     "@types/node": "*",
     "@typescript-eslint/eslint-plugin": "*",
     "@typescript-eslint/parser": "*",
+    "@vitest/coverage-v8": "*",
     "esbuild": "^0.28.2",
     "eslint": "*",
     "eslint-config-prettier": "*",

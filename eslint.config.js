@@ -9,6 +9,9 @@ module.exports = [
       'dist',
       '.next',
       'coverage',
+      'e2e',
+      'playwright-report',
+      'test-results',
       'api/prisma/migrations',
       '**/.turbo/**'
     ],

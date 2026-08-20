@@ -1,4 +1,3 @@
-import type { NextApiRequest } from 'next';
 import type { SessionData } from './session';
 
 export const API_ORIGIN = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
@@ -37,8 +36,4 @@ export async function proxyApiRequest(
 export function repoApiPath(repoId: string, subpath: string): string {
   const clean = subpath.replace(/^\//, '');
   return `/api/repositories/${repoId}/${clean}`;
-}
-
-export function readJsonBody<T>(req: NextApiRequest): T {
-  return req.body as T;
 }

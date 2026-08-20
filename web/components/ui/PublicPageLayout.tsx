@@ -3,7 +3,7 @@ import { LandingDecor } from './LandingDecor';
 import { PublicSiteHeader } from './PublicSiteHeader';
 
 type PublicPageLayoutProps = {
-  active?: 'home' | 'browse' | 'login' | 'repos';
+  active?: 'home' | 'browse' | 'docs' | 'login' | 'repos';
   pageClassName: string;
   mainClassName: string;
   shellClassName?: string;

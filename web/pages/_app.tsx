@@ -36,6 +36,7 @@ import '../styles/pr-detail.css';
 import '../styles/mcp-connect.css';
 import '../styles/differentiators.css';
 import '../styles/index-progress-float.css';
+import '../styles/docs.css';
 import '../styles/globals.css';
 import '../styles/focus-audit.css';
 

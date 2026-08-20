@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { indexProgressPercent, indexStageProgressCap, indexStatusLabel, isRepoIndexInProgress, parseIndexStreamPayload } from './indexStatus';
+import { isRepoIndexInProgress, indexProgressPercent, indexStageProgressCap, indexStatusLabel, parseIndexStreamPayload } from './indexStatus';
 
 describe('parseIndexStreamPayload', () => {
   it('parses SSE data payloads', () => {

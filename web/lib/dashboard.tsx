@@ -17,9 +17,9 @@ import {
   DEMO_PULLS
 } from './demoData';
 import { isDemoMode } from './demoMode';
-import { isRepoIndexInProgress, useIndexStatus, type RepositoryIndexStatus } from './indexStatus';
+import { useIndexStatus } from './indexStatus';
 import { useIndexProgressUi } from './indexProgressUi';
-import { formatLatency, hotspotScoreClass } from './metrics';
+import { formatLatency } from './metrics';
 
 type DashboardContext = {
   repoId: string;
@@ -141,30 +141,7 @@ export function useRepoData(repoId: string | null) {
   return { pulls, analytics, hotspots, error, loading };
 }
 
-export function showIndexHint(
-  pulls: PullRequestRow[],
-  hotspots: HotspotRow[],
-  analytics: RepositoryAnalytics | null
-): boolean {
-  if (isDemoMode()) return false;
-  const empty =
-    pulls.length === 0 &&
-    hotspots.length === 0 &&
-    (analytics?.totalReviews ?? 0) === 0;
-  return empty;
-}
-
-export function shouldShowIndexHint(
-  pulls: PullRequestRow[],
-  hotspots: HotspotRow[],
-  analytics: RepositoryAnalytics | null,
-  indexStatus: RepositoryIndexStatus | null,
-  repoId?: string | null,
-  pendingIndexJobRepoId?: string | null
-): boolean {
-  if (isRepoIndexInProgress(repoId ?? null, indexStatus, pendingIndexJobRepoId)) return false;
-  return showIndexHint(pulls, hotspots, analytics);
-}
+export { shouldShowIndexHint, showIndexHint } from './indexHint';
 
 export function usePendingIndexJobRepoId(): string | null {
   const { job } = useIndexProgressUi();
@@ -175,6 +152,6 @@ export function useRepoIndexStatus(repoId: string | null) {
   return useIndexStatus(repoId, !isDemoMode(), 1500);
 }
 
-export { formatLatency, hotspotScoreClass };
+export { formatLatency };
 
 export type { PublicUser };

@@ -234,13 +234,6 @@ export function createLLMProvider(kind: LLMProviderKind = resolveLLMProviderKind
   }
 }
 
-/** @deprecated use createLLMProvider */
-export class OpenAILLMProvider extends OpenAICompatibleLLMProvider {
-  constructor(apiKey: string, model = process.env.OPENAI_CHAT_MODEL ?? 'gpt-4o-mini') {
-    super(apiKey, 'https://api.openai.com/v1', model, 'openai', true);
-  }
-}
-
 export function getDefaultLLMProvider(): LLMProvider {
   return createLLMProvider();
 }
