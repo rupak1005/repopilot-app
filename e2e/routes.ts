@@ -16,7 +16,7 @@ export const DASHBOARD_PAGES = [
   { nav: 'Impact Analysis', path: '/impact', expect: /Impact/i },
   { nav: 'Ask RepoPilot', path: '/ask', expect: /Ask RepoPilot/i },
   { nav: 'History', path: '/history', expect: /History/i },
-  { nav: 'Planning', path: '/planning', expect: /Planning|coming soon/i },
+  { nav: 'Planning', path: '/planning', expect: /Planning|candidate|hotspot|Impact/i },
   { nav: 'Pull Requests', path: '/pulls', expect: /Pull Requests/i },
   { nav: 'Findings', path: '/findings', expect: /Findings/i },
   { nav: 'Settings', path: '/settings', expect: /Settings/i }

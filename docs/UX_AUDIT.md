@@ -34,7 +34,7 @@ Integrate → MCP
 System → Indexing, Settings
 ```
 
-Missing surfaces: Findings shipped (Phase 20). Wiki foundation shipped (Phase 25 — indexed markdown/ADRs). Planning remains a stub until change-plan model lands.
+Missing surfaces: Findings shipped (Phase 20). Wiki foundation shipped (Phase 25). Planning foundation shipped (Phase 26 — hotspot candidates). Deeper wiki render / persisted briefs still later.
 ## Progressive disclosure
 
 - Graph starts with capped overview — good instinct, bad hard cap

@@ -92,7 +92,7 @@ const HELP_BY_NAV: Record<NavKey, HelpTip> = {
   },
   planning: {
     title: 'Plan before you PR',
-    body: 'Planning will stitch Impact and Topography into a change brief. Until then, jump to those surfaces from the stub.',
+    body: 'Planning ranks topography hotspots as change candidates with Impact and Graph blast exits.',
     docHref: '/docs/getting-started',
     docLabel: 'Getting started',
     secondaryHref: '/docs/architecture',

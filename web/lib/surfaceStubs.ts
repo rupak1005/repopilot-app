@@ -20,10 +20,10 @@ export const SURFACE_STUBS: Record<SurfaceStub['id'], SurfaceStub> = {
     id: 'planning',
     title: 'Planning',
     lede: 'Turn impact and hotspots into change plans before you open a PR.',
-    statusLabel: 'Stub · coming soon',
+    statusLabel: 'Foundation · hotspot candidates',
     roadmap: [
-      'Draft change plans from Impact blast radius + Topography churn',
-      'Attach candidate files, tests, and reviewers from the index',
+      'Attach candidate tests and reviewers from the index',
+      'Persist named change briefs across sessions',
       'Hand off a plan into a PR review with the same evidence trail'
     ],
     related: [

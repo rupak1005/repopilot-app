@@ -30,7 +30,8 @@
 | 23 | Graph share deep links | **Done foundation** — `?layout=` + Copy link |
 | 24 | Tsconfig path aliases | **Done foundation** — indexed `paths` at graph build |
 | 25 | Wiki (indexed docs) | **Done foundation** — markdown / ADR board |
-| 26–35 | Remaining | Not started / partial |
+| 26 | Planning candidates | **Done foundation** — hotspot → Impact/Graph |
+| 27–35 | Remaining | Not started / partial |
 
 ## Phase 5
 
@@ -182,6 +183,12 @@
 - [x] Demo wiki fixture; revisionSha support via BFF
 - [x] Shared wiki helpers + API/web tests
 
+## Phase 26
+
+- [x] Planning board ranked from topography hotspots
+- [x] Per-candidate Impact / Graph blast / PRs exits + optional `?file=` seed
+- [x] Shared `planning` helpers + unit tests
+
 ## Next action
 
-Phase 26+ (deferred 3D topography, Planning depth, Findings polish, impact calibration fixtures).
+Phase 27+ (deferred 3D topography, Findings polish, impact calibration fixtures, inline wiki render).

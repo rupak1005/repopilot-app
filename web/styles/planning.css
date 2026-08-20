@@ -1,0 +1,62 @@
+/* Phase 26 — change planning candidates */
+
+.ui-planning-page {
+  max-width: min(880px, 100%);
+}
+
+.ui-planning-list {
+  list-style: none;
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  counter-reset: none;
+}
+
+.ui-planning-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: var(--border-medium);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.ui-planning-card__rank {
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-md);
+  border: var(--border-medium);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: var(--text-ui);
+}
+
+.ui-planning-card__path {
+  margin: 0 0 var(--space-1);
+  font-weight: 700;
+  word-break: break-all;
+}
+
+.ui-planning-card__reason {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-ui);
+  line-height: 1.45;
+}
+
+.ui-planning-card__meta {
+  margin: 0;
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+}
+
+.ui-planning-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
