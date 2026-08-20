@@ -21,7 +21,8 @@
 | 14 | Landing / marketing | **Done foundation** — brand hero + how-it-works |
 | 15 | Accessibility / motion | **Done foundation** — skip link, landmarks, keyboard rows |
 | 16 | Revision-scoped graph | **Done foundation** — `?rev=` + History deep links |
-| 17–35 | Remaining | Not started / partial |
+| 17 | Universal search | **Done foundation** — code + history scopes |
+| 18–35 | Remaining | Not started / partial |
 
 ## Phase 5
 
@@ -46,7 +47,7 @@
 
 - [x] Citation actions: Graph / Impact / GitHub (Ask, Search, PR evidence)
 - [ ] History time machine surface (deferred) → **started as Phase 10**
-- [ ] Universal search merge (deferred)
+- [x] Universal search merge → **Phase 17**
 
 ## Phase 8
 
@@ -112,6 +113,12 @@
 - [x] History “Graph” links open the matching revision
 - [x] Shared `revisionScope` helpers + tests
 
+## Phase 17
+
+- [x] Search page runs code + history queries together
+- [x] All / Code / History scope tabs with counts (`?scope=`)
+- [x] Shared `universalSearch` helpers + tests
+
 ## Next action
 
-Phase 17 (universal search merge) or Phase 18 (impact revision deep links).
+Phase 18 (impact revision deep links) or deferred Planning / Wiki surfaces.
