@@ -13,7 +13,7 @@
     "mcp": "node dist/mcp/server.js",
     "mcp:dev": "ts-node-dev --transpile-only src/mcp/server.ts",
     "lint": "eslint src --ext .ts",
-    "type-check": "tsc -p tsconfig.json --noEmit",
+    "type-check": "prisma generate && tsc -p tsconfig.json --noEmit",
     "test": "vitest run --config ../vitest.config.ts --project api --passWithNoTests"
   },
   "dependencies": {
