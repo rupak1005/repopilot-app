@@ -293,6 +293,12 @@ export function parseCodeToRecords(
   filePath: string,
   code: string
 ): ParsedFile {
+  const ext = path.extname(filePath).toLowerCase();
+  // Markdown is stored for Wiki; tree-sitter has nothing useful to extract.
+  if (ext === '.md' || ext === '.mdx') {
+    return { symbols: [], imports: [], exports: [] };
+  }
+
   const parser = createTreeSitterParser(filePath);
   const tree = parser.parse(code);
 
@@ -300,8 +306,6 @@ export function parseCodeToRecords(
   const symbols: ParsedSymbol[] = [];
   const imports: ParsedImport[] = [];
   const exportsList: ParsedExport[] = [];
-
-  const ext = path.extname(filePath).toLowerCase();
 
   const visitTopLevel = (node: TreeSitterSyntaxNode) => {
     if (ext === '.py') {

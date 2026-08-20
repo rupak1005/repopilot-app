@@ -81,6 +81,18 @@ export const LAYER_META: Record<Exclude<DiagramLayer, 'all'>, { label: string; c
   other: { label: 'Other', color: '#a1a1aa' }
 };
 
+/** Keep modules (and edges) for one layer before clustering — filter after cluster collapses to a single node. */
+export function filterArchitectureGraph(
+  graph: ArchitectureGraph,
+  layer: DiagramLayer
+): ArchitectureGraph {
+  if (layer === 'all') return graph;
+  const nodes = graph.nodes.filter((n) => layerOf(n.filePath) === layer);
+  const keep = new Set(nodes.map((n) => n.filePath));
+  const edges = graph.edges.filter((e) => keep.has(e.fromModule) && keep.has(e.toModule));
+  return { nodes, edges };
+}
+
 export function filterForceGraphData(data: ForceGraphData, layer: DiagramLayer): ForceGraphData {
   if (layer === 'all') return data;
   const nodes = data.nodes.filter((n) => layerOf(n.id) === layer);

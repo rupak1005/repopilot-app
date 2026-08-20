@@ -16,7 +16,9 @@ export const SOURCE_FILE_PATTERNS = [
   '**/*.mts',
   '**/*.mjs',
   '**/*.py',
-  '**/*.go'
+  '**/*.go',
+  '**/*.md',
+  '**/*.mdx'
 ];
 
 const IGNORE = [

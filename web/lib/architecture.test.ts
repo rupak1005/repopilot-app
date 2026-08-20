@@ -3,6 +3,7 @@ import {
   buildArchitectureView,
   clusterIdForPrefix,
   directoryClusterKey,
+  filterArchitectureGraph,
   filterForceGraphData,
   mergeForceGraphData,
   parseClusterId,
@@ -108,5 +109,23 @@ describe('filterForceGraphData', () => {
     const filtered = filterForceGraphData(data, 'api');
     expect(filtered.nodes).toHaveLength(1);
     expect(filtered.links).toHaveLength(0);
+  });
+});
+
+describe('filterArchitectureGraph', () => {
+  it('scopes modules before clustering so a layer is not a lone cluster node', () => {
+    const scoped = filterArchitectureGraph(bigGraph(90), 'common');
+    expect(scoped.nodes.every((n) => n.filePath.startsWith('common/'))).toBe(true);
+    expect(scoped.edges.every((e) => e.fromModule.startsWith('common/') && e.toModule.startsWith('common/'))).toBe(
+      true
+    );
+    const view = buildArchitectureView(scoped, {
+      clusterAbove: 60,
+      expandedClusters: [clusterIdForPrefix('common')],
+      maxFilesPerCluster: 80
+    });
+    expect(view.nodes.some((n) => n.kind === 'cluster')).toBe(false);
+    expect(view.nodes.length).toBeGreaterThan(1);
+    expect(view.nodes.every((n) => n.id.startsWith('common/'))).toBe(true);
   });
 });

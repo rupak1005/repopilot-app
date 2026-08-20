@@ -1,11 +1,24 @@
 import { describe, expect, it } from 'vitest';
 import { parseCodeToRecords } from './treeSitterParser';
+import { SOURCE_FILE_PATTERNS } from './fileDiscovery';
 import { syncRepository } from '../services/repositorySync';
 import { getPrisma } from '../db/prisma';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
+
+describe('markdown discovery', () => {
+  it('includes md/mdx in source patterns and skips tree-sitter parse', () => {
+    expect(SOURCE_FILE_PATTERNS).toContain('**/*.md');
+    expect(SOURCE_FILE_PATTERNS).toContain('**/*.mdx');
+    expect(parseCodeToRecords('README.md', '# Hello\n\nBody')).toEqual({
+      symbols: [],
+      imports: [],
+      exports: []
+    });
+  });
+});
 
 type FileRow = {
   id: string;

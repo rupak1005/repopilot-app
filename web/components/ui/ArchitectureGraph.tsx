@@ -107,6 +107,9 @@ type ArchitectureGraphProps = {
   onSelectedIdChange?: (id: string | null) => void;
   /** Persist layout algorithm in the URL (`?layout=system`). */
   onLayoutAlgoChange?: (algo: GraphLayoutAlgo) => void;
+  /** Layer chips — controlled so the page can filter before clustering. */
+  layer?: DiagramLayer;
+  onLayerChange?: (layer: DiagramLayer) => void;
   /** Absolute or path URL for the Copy link control. */
   shareUrl?: string | null;
 };
@@ -311,6 +314,8 @@ export function ArchitectureGraphView({
   onNeighborhoodLoaded,
   onSelectedIdChange,
   onLayoutAlgoChange,
+  layer: layerProp,
+  onLayerChange,
   shareUrl = null
 }: ArchitectureGraphProps) {
   const fgRef = useRef<ForceGraphMethods | undefined>(undefined);
@@ -320,7 +325,9 @@ export function ArchitectureGraphView({
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('split');
-  const [layer, setLayer] = useState<DiagramLayer>('all');
+  const [layerInternal, setLayerInternal] = useState<DiagramLayer>('all');
+  const layer = layerProp ?? layerInternal;
+  const setLayer = onLayerChange ?? setLayerInternal;
   const [dims, setDims] = useState({ width: 800, height: 560 });
   const [neighborTraversal, setNeighborTraversal] = useState<ModuleDependencyTraversal | null>(null);
   const [neighborsLoading, setNeighborsLoading] = useState(false);
@@ -393,11 +400,23 @@ export function ArchitectureGraphView({
 
   const fitGraph = useCallback(() => {
     const fg = fgRef.current;
-    if (fg && typeof fg.zoomToFit === 'function') {
+    if (!fg) return;
+    const nodes = layoutData.nodes;
+    if (nodes.length === 0) return;
+    // zoomToFit on 1–2 nodes often zooms past the viewport; pin a readable scale.
+    if (nodes.length <= 2 && typeof fg.centerAt === 'function' && typeof fg.zoom === 'function') {
+      const n = nodes[0]!;
+      const ms = reduceMotion ? 0 : 300;
+      fg.centerAt(n.x ?? 0, n.y ?? 0, ms);
+      fg.zoom(1.15, ms);
+      window.setTimeout(syncMinimapCamera, ms + 50);
+      return;
+    }
+    if (typeof fg.zoomToFit === 'function') {
       fg.zoomToFit(400, 80);
       window.setTimeout(syncMinimapCamera, 450);
     }
-  }, [syncMinimapCamera]);
+  }, [layoutData.nodes, reduceMotion, syncMinimapCamera]);
 
   const trackMinimapDuring = useCallback(
     (ms: number) => {

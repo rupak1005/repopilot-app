@@ -11,8 +11,10 @@ import {
   buildArchitectureView,
   clusterIdForPrefix,
   directoryClusterKey,
+  filterArchitectureGraph,
   mergeForceGraphData,
   type ArchitectureGraph,
+  type DiagramLayer,
   type ForceGraphData
 } from '../../../lib/architecture';
 import { blastFromImpactPayload, type BlastOverlay } from '../../../lib/blastOverlay';
@@ -44,6 +46,7 @@ export default function ArchitecturePage() {
   const [loading, setLoading] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
   const [expandedClusters, setExpandedClusters] = useState<string[]>([]);
+  const [layer, setLayer] = useState<DiagramLayer>('all');
   const [neighborhoodOverlay, setNeighborhoodOverlay] = useState<ForceGraphData | null>(null);
   const [blastOverlay, setBlastOverlay] = useState<BlastOverlay | null>(null);
   const [moduleCycles, setModuleCycles] = useState<string[][]>([]);
@@ -135,10 +138,22 @@ export default function ArchitecturePage() {
     };
   }, [repoId, reloadToken, revisionSha]);
 
-  const architectureView = useMemo(
-    () => (graph ? buildArchitectureView(graph, { expandedClusters }) : null),
-    [graph, expandedClusters]
-  );
+  const architectureView = useMemo(() => {
+    if (!graph) return null;
+    // Filter before cluster: post-cluster layer chips leave a lone cluster node with 0 deps.
+    const scoped = filterArchitectureGraph(graph, layer);
+    const layerCluster =
+      layer === 'api' || layer === 'web' || layer === 'common' ? clusterIdForPrefix(layer) : null;
+    const expanded =
+      layerCluster && !expandedClusters.includes(layerCluster)
+        ? [...expandedClusters, layerCluster]
+        : expandedClusters;
+    return buildArchitectureView(scoped, {
+      expandedClusters: expanded,
+      // Layer-scoped graphs are one top-level folder — keep more files visible.
+      maxFilesPerCluster: layer === 'all' ? 40 : 80
+    });
+  }, [graph, expandedClusters, layer]);
   const forceData = useMemo(() => {
     if (!architectureView) return null;
     if (!neighborhoodOverlay) return architectureView;
@@ -155,7 +170,13 @@ export default function ArchitecturePage() {
     setNeighborhoodOverlay(null);
     setBlastOverlay(null);
     setModuleCycles([]);
+    setLayer('all');
   }, [graph]);
+
+  useEffect(() => {
+    setExpandedClusters([]);
+    setNeighborhoodOverlay(null);
+  }, [layer]);
 
   useEffect(() => {
     if (!repoId || !graph) return;
@@ -374,6 +395,8 @@ export default function ArchitecturePage() {
             expandedClusters={expandedClusters}
             blastOverlay={blastOverlay}
             moduleCycles={moduleCycles}
+            layer={layer}
+            onLayerChange={setLayer}
             shareUrl={shareUrl}
             onSelectedIdChange={(id) => {
               // Clusters are not file deep links.
