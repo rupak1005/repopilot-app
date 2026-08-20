@@ -104,7 +104,7 @@ REPO_CLONE_ROOT=/data/repos
 
 LLM_PROVIDER=groq
 GROQ_API_KEY=gsk_...
-GROQ_CHAT_MODEL=llama-3.3-70b-versatile
+GROQ_CHAT_MODEL=openai/gpt-oss-120b
 EMBEDDING_PROVIDER=local
 
 GITHUB_TOKEN=github_pat_...
@@ -161,7 +161,20 @@ NEXT_PUBLIC_MARKETING_URL=https://repopilot-pi.vercel.app
 
 ---
 
-## Step 5 — Index your repo (one-time)
+## Step 5 — Pre-index landing examples (recommended)
+
+Warm up the three landing chips so guests open them instantly:
+
+```bash
+export DATABASE_URL="postgresql://...neon..."
+./scripts/preindex-examples.sh
+```
+
+Indexes `fastapi/fastapi`, `streamlit/streamlit`, and `rupak1005/repopilot` (see `web/lib/exampleRepos.ts`).
+
+---
+
+## Step 5b — Index your own repo (optional)
 
 From your laptop (or Railway one-off shell):
 

@@ -3,6 +3,8 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { AnimatePresence, MotionConfig, motion } from 'motion/react';
 import { ToastProvider } from '../components/ui/ToastProvider';
+import { IndexProgressFloatHost } from '../components/ui/IndexProgressFloat';
+import { IndexProgressProvider } from '../lib/indexProgressUi';
 import { usePageEnter } from '../lib/motion';
 import { applyTheme, getStoredTheme } from '../lib/theme';
 import '../styles/tokens.css';
@@ -33,6 +35,7 @@ import '../styles/architecture.css';
 import '../styles/pr-detail.css';
 import '../styles/mcp-connect.css';
 import '../styles/differentiators.css';
+import '../styles/index-progress-float.css';
 import '../styles/globals.css';
 import '../styles/focus-audit.css';
 
@@ -57,8 +60,13 @@ function AnimatedPage({ Component, pageProps }: AppProps) {
 
 export default function App(props: AppProps) {
   return (
-    <ToastProvider>
-      <AnimatedPage {...props} />
-    </ToastProvider>
+    <IndexProgressProvider>
+      <ToastProvider>
+        <AnimatedPage {...props} />
+        <div className="index-progress-float-host">
+          <IndexProgressFloatHost />
+        </div>
+      </ToastProvider>
+    </IndexProgressProvider>
   );
 }

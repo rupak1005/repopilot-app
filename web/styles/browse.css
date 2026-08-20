@@ -18,28 +18,33 @@
 
 /* Sparkles sit outside content — browse hero needs extra top air */
 .browse-main .landing-decor__pos--tl-lg {
-  top: -48px;
-  left: -32px;
+  top: -40px;
+  left: -26px;
 }
 
 .browse-main .landing-decor__pos--tl-md {
-  top: -36px;
-  left: 12px;
+  top: -32px;
+  left: 28px;
 }
 
 .browse-main .landing-decor__pos--tl-sm {
-  top: -16px;
-  left: 48px;
+  top: 6px;
+  left: -14px;
 }
 
 .browse-main .landing-decor__pos--tr-lg {
-  top: -42px;
-  right: 4px;
+  top: -36px;
+  right: -12px;
+}
+
+.browse-main .landing-decor__pos--tr-md {
+  top: -28px;
+  right: 30px;
 }
 
 .browse-main .landing-decor__pos--tr-sm {
-  top: -14px;
-  right: -24px;
+  top: 4px;
+  right: -12px;
 }
 
 .browse-hero {

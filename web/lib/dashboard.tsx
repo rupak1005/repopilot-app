@@ -17,6 +17,8 @@ import {
   DEMO_PULLS
 } from './demoData';
 import { isDemoMode } from './demoMode';
+import { isRepoIndexInProgress, useIndexStatus, type RepositoryIndexStatus } from './indexStatus';
+import { useIndexProgressUi } from './indexProgressUi';
 import { formatLatency, hotspotScoreClass } from './metrics';
 
 type DashboardContext = {
@@ -150,6 +152,27 @@ export function showIndexHint(
     hotspots.length === 0 &&
     (analytics?.totalReviews ?? 0) === 0;
   return empty;
+}
+
+export function shouldShowIndexHint(
+  pulls: PullRequestRow[],
+  hotspots: HotspotRow[],
+  analytics: RepositoryAnalytics | null,
+  indexStatus: RepositoryIndexStatus | null,
+  repoId?: string | null,
+  pendingIndexJobRepoId?: string | null
+): boolean {
+  if (isRepoIndexInProgress(repoId ?? null, indexStatus, pendingIndexJobRepoId)) return false;
+  return showIndexHint(pulls, hotspots, analytics);
+}
+
+export function usePendingIndexJobRepoId(): string | null {
+  const { job } = useIndexProgressUi();
+  return job?.repoId ?? null;
+}
+
+export function useRepoIndexStatus(repoId: string | null) {
+  return useIndexStatus(repoId, !isDemoMode(), 1500);
 }
 
 export { formatLatency, hotspotScoreClass };

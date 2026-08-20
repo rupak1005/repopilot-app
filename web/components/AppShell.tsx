@@ -18,7 +18,8 @@ import {
 import type { Icon } from '@phosphor-icons/react';
 import { useRouter } from 'next/router';
 import { useEffect, useState, type ReactNode } from 'react';
-import { indexStatusLabel, useIndexStatus } from '../lib/indexStatus';
+import { indexStatusLabel, isRepoIndexInProgress, useAnimatedIndexProgress, useIndexStatus } from '../lib/indexStatus';
+import { useIndexProgressUi } from '../lib/indexProgressUi';
 import { GITHUB_SIGN_IN_URL, signOut } from '../lib/auth';
 import { IconButton } from './ui/IconButton';
 import { NavItem } from './ui/NavItem';
@@ -64,17 +65,31 @@ export function AppShell({
   const router = useRouter();
   const base = `/dashboard/${repoId}`;
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const indexStatus = useIndexStatus(repoId, !demoMode);
-  const indexLabel = demoMode ? 'Demo data' : indexStatusLabel(indexStatus);
+  const indexStatus = useIndexStatus(repoId, !demoMode, 1500);
+  const indexDisplayPercent = useAnimatedIndexProgress(indexStatus);
+  const { startIndexProgress, job } = useIndexProgressUi();
+  const indexInProgress = isRepoIndexInProgress(repoId, indexStatus, job?.repoId);
+  const indexLabel =
+    demoMode
+      ? 'Demo data'
+      : indexInProgress && indexStatus?.state !== 'indexing'
+        ? 'Indexing…'
+        : indexStatusLabel(indexStatus, indexDisplayPercent);
   const indexPillClass = [
     'indexing-pill',
     demoMode ? 'indexing-pill--demo' : '',
     indexStatus?.state === 'failed' ? 'indexing-pill--failed' : '',
-    indexStatus?.state === 'ready' ? 'indexing-pill--ready' : ''
+    indexStatus?.state === 'ready' && !indexInProgress ? 'indexing-pill--ready' : ''
   ]
     .filter(Boolean)
     .join(' ');
-  const pulseIdle = !demoMode && indexStatus?.state === 'ready';
+  const pulseIdle = !demoMode && indexStatus?.state === 'ready' && !indexInProgress;
+
+  useEffect(() => {
+    if (demoMode || !indexStatus || indexStatus.state !== 'indexing') return;
+    if (job?.repoId === repoId) return;
+    startIndexProgress({ repoId, fullName: repoFullName });
+  }, [demoMode, indexStatus, repoId, repoFullName, job?.repoId, startIndexProgress]);
 
   useEffect(() => {
     function close() {

@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import { GitBranch } from '@phosphor-icons/react';
 import { ArchitectureGraphView } from '../../../components/ui/ArchitectureGraph';
 import { DifferentiatorsStrip } from '../../../components/ui/DifferentiatorsStrip';
 import { ErrorBanner } from '../../../components/ui/ErrorBanner';
 import { IndexHint } from '../../../components/ui/IndexHint';
-import { DashboardLayout } from '../../../lib/dashboard';
+import { DashboardLayout, usePendingIndexJobRepoId, useRepoIndexStatus } from '../../../lib/dashboard';
+import { isRepoIndexInProgress } from '../../../lib/indexStatus';
 import { toForceGraphData, type ArchitectureGraph } from '../../../lib/architecture';
 import { repoApiPath } from '../../../lib/serverApi';
 import { DEMO_ARCHITECTURE } from '../../../lib/demoData';
@@ -22,6 +23,7 @@ export default function ArchitecturePage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
+  const prevIndexState = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     async function loadUser() {
@@ -72,8 +74,19 @@ export default function ArchitecturePage() {
   }, [repoId, reloadToken]);
 
   const forceData = useMemo(() => (graph ? toForceGraphData(graph) : null), [graph]);
+  const indexStatus = useRepoIndexStatus(repoId);
+  const pendingIndexJobRepoId = usePendingIndexJobRepoId();
+  const indexInProgress = isRepoIndexInProgress(repoId, indexStatus, pendingIndexJobRepoId);
   const empty = graph && graph.nodes.length === 0;
   const slug = repoFullName || repoId || '…';
+
+  useEffect(() => {
+    const prev = prevIndexState.current;
+    prevIndexState.current = indexStatus?.state;
+    if (prev === 'indexing' && indexStatus?.state === 'ready') {
+      setReloadToken((n) => n + 1);
+    }
+  }, [indexStatus?.state]);
 
   return (
     <DashboardLayout activeNav="architecture" canvasClass="canvas--diagram">
@@ -105,8 +118,18 @@ export default function ArchitecturePage() {
           <p className="ui-diagram-explainer">{DEMO_EXPLANATION}</p>
         ) : null}
 
-        {error ? <ErrorBanner>{error}</ErrorBanner> : null}
-        {empty ? <IndexHint repoFullName={repoFullName || undefined} /> : null}
+        {error && !indexInProgress ? <ErrorBanner>{error}</ErrorBanner> : null}
+        {empty && !indexInProgress ? (
+          <IndexHint repoFullName={repoFullName || undefined} />
+        ) : null}
+
+        {indexInProgress && !forceData ? (
+          <div className="ui-diagram__stage ui-diagram__stage--solo">
+            <div className="ui-diagram__loading">
+              <p>Indexing repository… the dependency diagram will appear when the graph is ready.</p>
+            </div>
+          </div>
+        ) : null}
 
         {forceData && forceData.nodes.length > 0 ? (
           <ArchitectureGraphView
@@ -116,7 +139,7 @@ export default function ArchitecturePage() {
             loading={loading}
             onGraphRebuilt={() => setReloadToken((n) => n + 1)}
           />
-        ) : loading ? (
+        ) : loading && !indexInProgress ? (
           <div className="ui-diagram__stage ui-diagram__stage--solo">
             <div className="ui-diagram__loading">
               <p>Building diagram…</p>

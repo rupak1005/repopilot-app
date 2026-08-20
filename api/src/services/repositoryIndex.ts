@@ -32,6 +32,13 @@ function logEvent(event: string, fields: Record<string, unknown>) {
   console.log(JSON.stringify({ event, ...fields }));
 }
 
+function historyMaxCommits(): number {
+  const raw = process.env.HISTORY_MAX_COMMITS;
+  if (raw === '0' || raw === 'false') return 0;
+  const parsed = Number(raw ?? 300);
+  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 300;
+}
+
 async function enqueueRepositorySyncJob(args: {
   repositoryId: string;
   revisionSha: string;
@@ -162,6 +169,7 @@ function deriveIndexStage(args: {
 }): RepositoryIndexStatus['stage'] {
   if (args.state === 'failed') return 'failed';
   if (args.state === 'ready') return 'ready';
+  if (args.state !== 'indexing') return 'clone';
   if (args.fileCount === 0) return 'clone';
   if (args.moduleDependencyCount === 0) {
     return args.symbolCount > 0 ? 'graph' : 'parse';
@@ -196,10 +204,19 @@ export async function runFullRepositoryIndex(args: {
   });
 
   try {
-    await ingestRepositoryHistory({
-      repositoryId: args.repositoryId,
-      repoPath: args.repoPath
-    });
+    const maxCount = historyMaxCommits();
+    if (maxCount > 0) {
+      await ingestRepositoryHistory({
+        repositoryId: args.repositoryId,
+        repoPath: args.repoPath,
+        maxCount
+      });
+    } else {
+      logEvent('repo.index.history.skipped', {
+        repositoryId: args.repositoryId,
+        reason: 'HISTORY_MAX_COMMITS=0'
+      });
+    }
   } catch (err) {
     logEvent('repo.index.history.skipped', {
       repositoryId: args.repositoryId,
@@ -340,6 +357,10 @@ export async function startPublicRepositoryIndex(args: {
   };
 
   if (background) {
+    await beginIndexJob({
+      repositoryId: args.repositoryId,
+      revisionSha
+    });
     void runFullRepositoryIndexWithJob(pipelineArgs).catch((err) => {
       logEvent('repo.index.public.background.failed', {
         repositoryId: args.repositoryId,

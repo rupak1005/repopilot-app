@@ -9,7 +9,7 @@ import { ErrorBanner } from '../../../components/ui/ErrorBanner';
 import { IndexHint } from '../../../components/ui/IndexHint';
 import { KpiTile } from '../../../components/ui/KpiTile';
 import { demoDelay, demoFileImpact } from '../../../lib/demoData';
-import { DashboardLayout, showIndexHint, useRepoData } from '../../../lib/dashboard';
+import { DashboardLayout, shouldShowIndexHint, usePendingIndexJobRepoId, useRepoData, useRepoIndexStatus } from '../../../lib/dashboard';
 import { isDemoMode } from '../../../lib/demoMode';
 import { repoApiPath } from '../../../lib/serverApi';
 import type { FileImpactAnalysis } from '../../../lib/types';
@@ -20,7 +20,16 @@ export default function ImpactPage() {
   const initialFile =
     typeof router.query.file === 'string' ? router.query.file : 'api/src/services/PaymentService.ts';
   const { pulls, analytics, hotspots, error: repoError, loading: repoLoading } = useRepoData(repoId);
-  const needsIndex = showIndexHint(pulls, hotspots, analytics);
+  const indexStatus = useRepoIndexStatus(repoId);
+  const pendingIndexJobRepoId = usePendingIndexJobRepoId();
+  const needsIndex = shouldShowIndexHint(
+    pulls,
+    hotspots,
+    analytics,
+    indexStatus,
+    repoId,
+    pendingIndexJobRepoId
+  );
 
   const [filePath, setFilePath] = useState(initialFile);
   const [result, setResult] = useState<FileImpactAnalysis | null>(null);

@@ -23,6 +23,7 @@
   --color-focus: hsl(270 90% 55%);
   --color-link: hsl(270 85% 42%);
   --color-link-hover: hsl(270 85% 32%);
+  --color-accent: var(--color-link);
   --color-success: hsl(142 55% 38%);
   --color-warning: hsl(38 92% 42%);
   --color-danger: hsl(0 72% 48%);
@@ -159,6 +160,7 @@
   --color-focus: hsl(270 80% 72%);
   --color-link: hsl(270 85% 78%);
   --color-link-hover: hsl(270 90% 88%);
+  --color-accent: var(--color-link);
   --color-success: hsl(142 50% 52%);
   --color-warning: hsl(38 90% 58%);
   --color-danger: hsl(0 75% 62%);

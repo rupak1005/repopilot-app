@@ -29,7 +29,7 @@ Used by `/ask` and PR review.
 ```env
 LLM_PROVIDER=groq
 GROQ_API_KEY=gsk_...
-GROQ_CHAT_MODEL=llama-3.3-70b-versatile
+GROQ_CHAT_MODEL=openai/gpt-oss-120b
 ```
 
 ### Google Gemini (free tier)

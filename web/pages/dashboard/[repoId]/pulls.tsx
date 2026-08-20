@@ -7,13 +7,22 @@ import { ErrorBanner } from '../../../components/ui/ErrorBanner';
 import { IndexHint } from '../../../components/ui/IndexHint';
 import { OutcomeIcon } from '../../../components/ui/OutcomeIcon';
 import { StatusBadge, reviewStatusVariant } from '../../../components/ui/StatusBadge';
-import { DashboardLayout, showIndexHint, useRepoData } from '../../../lib/dashboard';
+import { DashboardLayout, shouldShowIndexHint, usePendingIndexJobRepoId, useRepoData, useRepoIndexStatus } from '../../../lib/dashboard';
 
 export default function PullsPage() {
   const router = useRouter();
   const repoId = typeof router.query.repoId === 'string' ? router.query.repoId : null;
   const { pulls, analytics, hotspots, error, loading } = useRepoData(repoId);
-  const needsIndex = showIndexHint(pulls, hotspots, analytics);
+  const indexStatus = useRepoIndexStatus(repoId);
+  const pendingIndexJobRepoId = usePendingIndexJobRepoId();
+  const needsIndex = shouldShowIndexHint(
+    pulls,
+    hotspots,
+    analytics,
+    indexStatus,
+    repoId,
+    pendingIndexJobRepoId
+  );
   const base = repoId ? `/dashboard/${repoId}` : '';
 
   return (

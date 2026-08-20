@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { deriveRepositoryId, parseGithubRepoUrl } from '@repopilot/common';
 import { isDemoMode } from '../../../lib/demoMode';
+import { apiUnreachableMessage, parseJsonResponse } from '../../../lib/parseJsonResponse';
 import { checkRateLimit } from '../../../lib/rateLimit';
 import { proxyApiRequest } from '../../../lib/serverApi';
 import { createPublicGuestSession, getSession, setSessionCookie } from '../../../lib/session';
@@ -53,23 +54,34 @@ export default async function handler(
     return;
   }
 
-  const response = await proxyApiRequest('/api/v1/public/repositories/open', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      owner: parsed.owner,
-      name: parsed.name,
-      background: true
-    })
-  });
+  let response: Response;
+  try {
+    response = await proxyApiRequest('/api/v1/public/repositories/open', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        owner: parsed.owner,
+        name: parsed.name,
+        background: true
+      })
+    });
+  } catch {
+    res.status(503).json({ error: apiUnreachableMessage() });
+    return;
+  }
 
-  const payload = (await response.json()) as {
+  const payload = await parseJsonResponse<{
     error?: string;
     repositoryId?: string;
     fullName?: string;
     revisionSha?: string;
     indexing?: boolean;
-  };
+  }>(response);
+
+  if (!payload) {
+    res.status(503).json({ error: apiUnreachableMessage() });
+    return;
+  }
 
   if (!response.ok || !payload.repositoryId || !payload.fullName) {
     res.status(response.status).json({

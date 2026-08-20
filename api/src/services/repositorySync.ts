@@ -89,7 +89,7 @@ export async function syncRepository(
 
   const concurrency = Math.max(
     1,
-    args.concurrency ?? Number(process.env.SYNC_CONCURRENCY ?? 2)
+    args.concurrency ?? Number(process.env.SYNC_CONCURRENCY ?? 4)
   );
 
   logEvent('repo.sync.started', {

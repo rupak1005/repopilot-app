@@ -2,9 +2,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { ErrorBanner } from '../../components/ui/ErrorBanner';
-import { IndexProgress } from '../../components/ui/IndexProgress';
 import { PublicPageLayout } from '../../components/ui/PublicPageLayout';
 import { isDemoMode } from '../../lib/demoMode';
+import { useIndexProgressUi } from '../../lib/indexProgressUi';
+import { apiUnreachableMessage, parseJsonResponse } from '../../lib/parseJsonResponse';
 
 const SLUG_PATTERN = /^[\w.-]+$/;
 
@@ -15,7 +16,7 @@ export default function ShortRepoPage() {
   const slug = owner && repo ? `${owner}/${repo}` : '';
 
   const [error, setError] = useState<string | null>(null);
-  const [indexingRepo, setIndexingRepo] = useState<{ id: string; fullName: string } | null>(null);
+  const { startIndexProgress } = useIndexProgressUi();
 
   useEffect(() => {
     if (!router.isReady || !slug) return;
@@ -34,21 +35,27 @@ export default function ShortRepoPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url: slug })
         });
-        const data = (await response.json()) as {
+        const data = await parseJsonResponse<{
           repositoryId?: string;
           fullName?: string;
           indexing?: boolean;
           error?: string;
-        };
+        }>(response);
         if (cancelled) return;
+        if (!data) {
+          throw new Error(apiUnreachableMessage());
+        }
         if (!response.ok || !data.repositoryId) {
           throw new Error(data.error ?? 'Could not open repository');
         }
+        const fullName = data.fullName ?? slug;
         if (data.indexing && !isDemoMode()) {
-          setIndexingRepo({
-            id: data.repositoryId,
-            fullName: data.fullName ?? slug
+          startIndexProgress({
+            repoId: data.repositoryId,
+            fullName,
+            onReady: () => void router.replace(`/dashboard/${data.repositoryId}`)
           });
+          void router.replace(`/dashboard/${data.repositoryId}`);
           return;
         }
         void router.replace(`/dashboard/${data.repositoryId}`);
@@ -63,7 +70,7 @@ export default function ShortRepoPage() {
     return () => {
       cancelled = true;
     };
-  }, [router, slug, owner, repo]);
+  }, [router, slug, owner, repo, startIndexProgress]);
 
   return (
     <PublicPageLayout
@@ -72,31 +79,17 @@ export default function ShortRepoPage() {
       mainClassName="landing-page__main"
       shellClassName="landing-shell"
     >
-          <div className="landing-card">
-            {indexingRepo ? (
-              <IndexProgress
-                repoId={indexingRepo.id}
-                fullName={indexingRepo.fullName}
-                onReady={() => void router.push(`/dashboard/${indexingRepo.id}`)}
-                onFailed={(message) => {
-                  setError(message);
-                  setIndexingRepo(null);
-                }}
-              />
-            ) : (
-              <>
-                <p className="landing-eyebrow">Opening repository</p>
-                <h1>{slug || '…'}</h1>
-                <p className="landing-lede">
-                  {error ? 'We could not start indexing this repository.' : 'Preparing analysis…'}
-                </p>
-                {error ? <ErrorBanner>{error}</ErrorBanner> : null}
-                <p className="landing-footer">
-                  <Link href="/">Back to home</Link>
-                </p>
-              </>
-            )}
-          </div>
+      <div className="landing-card">
+        <p className="landing-eyebrow">Opening repository</p>
+        <h1>{slug || '…'}</h1>
+        <p className="landing-lede">
+          {error ? 'We could not start indexing this repository.' : 'Preparing analysis…'}
+        </p>
+        {error ? <ErrorBanner>{error}</ErrorBanner> : null}
+        <p className="landing-footer">
+          <Link href="/">Back to home</Link>
+        </p>
+      </div>
     </PublicPageLayout>
   );
 }

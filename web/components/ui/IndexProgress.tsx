@@ -1,16 +1,18 @@
 import { useEffect, useRef } from 'react';
 import { CheckCircle, CircleNotch, XCircle } from '@phosphor-icons/react';
 import {
+  indexProgressPercent,
   indexProgressSteps,
   type IndexStage,
   type RepositoryIndexStatus,
+  useAnimatedIndexProgress,
   useIndexStatus
 } from '../../lib/indexStatus';
 
 type IndexProgressProps = {
   repoId: string;
   fullName?: string;
-  onReady: () => void;
+  onReady?: () => void;
   onFailed?: (message: string) => void;
 };
 
@@ -50,7 +52,7 @@ export function IndexProgress({ repoId, fullName, onReady, onFailed }: IndexProg
   useEffect(() => {
     if (!status) return;
     if (status.state === 'ready' && status.stage === 'ready') {
-      const timer = window.setTimeout(() => onReady(), 600);
+      const timer = window.setTimeout(() => onReady?.(), 600);
       return () => window.clearTimeout(timer);
     }
     if ((status.state === 'failed' || status.stage === 'failed') && !failedNotified.current) {
@@ -59,11 +61,38 @@ export function IndexProgress({ repoId, fullName, onReady, onFailed }: IndexProg
     }
   }, [status, onReady, onFailed]);
 
+  const percent = useAnimatedIndexProgress(status);
+  const barPercent =
+    percent ?? (status?.state === 'indexing' ? 3 : status?.state === 'ready' ? 100 : null);
+  const showBar = barPercent !== null;
+
   return (
     <div className="index-progress" role="status" aria-live="polite">
-      <p className="index-progress__title">
-        {fullName ? `Indexing ${fullName}` : 'Indexing repository'}
-      </p>
+      <div className="index-progress__head">
+        <p className="index-progress__title">
+          {fullName ? `Indexing ${fullName}` : 'Indexing repository'}
+          {percent !== null ? (
+            <span className="index-progress__pct mono">{percent}%</span>
+          ) : status?.state === 'indexing' ? (
+            <span className="index-progress__pct mono">…</span>
+          ) : null}
+        </p>
+        {showBar ? (
+          <div
+            className="index-progress__bar"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={barPercent}
+            aria-label="Indexing progress"
+          >
+            <div
+              className={`index-progress__bar-fill${status?.state === 'indexing' ? ' index-progress__bar-fill--active' : ''}`}
+              style={{ width: `${barPercent}%` }}
+            />
+          </div>
+        ) : null}
+      </div>
       <ol className="index-progress__steps">
         {indexProgressSteps.map((step) => {
           const state = status ? stepState(step.id, status) : 'pending';

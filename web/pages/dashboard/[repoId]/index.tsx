@@ -14,16 +14,27 @@ import { StatusBadge, reviewStatusVariant } from '../../../components/ui/StatusB
 import {
   DashboardLayout,
   formatLatency,
-  showIndexHint,
-  useRepoData
+  shouldShowIndexHint,
+  usePendingIndexJobRepoId,
+  useRepoData,
+  useRepoIndexStatus
 } from '../../../lib/dashboard';
 
 export default function OverviewPage() {
   const router = useRouter();
   const repoId = typeof router.query.repoId === 'string' ? router.query.repoId : null;
   const { pulls, analytics, hotspots, error, loading } = useRepoData(repoId);
+  const indexStatus = useRepoIndexStatus(repoId);
+  const pendingIndexJobRepoId = usePendingIndexJobRepoId();
   const base = repoId ? `/dashboard/${repoId}` : '';
-  const needsIndex = showIndexHint(pulls, hotspots, analytics);
+  const needsIndex = shouldShowIndexHint(
+    pulls,
+    hotspots,
+    analytics,
+    indexStatus,
+    repoId,
+    pendingIndexJobRepoId
+  );
 
   return (
     <DashboardLayout activeNav="overview">

@@ -349,11 +349,19 @@ async function bootstrap() {
       return { error: 'query is required' };
     }
 
-    return askCodebaseQuestion({
-      repositoryId: params.repoId,
-      query: body.query,
-      revisionSha: body.revisionSha
-    });
+    try {
+      return await askCodebaseQuestion({
+        repositoryId: params.repoId,
+        query: body.query,
+        revisionSha: body.revisionSha
+      });
+    } catch (err) {
+      server.log.error({ err, repositoryId: params.repoId }, 'Ask failed');
+      reply.code(500);
+      return {
+        error: err instanceof Error ? err.message : 'Ask failed'
+      };
+    }
   });
 
   server.get('/api/v1/repositories/:repoId/pulls', async (request) => {

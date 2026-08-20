@@ -197,7 +197,7 @@ export function createLLMProvider(kind: LLMProviderKind = resolveLLMProviderKind
       return new OpenAICompatibleLLMProvider(
         apiKey,
         'https://api.groq.com/openai/v1',
-        process.env.GROQ_CHAT_MODEL ?? 'llama-3.3-70b-versatile',
+        process.env.GROQ_CHAT_MODEL ?? 'openai/gpt-oss-120b',
         'groq',
         false
       );

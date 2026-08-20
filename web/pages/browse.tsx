@@ -7,6 +7,9 @@ import { DifferentiatorsStrip } from '../components/ui/DifferentiatorsStrip';
 import { ErrorBanner } from '../components/ui/ErrorBanner';
 import { PublicPageLayout } from '../components/ui/PublicPageLayout';
 import { githubUrl } from '../lib/exampleRepos';
+import { isDemoMode } from '../lib/demoMode';
+import { useIndexProgressUi } from '../lib/indexProgressUi';
+import { apiUnreachableMessage, parseJsonResponse } from '../lib/parseJsonResponse';
 import {
   browseResultRange,
   browseTotalPages,
@@ -39,6 +42,7 @@ function formatDate(iso: string): string {
 
 export default function BrowsePage() {
   const router = useRouter();
+  const { startIndexProgress } = useIndexProgressUi();
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<BrowseSort>('stars');
   const [minStars, setMinStars] = useState('');
@@ -91,9 +95,19 @@ export default function BrowsePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: githubUrl(fullName) })
       });
-      const data = (await response.json()) as { repositoryId?: string; error?: string };
+      const data = await parseJsonResponse<{ repositoryId?: string; fullName?: string; indexing?: boolean; error?: string }>(response);
+      if (!data) {
+        throw new Error(apiUnreachableMessage());
+      }
       if (!response.ok || !data.repositoryId) {
         throw new Error(data.error ?? 'Could not open repository');
+      }
+      if (data.indexing && !isDemoMode()) {
+        startIndexProgress({
+          repoId: data.repositoryId,
+          fullName: data.fullName ?? fullName,
+          onReady: () => void router.push(`/dashboard/${data.repositoryId}/architecture`)
+        });
       }
       void router.push(`/dashboard/${data.repositoryId}/architecture`);
     } catch (err) {

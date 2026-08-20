@@ -4,13 +4,22 @@ import { BentoPanel } from '../../../components/ui/BentoPanel';
 import { ErrorBanner } from '../../../components/ui/ErrorBanner';
 import { HotspotList } from '../../../components/ui/HotspotList';
 import { IndexHint } from '../../../components/ui/IndexHint';
-import { DashboardLayout, showIndexHint, useRepoData } from '../../../lib/dashboard';
+import { DashboardLayout, shouldShowIndexHint, usePendingIndexJobRepoId, useRepoData, useRepoIndexStatus } from '../../../lib/dashboard';
 
 export default function HotspotsPage() {
   const router = useRouter();
   const repoId = typeof router.query.repoId === 'string' ? router.query.repoId : null;
   const { hotspots, analytics, pulls, error, loading } = useRepoData(repoId);
-  const needsIndex = showIndexHint(pulls, hotspots, analytics);
+  const indexStatus = useRepoIndexStatus(repoId);
+  const pendingIndexJobRepoId = usePendingIndexJobRepoId();
+  const needsIndex = shouldShowIndexHint(
+    pulls,
+    hotspots,
+    analytics,
+    indexStatus,
+    repoId,
+    pendingIndexJobRepoId
+  );
 
   return (
     <DashboardLayout activeNav="hotspots">

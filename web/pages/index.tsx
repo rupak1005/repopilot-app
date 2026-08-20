@@ -4,11 +4,13 @@ import { FormEvent, useEffect, useState } from 'react';
 import { Button } from '../components/ui/Button';
 import { DifferentiatorsStrip } from '../components/ui/DifferentiatorsStrip';
 import { ErrorBanner } from '../components/ui/ErrorBanner';
-import { IndexProgress } from '../components/ui/IndexProgress';
 import { PublicPageLayout } from '../components/ui/PublicPageLayout';
-import { EXAMPLE_REPOS } from '../lib/exampleRepos';
+import { parseGithubRepoUrl } from '@repopilot/common';
+import { EXAMPLE_REPOS, githubUrl } from '../lib/exampleRepos';
 import { GITHUB_SIGN_IN_URL } from '../lib/auth';
 import { isDemoMode } from '../lib/demoMode';
+import { useIndexProgressUi } from '../lib/indexProgressUi';
+import { apiUnreachableMessage, parseJsonResponse } from '../lib/parseJsonResponse';
 import { MARKETING_URL } from '../lib/types';
 
 export default function LandingPage() {
@@ -17,7 +19,7 @@ export default function LandingPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [signedInRepoId, setSignedInRepoId] = useState<string | null>(null);
-  const [indexingRepo, setIndexingRepo] = useState<{ id: string; fullName: string } | null>(null);
+  const { startIndexProgress } = useIndexProgressUi();
 
   useEffect(() => {
     async function checkSession() {
@@ -32,24 +34,35 @@ export default function LandingPage() {
   async function openRepo(input: string) {
     setLoading(true);
     setError(null);
-    setIndexingRepo(null);
     try {
+      if (!parseGithubRepoUrl(input)) {
+        throw new Error('Paste a public GitHub URL or owner/repo slug.');
+      }
       const response = await fetch('/api/public/open', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: input })
       });
-      const data = (await response.json()) as {
+      const data = await parseJsonResponse<{
         repositoryId?: string;
         fullName?: string;
         indexing?: boolean;
         error?: string;
-      };
+      }>(response);
+      if (!data) {
+        throw new Error(apiUnreachableMessage());
+      }
       if (!response.ok || !data.repositoryId) {
         throw new Error(data.error ?? 'Could not open repository');
       }
       if (data.indexing && !isDemoMode()) {
-        setIndexingRepo({ id: data.repositoryId, fullName: data.fullName ?? input });
+        const fullName = data.fullName ?? input;
+        startIndexProgress({
+          repoId: data.repositoryId,
+          fullName,
+          onReady: () => void router.push(`/dashboard/${data.repositoryId}`)
+        });
+        void router.push(`/dashboard/${data.repositoryId}`);
         setLoading(false);
         return;
       }
@@ -73,18 +86,6 @@ export default function LandingPage() {
       shellClassName="landing-shell"
     >
           <div className="landing-card">
-            {indexingRepo ? (
-              <IndexProgress
-                repoId={indexingRepo.id}
-                fullName={indexingRepo.fullName}
-                onReady={() => void router.push(`/dashboard/${indexingRepo.id}`)}
-                onFailed={(message) => {
-                  setError(message);
-                  setIndexingRepo(null);
-                }}
-              />
-            ) : (
-              <>
                 <p className="landing-eyebrow">Engineering intelligence</p>
                 <h1>Repository to diagram — and beyond</h1>
                 <p className="landing-lede">
@@ -123,7 +124,10 @@ export default function LandingPage() {
                         type="button"
                         className="landing-chip"
                         disabled={loading}
-                        onClick={() => void openRepo(repo.slug)}
+                        onClick={() => {
+                          setUrl(githubUrl(repo.slug));
+                          void openRepo(repo.slug);
+                        }}
                       >
                         {repo.label}
                       </button>
@@ -161,8 +165,6 @@ export default function LandingPage() {
                   <span aria-hidden> · </span>
                   <Link href={MARKETING_URL}>Marketing site</Link>
                 </p>
-              </>
-            )}
           </div>
     </PublicPageLayout>
   );
