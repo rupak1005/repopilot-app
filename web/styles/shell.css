@@ -160,8 +160,8 @@
   align-items: center;
   gap: var(--space-2);
   flex-shrink: 0;
-  min-height: 32px;
-  padding: var(--space-1) var(--space-4);
+  min-height: 36px;
+  padding: var(--space-2) var(--space-4);
   background: var(--color-surface-muted);
   border-bottom: var(--border-light);
   font-size: var(--text-caption);

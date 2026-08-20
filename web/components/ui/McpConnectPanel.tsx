@@ -31,49 +31,9 @@ export function McpConnectPanel({ context }: McpConnectPanelProps) {
 
   return (
     <div className="mcp-connect">
-      <ol className="mcp-connect__steps">
-        {MCP_SETUP_STEPS.map((step, index) => (
-          <li key={step.id} className="mcp-connect__step">
-            <span className="mcp-connect__step-num">{index + 1}</span>
-            <div>
-              <h3>{step.title}</h3>
-              <p>{step.body}</p>
-              {step.id === 'env' && ctx.repositoryId ? (
-                <dl className="mcp-connect__ids">
-                  <div>
-                    <dt>RepoPilot ID</dt>
-                    <dd className="mcp-connect__id-row">
-                      <span className="mono">{ctx.repositoryId}</span>
-                      <button
-                        type="button"
-                        className="mcp-connect__copy mcp-connect__copy--inline"
-                        onClick={() => void copyText(ctx.repositoryId!, 'repoId')}
-                      >
-                        {copied === 'repoId' ? (
-                          <Check size={14} weight="bold" aria-hidden />
-                        ) : (
-                          <Copy size={14} weight="bold" aria-hidden />
-                        )}
-                        {copied === 'repoId' ? 'Copied' : 'Copy'}
-                      </button>
-                    </dd>
-                  </div>
-                  {ctx.repoSlug ? (
-                    <div>
-                      <dt>GitHub slug</dt>
-                      <dd className="mono">{ctx.repoSlug}</dd>
-                    </div>
-                  ) : null}
-                </dl>
-              ) : null}
-            </div>
-          </li>
-        ))}
-      </ol>
-
-      <div className="mcp-connect__config">
+      <section className="mcp-connect__config" aria-labelledby="mcp-config-title">
         <div className="mcp-connect__config-head">
-          <h3>MCP server config</h3>
+          <h2 id="mcp-config-title">MCP server config</h2>
           <button type="button" className="mcp-connect__copy" onClick={() => void copyText(config, 'config')}>
             {copied === 'config' ? (
               <Check size={16} weight="bold" aria-hidden />
@@ -88,10 +48,59 @@ export function McpConnectPanel({ context }: McpConnectPanelProps) {
           Run from your RepoPilot monorepo root. Works with Cursor, Claude Desktop, and other MCP
           clients that accept the same JSON shape.
         </p>
-      </div>
+        {ctx.repositoryId ? (
+          <dl className="mcp-connect__ids">
+            <div>
+              <dt>RepoPilot ID</dt>
+              <dd className="mcp-connect__id-row">
+                <span className="mono">{ctx.repositoryId}</span>
+                <button
+                  type="button"
+                  className="mcp-connect__copy mcp-connect__copy--inline"
+                  onClick={() => void copyText(ctx.repositoryId!, 'repoId')}
+                >
+                  {copied === 'repoId' ? (
+                    <Check size={14} weight="bold" aria-hidden />
+                  ) : (
+                    <Copy size={14} weight="bold" aria-hidden />
+                  )}
+                  {copied === 'repoId' ? 'Copied' : 'Copy'}
+                </button>
+              </dd>
+            </div>
+            {ctx.repoSlug ? (
+              <div>
+                <dt>GitHub slug</dt>
+                <dd className="mono">{ctx.repoSlug}</dd>
+              </div>
+            ) : null}
+          </dl>
+        ) : null}
+      </section>
 
-      <div className="mcp-connect__tools">
-        <h3>Available tools</h3>
+      <section className="mcp-connect__setup" aria-labelledby="mcp-setup-title">
+        <h2 id="mcp-setup-title" className="mcp-connect__section-title">
+          Setup
+        </h2>
+        <ol className="mcp-connect__steps">
+          {MCP_SETUP_STEPS.map((step, index) => (
+            <li key={step.id} className="mcp-connect__step">
+              <span className="mcp-connect__step-num" aria-hidden>
+                {index + 1}
+              </span>
+              <div>
+                <h3>{step.title}</h3>
+                <p>{step.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="mcp-connect__tools" aria-labelledby="mcp-tools-title">
+        <h2 id="mcp-tools-title" className="mcp-connect__section-title">
+          Available tools
+        </h2>
         <ul className="mcp-connect__tool-list">
           {MCP_TOOLS.map((tool) => (
             <li key={tool.name} className="mcp-connect__tool">
@@ -108,7 +117,7 @@ export function McpConnectPanel({ context }: McpConnectPanelProps) {
             </li>
           ))}
         </ul>
-      </div>
+      </section>
     </div>
   );
 }

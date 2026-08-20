@@ -35,6 +35,7 @@ export default function PublicMcpPage() {
       pageClassName="mcp-page"
       mainClassName="mcp-page__main"
       shellClassName="mcp-page__shell"
+      decorVariant="none"
       seo={{
         title: 'Connect Cursor / MCP',
         description:
@@ -42,28 +43,28 @@ export default function PublicMcpPage() {
         path: '/mcp'
       }}
     >
-          <div className="page-title-block">
-            <h1>Connect Cursor / MCP</h1>
-            <p>
-              Wire RepoPilot into Cursor, Claude Desktop, or any MCP client so agents can search,
-              trace dependencies, and run impact analysis on your indexed repo.
-            </p>
-          </div>
+      <div className="page-title-block">
+        <h1>Connect Cursor / MCP</h1>
+        <p>
+          Wire RepoPilot into Cursor, Claude Desktop, or any MCP client so agents can search,
+          trace dependencies, and run impact analysis on your indexed repo.
+        </p>
+      </div>
 
-          {!context ? (
-            <p className="mcp-page__notice">
-              <Link href="/">Analyze a public repo</Link> or{' '}
-              <Link href={GITHUB_SIGN_IN_URL}>connect GitHub</Link> first — step 3 fills in your repository ID
-              automatically.
-            </p>
-          ) : (
-            <p className="mcp-page__notice">
-              Config below is prefilled for your current session.{' '}
-              <Link href={`/dashboard/${repoId}/mcp`}>Open dashboard view →</Link>
-            </p>
-          )}
+      {!context ? (
+        <p className="mcp-page__notice">
+          <Link href="/">Analyze a public repo</Link> or{' '}
+          <Link href={GITHUB_SIGN_IN_URL}>connect GitHub</Link> first — the config fills in your
+          repository ID automatically.
+        </p>
+      ) : (
+        <p className="mcp-page__notice">
+          Config below is prefilled for your current session.{' '}
+          <Link href={`/dashboard/${repoId}/mcp`}>Open dashboard view →</Link>
+        </p>
+      )}
 
-          <McpConnectPanel context={context} />
+      <McpConnectPanel context={context} />
     </PublicPageLayout>
   );
 }

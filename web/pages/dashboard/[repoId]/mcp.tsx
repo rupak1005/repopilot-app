@@ -21,12 +21,12 @@ export default function DashboardMcpPage() {
 
   return (
     <DashboardLayout activeNav="mcp">
-      <div className="canvas-inner canvas-inner--narrow">
+      <div className="canvas-inner canvas-inner--mcp">
         <div className="page-title-block">
           <h1>MCP for agents</h1>
           <p>
-            Give coding agents access to this indexed repository — search, impact, dependencies,
-            history, and Ask tools backed by real Postgres data.
+            Connect Cursor or any MCP client to this indexed repo — copy the config, then use
+            search, impact, and Ask tools against live Postgres data.
           </p>
         </div>
 
