@@ -36,14 +36,17 @@ export default function DocsDesignSystemPage() {
       <DocsSection title="Typography">
         <ul>
           <li>
-            <strong>UI text</strong> — system sans stack via <code>--font-sans</code>
+            <strong>Display</strong> — Manrope via <code>--font-display</code>
           </li>
           <li>
-            <strong>Data / code</strong> — monospace via <code>--font-mono</code> for inputs, tables, KPI labels
+            <strong>UI / body</strong> — Hanken Grotesk via <code>--font-sans</code>
           </li>
           <li>
-            <strong>Scale</strong> — <code>--text-h1</code>, <code>--text-h2</code>, <code>--text-body</code>,{' '}
-            <code>--text-ui</code>, <code>--text-micro</code>
+            <strong>Technical</strong> — JetBrains Mono via <code>--font-mono</code> for inputs, tables, KPI labels
+          </li>
+          <li>
+            <strong>Scale</strong> — <code>--text-display</code>, <code>--text-h1</code>, <code>--text-h2</code>,{' '}
+            <code>--text-body</code>, <code>--text-ui</code>, <code>--text-micro</code>
           </li>
         </ul>
       </DocsSection>

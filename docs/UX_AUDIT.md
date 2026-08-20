@@ -1,0 +1,70 @@
+# UX Audit — Phase 0
+
+**Date:** 2026-08-20  
+**Scope:** Cross-feature UX, IA, a11y, empty/loading/error
+
+## What exists
+
+| Pattern | Status |
+|---------|--------|
+| Neo-brutalist shell + mobile drawer | Real |
+| Index progress float + stages | Real |
+| EmptyState / ErrorBanner / IndexHint / Toast | Real |
+| Cross-links graph → impact / search / GitHub | Real |
+| Ask citations (file + lines) | Real (interactive open limited) |
+| Topbar Activity + contextual Help | In progress (local) |
+| Dark mode | Real |
+| Reduced motion | Partial coverage |
+
+## Information architecture gaps (vs prompt Phase 2)
+
+Current flat nav:
+
+```text
+Overview, Search, Ask, PRs, Hotspots, Architecture, Impact, Settings
+```
+
+Target grouped IA:
+
+```text
+Understand → Architecture, Dependency Graph, Topography, Search, Docs
+Investigate → Impact, Ask, History, Hotspots
+Change → Planning, PRs, Findings
+Integrate → MCP
+System → Indexing, Settings
+```
+
+Missing surfaces: History time machine, Planning, Wiki, Command Palette, Universal Search, Revision context bar.
+
+## Progressive disclosure
+
+- Graph starts with capped overview — good instinct, bad hard cap
+- Impact dumps lists — OK for v1, needs progressive “why”
+- Ask is conversation-first — good
+
+## Accessibility gaps
+
+- Force-graph largely pointer-driven
+- Some table rows are click-only
+- Touch targets generally OK (≥40px on buttons)
+- Focus rings present via `focus-audit.css`
+
+## Empty / error / loading
+
+| Good | Debt |
+|------|------|
+| Architecture index-in-progress messaging | Mixed EmptyState vs plain text |
+| Ask thinking bubble | Failures sometimes raw API strings |
+| IndexHint when not indexed | No “what we checked” on empty impact |
+
+## Migration plan
+
+1. Restructure nav groups without removing routes (aliases OK)
+2. Cmd+K command palette over existing routes
+3. Revision bar: repo + SHA + index state (data already on index status)
+4. Citation actions: open source / graph / impact / GitHub
+5. Mobile: inspector → bottom sheet for graph/impact
+
+## Risk
+
+IA churn confuses existing users — ship with redirects and “What’s new” once.

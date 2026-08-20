@@ -9,16 +9,11 @@ export default function Document() {
         <meta name="theme-color" content="#f3e8ff" media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content="#100e18" media="(prefers-color-scheme: dark)" />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <link rel="preconnect" href="https://cdn.jsdelivr.net" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
           rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-sans/style.css"
-        />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@500;600;700;800&display=swap"
         />
       </Head>
       <body>

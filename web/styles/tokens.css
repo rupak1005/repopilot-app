@@ -12,7 +12,11 @@
   --color-surface: hsl(270 100% 98%);
   --color-surface-muted: hsl(270 100% 92%);
   --color-surface-accent: hsl(270 100% 90%);
-  --color-primary: hsl(270 97% 75%);
+  /* Primary roles: soft = neo fills, strong = ink/actions, container = tinted panels */
+  --color-primary-soft: hsl(270 97% 75%);
+  --color-primary-strong: hsl(270 68% 42%);
+  --color-primary-container: hsl(270 90% 88%);
+  --color-primary: var(--color-primary-soft);
   --color-primary-hover: hsl(270 97% 80%);
   --color-secondary: hsl(270 40% 96%);
   --color-text: hsl(0 0% 8%);
@@ -22,8 +26,8 @@
   --color-border-strong: hsl(0 0% 0%);
   --color-border-soft: hsl(270 20% 82%);
   --color-focus: hsl(270 90% 55%);
-  --color-link: hsl(270 85% 42%);
-  --color-link-hover: hsl(270 85% 32%);
+  --color-link: var(--color-primary-strong);
+  --color-link-hover: hsl(270 68% 32%);
   --color-accent: var(--color-link);
   --color-on-primary: hsl(0 0% 8%);
   --color-on-danger: hsl(0 0% 100%);
@@ -73,19 +77,22 @@
   --on-surface-variant: var(--color-text-muted);
   --on-background: var(--color-text);
   --primary: var(--color-primary);
-  --primary-container: var(--color-primary);
+  --primary-container: var(--color-primary-container);
   --on-primary-container: var(--color-on-primary);
   --secondary: var(--color-link);
 
   /* ——— Typography ——— */
-  --font-sans: 'Geist', system-ui, sans-serif;
+  --font-display: 'Manrope', system-ui, sans-serif;
+  --font-sans: 'Hanken Grotesk', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
-  --text-display: clamp(2.25rem, 5vw, 3.25rem);
-  --text-h1: clamp(2rem, 4vw, 2.75rem);
-  --text-h2: clamp(1.25rem, 2.5vw, 1.625rem);
-  --text-body: 1rem;
+  /* Responsive type (~48→32 display, 32→24 heading, 16→15 body) */
+  --text-display: clamp(2rem, 4vw + 1rem, 3rem);
+  --text-h1: clamp(1.5rem, 2vw + 1rem, 2rem);
+  --text-h2: clamp(1.125rem, 1vw + 0.75rem, 1.5rem);
+  --text-body: clamp(0.9375rem, 0.2vw + 0.9rem, 1rem);
   --text-ui: 0.9375rem;
   --text-micro: 0.75rem;
+  --text-caption: 0.8125rem;
 
   /* ——— Spacing ——— */
   --space-1: 4px;
@@ -151,7 +158,10 @@
   --color-surface: hsl(260 24% 11%);
   --color-surface-muted: hsl(260 22% 14%);
   --color-surface-accent: hsl(260 26% 18%);
-  --color-primary: hsl(270 70% 68%);
+  --color-primary-soft: hsl(270 70% 68%);
+  --color-primary-strong: hsl(270 85% 78%);
+  --color-primary-container: hsl(270 40% 22%);
+  --color-primary: var(--color-primary-soft);
   --color-primary-hover: hsl(270 70% 74%);
   --color-secondary: hsl(260 20% 16%);
   --color-text: hsl(270 30% 94%);
@@ -161,7 +171,7 @@
   --color-border-strong: hsl(270 20% 88%);
   --color-border-soft: hsl(260 18% 20%);
   --color-focus: hsl(270 80% 72%);
-  --color-link: hsl(270 85% 78%);
+  --color-link: var(--color-primary-strong);
   --color-link-hover: hsl(270 90% 88%);
   --color-accent: var(--color-link);
   --color-on-primary: hsl(0 0% 8%);

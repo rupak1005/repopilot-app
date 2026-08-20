@@ -20,6 +20,17 @@ body {
     color var(--duration-normal) var(--ease-out-expo);
 }
 
+h1,
+h2,
+.brand-title,
+.page-title-block h1,
+.ui-page-header h1,
+.ui-diagram-hero h1,
+.landing-hero h1 {
+  font-family: var(--font-display);
+  letter-spacing: -0.03em;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html,
   body {
