@@ -380,27 +380,53 @@ export function ArchitectureGraphView({
     };
   }, [filtered, layoutAlgo]);
 
+  const syncMinimapCamera = useCallback(() => {
+    const fg = fgRef.current;
+    if (!fg || typeof fg.zoom !== 'function' || typeof fg.centerAt !== 'function') return;
+    const k = fg.zoom();
+    const center = fg.centerAt();
+    if (typeof k !== 'number' || !center || !Number.isFinite(center.x) || !Number.isFinite(center.y)) {
+      return;
+    }
+    setMinimapCamera({ k: k > 0 ? k : 1, x: center.x, y: center.y });
+  }, []);
+
   const fitGraph = useCallback(() => {
     const fg = fgRef.current;
     if (fg && typeof fg.zoomToFit === 'function') {
       fg.zoomToFit(400, 80);
+      window.setTimeout(syncMinimapCamera, 450);
     }
-  }, []);
+  }, [syncMinimapCamera]);
 
-  const onGraphZoom = useCallback(
-    (transform: { k: number; x: number; y: number }) => {
-      setMinimapCamera(cameraFromZoomTransform(transform, dims.width, dims.height));
+  const trackMinimapDuring = useCallback(
+    (ms: number) => {
+      if (ms <= 0) {
+        syncMinimapCamera();
+        return;
+      }
+      const started = performance.now();
+      const tick = () => {
+        syncMinimapCamera();
+        if (performance.now() - started < ms + 40) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
     },
-    [dims.width, dims.height]
+    [syncMinimapCamera]
   );
+
+  const onGraphZoom = useCallback((transform: { k: number; x: number; y: number }) => {
+    setMinimapCamera(cameraFromZoomTransform(transform, dims.width, dims.height));
+  }, [dims.width, dims.height]);
 
   const navigateMinimap = useCallback(
     (point: { x: number; y: number }) => {
       const fg = fgRef.current;
       const ms = reduceMotion ? 0 : 350;
       if (fg && typeof fg.centerAt === 'function') fg.centerAt(point.x, point.y, ms);
+      trackMinimapDuring(ms);
     },
-    [reduceMotion]
+    [reduceMotion, trackMinimapDuring]
   );
 
   const linkCurvature = useCallback((link: LinkObject) => {
@@ -507,9 +533,13 @@ export function ArchitectureGraphView({
 
   useEffect(() => {
     if (renderer !== 'interactive' || loading || layoutData.nodes.length === 0) return;
-    const t = setTimeout(fitGraph, 80);
+    const t = setTimeout(() => {
+      fitGraph();
+      // zoomToFit animates ~400ms — sync the minimap frame after it settles.
+      window.setTimeout(syncMinimapCamera, 450);
+    }, 80);
     return () => clearTimeout(t);
-  }, [layoutData, layoutMode, loading, renderer, fitGraph]);
+  }, [layoutData, layoutMode, loading, renderer, fitGraph, syncMinimapCamera]);
 
   useEffect(() => {
     if (!pulseId) return;
@@ -621,9 +651,10 @@ export function ArchitectureGraphView({
         const ms = reduceMotion ? 0 : 500;
         if (fg && typeof fg.centerAt === 'function') fg.centerAt(node.x, node.y, ms);
         if (fg && typeof fg.zoom === 'function') fg.zoom(2.2, ms);
+        trackMinimapDuring(ms);
       }
     },
-    [renderer, layoutData.nodes, reduceMotion, onSelectedIdChange]
+    [renderer, layoutData.nodes, reduceMotion, onSelectedIdChange, trackMinimapDuring]
   );
 
   useEffect(() => {

@@ -120,17 +120,21 @@ export function viewportInWorld(
   };
 }
 
-/** Convert d3-zoom screen transform into world-space camera center. */
+/**
+ * Convert force-graph `onZoom` payload into a world-space camera.
+ * force-graph merges the d3 transform with `centerAt()`, so `x`/`y` are already
+ * the graph coordinates at the canvas center — not d3 translate offsets.
+ */
 export function cameraFromZoomTransform(
   transform: { x: number; y: number; k: number },
-  viewWidth: number,
-  viewHeight: number
+  _viewWidth?: number,
+  _viewHeight?: number
 ): MinimapCamera {
   const k = transform.k > 0 ? transform.k : 1;
   return {
     k,
-    x: (viewWidth / 2 - transform.x) / k,
-    y: (viewHeight / 2 - transform.y) / k
+    x: transform.x,
+    y: transform.y
   };
 }
 
@@ -141,16 +145,22 @@ export type MinimapFrame = {
   height: number;
 };
 
-/** Keep the viewport rectangle inside the mini canvas with a usable minimum size. */
+/** Intersect the viewport rectangle with the mini canvas (don’t relocate it). */
 export function clampMinimapFrame(
   frame: MinimapFrame,
   miniWidth: number,
   miniHeight: number,
-  minSize = 10
-): MinimapFrame {
-  const width = Math.min(miniWidth, Math.max(minSize, frame.width));
-  const height = Math.min(miniHeight, Math.max(minSize, frame.height));
-  const x = Math.min(Math.max(0, frame.x), miniWidth - width);
-  const y = Math.min(Math.max(0, frame.y), miniHeight - height);
-  return { x, y, width, height };
+  minSize = 8
+): MinimapFrame | null {
+  const x1 = Math.max(0, frame.x);
+  const y1 = Math.max(0, frame.y);
+  const x2 = Math.min(miniWidth, frame.x + frame.width);
+  const y2 = Math.min(miniHeight, frame.y + frame.height);
+  if (x2 - x1 < 1 || y2 - y1 < 1) return null;
+  return {
+    x: x1,
+    y: y1,
+    width: Math.max(minSize, x2 - x1),
+    height: Math.max(minSize, y2 - y1)
+  };
 }

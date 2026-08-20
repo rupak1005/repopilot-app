@@ -38,19 +38,25 @@ describe('graphMinimap', () => {
     expect(viewport.y).toBe(-10);
   });
 
-  it('maps d3 zoom transform to world camera center', () => {
-    const camera = cameraFromZoomTransform({ x: 100, y: 50, k: 2 }, 400, 200);
+  it('maps force-graph onZoom payload (center + k) to camera', () => {
+    const camera = cameraFromZoomTransform({ x: 120, y: 80, k: 2 }, 400, 200);
     expect(camera.k).toBe(2);
-    expect(camera.x).toBe(50);
-    expect(camera.y).toBe(25);
+    expect(camera.x).toBe(120);
+    expect(camera.y).toBe(80);
   });
 
-  it('clamps viewport frame inside the mini canvas', () => {
-    expect(clampMinimapFrame({ x: -20, y: -10, width: 400, height: 5 }, 160, 100)).toEqual({
+  it('clips viewport frame to the mini canvas without relocating it', () => {
+    expect(clampMinimapFrame({ x: -20, y: -10, width: 60, height: 40 }, 160, 100)).toEqual({
       x: 0,
       y: 0,
-      width: 160,
-      height: 10
+      width: 40,
+      height: 30
+    });
+    expect(clampMinimapFrame({ x: 50, y: 40, width: 24, height: 18 }, 160, 100)).toEqual({
+      x: 50,
+      y: 40,
+      width: 24,
+      height: 18
     });
   });
 });
