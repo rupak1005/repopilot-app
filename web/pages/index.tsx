@@ -10,6 +10,12 @@ import { EXAMPLE_REPOS, githubUrl } from '../lib/exampleRepos';
 import { GITHUB_SIGN_IN_URL } from '../lib/auth';
 import { isDemoMode } from '../lib/demoMode';
 import { useIndexProgressUi } from '../lib/indexProgressUi';
+import {
+  LANDING_BRAND,
+  LANDING_HEADLINE,
+  LANDING_HOW_IT_WORKS,
+  LANDING_LEDE
+} from '../lib/landing';
 import { apiUnreachableMessage, parseJsonResponse } from '../lib/parseJsonResponse';
 import { MARKETING_URL } from '../lib/types';
 import { DEFAULT_DESCRIPTION, siteJsonLd } from '../lib/seo';
@@ -92,88 +98,117 @@ export default function LandingPage() {
         jsonLd: siteJsonLd()
       }}
     >
-          <div className="landing-card">
-                <p className="landing-eyebrow">Engineering intelligence</p>
-                <h1>Understand your repository — with evidence</h1>
-                <p className="landing-lede">
-                  Index your codebase for impact analysis, hotspots, grounded Ask, and PR review —
-                  built from real imports and AST, not LLM sketches. Paste a URL or slug, or swap{' '}
-                  <span className="mono">hub</span> for <span className="mono">pilot</span> in the
-                  hostname.
-                </p>
+      <div className="landing-hero">
+        <div className="landing-card landing-card--hero">
+          <p className="landing-brand">{LANDING_BRAND}</p>
+          <h1>{LANDING_HEADLINE}</h1>
+          <p className="landing-lede">{LANDING_LEDE}</p>
 
-                <form className="landing-form" onSubmit={(event) => void handleSubmit(event)}>
-                  <label className="ui-field-label" htmlFor="github-url">
-                    GitHub repository
-                  </label>
-                  <div className="landing-form__row">
-                    <input
-                      id="github-url"
-                      className="ui-input"
-                      value={url}
-                      onChange={(event) => setUrl(event.target.value)}
-                      placeholder="owner/repo or GitHub URL"
-                      spellCheck={false}
-                      autoFocus
-                    />
-                    <Button type="submit" variant="primary" size="lg" disabled={loading || !url.trim()}>
-                      {loading ? 'Analyzing…' : 'Analyze'}
-                    </Button>
-                  </div>
-                  {error ? <ErrorBanner>{error}</ErrorBanner> : null}
-                </form>
+          <form className="landing-form" onSubmit={(event) => void handleSubmit(event)}>
+            <label className="ui-field-label" htmlFor="github-url">
+              GitHub repository
+            </label>
+            <div className="landing-form__row">
+              <input
+                id="github-url"
+                className="ui-input"
+                value={url}
+                onChange={(event) => setUrl(event.target.value)}
+                placeholder="owner/repo or GitHub URL"
+                spellCheck={false}
+                autoFocus
+              />
+              <Button type="submit" variant="primary" size="lg" disabled={loading || !url.trim()}>
+                {loading ? 'Analyzing…' : 'Analyze'}
+              </Button>
+            </div>
+            {error ? <ErrorBanner>{error}</ErrorBanner> : null}
+          </form>
 
-                <div className="landing-examples">
-                  <p className="landing-examples__label">Try these example repositories:</p>
-                  <div className="landing-examples__chips">
-                    {EXAMPLE_REPOS.map((repo) => (
-                      <button
-                        key={repo.slug}
-                        type="button"
-                        className="landing-chip"
-                        disabled={loading}
-                        onClick={() => {
-                          setUrl(githubUrl(repo.slug));
-                          void openRepo(repo.slug);
-                        }}
-                      >
-                        {repo.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <DifferentiatorsStrip
-                  title="Why RepoPilot"
-                  showTagline
-                  className="diff-strip--landing"
-                />
-
-                <p className="landing-note">
-                  Private repos need{' '}
-                  <Link href={GITHUB_SIGN_IN_URL} className="landing-link">
-                    GitHub sign-in
-                  </Link>
-                  .{' '}
-                  {isDemoMode()
-                    ? 'Demo mode uses fixtures after paste.'
-                    : 'First run may take a minute while we clone and index.'}
-                </p>
-
-                {signedInRepoId ? (
-                  <div className="landing-signed-in">
-                    <Link href={`/dashboard/${signedInRepoId}`} className="landing-link">
-                      Continue to dashboard →
-                    </Link>
-                  </div>
-                ) : null}
-
-                <p className="landing-footer">
-                  <Link href="/browse">Browse public repos</Link>
-                  <span aria-hidden> · </span>
-                  <Link href={MARKETING_URL}>Marketing site</Link>
-                </p>
+          <div className="landing-cta-row" aria-label="Secondary actions">
+            <Link href={GITHUB_SIGN_IN_URL} className="landing-link">
+              Sign in for private repos
+            </Link>
+            <span aria-hidden>·</span>
+            <Link href="/docs/getting-started" className="landing-link">
+              Getting started
+            </Link>
+            <span aria-hidden>·</span>
+            <Link href="/browse" className="landing-link">
+              Browse public repos
+            </Link>
           </div>
+
+          <div className="landing-examples">
+            <p className="landing-examples__label">Try an example:</p>
+            <div className="landing-examples__chips">
+              {EXAMPLE_REPOS.map((repo) => (
+                <button
+                  key={repo.slug}
+                  type="button"
+                  className="landing-chip"
+                  disabled={loading}
+                  onClick={() => {
+                    setUrl(githubUrl(repo.slug));
+                    void openRepo(repo.slug);
+                  }}
+                >
+                  {repo.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <p className="landing-note">
+            {isDemoMode()
+              ? 'Demo mode uses fixtures after paste.'
+              : 'First run may take a minute while we clone and index.'}
+            {signedInRepoId ? (
+              <>
+                {' '}
+                <Link href={`/dashboard/${signedInRepoId}`} className="landing-link">
+                  Continue to dashboard →
+                </Link>
+              </>
+            ) : null}
+          </p>
+        </div>
+      </div>
+
+      <section className="landing-section" aria-labelledby="landing-how-title">
+        <h2 id="landing-how-title" className="landing-section__title">
+          How it works
+        </h2>
+        <p className="landing-section__lede">Three steps from URL to evidence-backed investigation.</p>
+        <ol className="landing-steps">
+          {LANDING_HOW_IT_WORKS.map((step, index) => (
+            <li key={step.id} className="landing-step">
+              <span className="landing-step__num" aria-hidden>
+                {index + 1}
+              </span>
+              <div>
+                <h3>{step.title}</h3>
+                <p>{step.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="landing-section landing-section--why" aria-labelledby="landing-why-title">
+        <h2 id="landing-why-title" className="visually-hidden">
+          Why RepoPilot
+        </h2>
+        <DifferentiatorsStrip title="Why RepoPilot" showTagline className="diff-strip--landing" />
+      </section>
+
+      <p className="landing-footer">
+        <Link href="/docs">Docs</Link>
+        <span aria-hidden> · </span>
+        <Link href="/mcp">MCP for agents</Link>
+        <span aria-hidden> · </span>
+        <Link href={MARKETING_URL}>Marketing site</Link>
+      </p>
     </PublicPageLayout>
   );
 }

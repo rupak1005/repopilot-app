@@ -18,7 +18,8 @@
 | 11 | Settings / indexing | **Done foundation** — index health + re-index |
 | 12 | Overview polish | **Done foundation** — pulse + quick actions |
 | 13 | Docs / onboarding | **Done foundation** — checklist + tour refresh |
-| 14–35 | Remaining | Not started / partial |
+| 14 | Landing / marketing | **Done foundation** — brand hero + how-it-works |
+| 15–35 | Remaining | Not started / partial |
 
 ## Phase 5
 
@@ -87,6 +88,13 @@
 - [x] Docs nav + MCP page titled for agents; API reference covers new query ops
 - [x] Introduction links to MCP docs
 
+## Phase 14
+
+- [x] Brand-first landing hero (RepoPilot + headline + analyze CTA)
+- [x] How-it-works section (paste → index → investigate)
+- [x] Differentiators moved below the fold; docs/MCP footer links
+- [x] Shared landing copy module + tests
+
 ## Next action
 
-Phase 14 (Landing / marketing polish) or revision-scoped graph viewing.
+Phase 15 (Accessibility / motion polish) or revision-scoped graph viewing.
