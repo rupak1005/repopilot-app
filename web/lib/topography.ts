@@ -1,17 +1,27 @@
 import type { HotspotRow } from './types';
 
+export type TopoMetric = 'score' | 'changeCount' | 'dependentCount' | 'findingsCount';
+
+export const TOPO_METRICS: Array<{ id: TopoMetric; label: string }> = [
+  { id: 'score', label: 'Hotspot score' },
+  { id: 'changeCount', label: 'Churn' },
+  { id: 'dependentCount', label: 'Dependents' },
+  { id: 'findingsCount', label: 'Findings' }
+];
+
 export type TopoCell = {
   id: string;
   kind: 'cluster' | 'file';
   label: string;
+  /** Metric value used for sizing/ranking. */
+  value: number;
   score: number;
   changeCount: number;
+  dependentCount: number;
+  findingsCount: number;
   memberCount: number;
-  /** Grid column 0..cols-1 */
   col: number;
-  /** Grid row 0..rows-1 */
   row: number;
-  /** Visual weight 1–4 */
   weight: number;
   files: HotspotRow[];
 };
@@ -22,9 +32,23 @@ export function topographyClusterKey(filePath: string): string {
   return filePath.slice(0, slash);
 }
 
-function weightForScore(score: number, maxScore: number): number {
-  if (maxScore <= 0) return 1;
-  const ratio = score / maxScore;
+export function hotspotMetricValue(row: HotspotRow, metric: TopoMetric): number {
+  switch (metric) {
+    case 'changeCount':
+      return row.changeCount ?? 0;
+    case 'dependentCount':
+      return row.dependentCount ?? 0;
+    case 'findingsCount':
+      return row.findingsCount ?? 0;
+    case 'score':
+    default:
+      return row.score ?? 0;
+  }
+}
+
+function weightForValue(value: number, maxValue: number): number {
+  if (maxValue <= 0) return 1;
+  const ratio = value / maxValue;
   if (ratio >= 0.75) return 4;
   if (ratio >= 0.45) return 3;
   if (ratio >= 0.2) return 2;
@@ -33,15 +57,16 @@ function weightForScore(score: number, maxScore: number): number {
 
 /**
  * 2D topography layout: cluster hotspots by top-level directory into a dense grid.
- * Size encodes relative hotspot score — not decorative 3D.
+ * Size encodes the selected metric — not decorative 3D.
  */
 export function layoutTopography(
   hotspots: HotspotRow[],
-  opts?: { columns?: number }
+  opts?: { columns?: number; metric?: TopoMetric }
 ): TopoCell[] {
   if (hotspots.length === 0) return [];
 
   const columns = Math.max(2, opts?.columns ?? 4);
+  const metric = opts?.metric ?? 'score';
   const byCluster = new Map<string, HotspotRow[]>();
   for (const row of hotspots) {
     const key = topographyClusterKey(row.filePath);
@@ -52,25 +77,33 @@ export function layoutTopography(
 
   const clusters = Array.from(byCluster.entries())
     .map(([key, files]) => {
-      const sorted = [...files].sort((a, b) => b.score - a.score);
+      const sorted = [...files].sort(
+        (a, b) => hotspotMetricValue(b, metric) - hotspotMetricValue(a, metric)
+      );
+      const value = Math.max(...sorted.map((f) => hotspotMetricValue(f, metric)));
       const score = Math.max(...sorted.map((f) => f.score));
       const changeCount = sorted.reduce((sum, f) => sum + f.changeCount, 0);
-      return { key, files: sorted, score, changeCount };
+      const dependentCount = sorted.reduce((sum, f) => sum + (f.dependentCount ?? 0), 0);
+      const findingsCount = sorted.reduce((sum, f) => sum + (f.findingsCount ?? 0), 0);
+      return { key, files: sorted, value, score, changeCount, dependentCount, findingsCount };
     })
-    .sort((a, b) => b.score - a.score);
+    .sort((a, b) => b.value - a.value);
 
-  const maxScore = clusters[0]?.score ?? 0;
+  const maxValue = clusters[0]?.value ?? 0;
 
   return clusters.map((cluster, index) => ({
     id: `topo:${cluster.key}`,
     kind: 'cluster' as const,
     label: cluster.key === '__root__' ? 'root' : cluster.key,
+    value: cluster.value,
     score: cluster.score,
     changeCount: cluster.changeCount,
+    dependentCount: cluster.dependentCount,
+    findingsCount: cluster.findingsCount,
     memberCount: cluster.files.length,
     col: index % columns,
     row: Math.floor(index / columns),
-    weight: weightForScore(cluster.score, maxScore),
+    weight: weightForValue(cluster.value, maxValue),
     files: cluster.files
   }));
 }

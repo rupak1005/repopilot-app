@@ -97,6 +97,33 @@
   gap: var(--space-4);
 }
 
+.ui-topo__metrics {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border: var(--border-medium);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+}
+
+.ui-topo__metric {
+  border: none;
+  background: transparent;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-ui);
+  font-weight: 700;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.ui-topo__metric--active {
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-hard-sm);
+}
+
 .ui-topo__grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

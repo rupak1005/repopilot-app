@@ -48,7 +48,7 @@ import {
   resolveModulePathArg,
   shortestModulePath
 } from './services/contextGraph';
-import { analyzeFileImpact, analyzePullImpact, resolveIndexedFilePath } from './services/impactAnalysis';
+import { analyzeFileImpact, analyzePullImpact, analyzeSymbolImpact, resolveIndexedFilePath } from './services/impactAnalysis';
 import { requireInternalApiAuth } from './middleware/internalAuth';
 import { checkRateLimit, clientIp } from './middleware/rateLimit';
 import {
@@ -630,6 +630,8 @@ async function bootstrap() {
     const query = request.query as {
       filePath?: string;
       pullNumber?: string;
+      symbolId?: string;
+      symbolName?: string;
       revisionSha?: string;
       depth?: string;
     };
@@ -658,9 +660,24 @@ async function bootstrap() {
       return result;
     }
 
+    if (query.symbolId?.trim() || query.symbolName?.trim()) {
+      const result = await analyzeSymbolImpact({
+        repositoryId: params.repoId,
+        symbolId: query.symbolId,
+        symbolName: query.symbolName,
+        revisionSha: query.revisionSha,
+        depth
+      });
+      if (!result) {
+        reply.code(404);
+        return { error: 'symbol not found for repository' };
+      }
+      return result;
+    }
+
     if (!query.filePath?.trim()) {
       reply.code(400);
-      return { error: 'filePath or pullNumber is required' };
+      return { error: 'filePath, pullNumber, symbolId, or symbolName is required' };
     }
 
     const result = await analyzeFileImpact({

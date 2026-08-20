@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import {
+  TOPO_METRICS,
   layoutTopography,
   topographyRiskTone,
-  type TopoCell
+  type TopoCell,
+  type TopoMetric
 } from '../../lib/topography';
 import type { HotspotRow } from '../../lib/types';
 import { EmptyState } from './EmptyState';
@@ -14,7 +16,11 @@ type TopographyMapProps = {
 };
 
 export function TopographyMap({ hotspots, repoId }: TopographyMapProps) {
-  const cells = useMemo(() => layoutTopography(hotspots, { columns: 4 }), [hotspots]);
+  const [metric, setMetric] = useState<TopoMetric>('score');
+  const cells = useMemo(
+    () => layoutTopography(hotspots, { columns: 4, metric }),
+    [hotspots, metric]
+  );
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = cells.find((cell) => cell.id === selectedId) ?? null;
 
@@ -30,11 +36,27 @@ export function TopographyMap({ hotspots, repoId }: TopographyMapProps) {
 
   return (
     <div className="ui-topo">
+      <div className="ui-topo__metrics" role="tablist" aria-label="Topography metric">
+        {TOPO_METRICS.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            role="tab"
+            aria-selected={metric === item.id}
+            className={`ui-topo__metric${metric === item.id ? ' ui-topo__metric--active' : ''}`}
+            onClick={() => setMetric(item.id)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
       <div className="ui-topo__grid" role="list" aria-label="Codebase topography">
         {cells.map((cell) => (
           <TopoBlock
             key={cell.id}
             cell={cell}
+            metric={metric}
             selected={selectedId === cell.id}
             onSelect={() => setSelectedId(cell.id === selectedId ? null : cell.id)}
           />
@@ -46,8 +68,8 @@ export function TopographyMap({ hotspots, repoId }: TopographyMapProps) {
           <p className="label-caps">Cluster</p>
           <h3 className="ui-topo__inspector-title">{selected.label}/</h3>
           <p className="ui-topo__inspector-meta">
-            Peak {selected.score.toFixed(0)} pts · {selected.memberCount} files ·{' '}
-            {selected.changeCount} changes
+            Metric {selected.value.toFixed(0)} · peak score {selected.score.toFixed(0)} ·{' '}
+            {selected.memberCount} files · {selected.changeCount} changes
           </p>
           <ul className="ui-topo__files">
             {selected.files.slice(0, 8).map((file) => {
@@ -71,7 +93,7 @@ export function TopographyMap({ hotspots, repoId }: TopographyMapProps) {
         </div>
       ) : (
         <p className="ui-topo__hint">
-          Blocks are directory clusters. Size and color encode hotspot score — click a block to
+          Blocks are directory clusters. Size encodes the selected metric — click a block to
           inspect files.
         </p>
       )}
@@ -81,10 +103,12 @@ export function TopographyMap({ hotspots, repoId }: TopographyMapProps) {
 
 function TopoBlock({
   cell,
+  metric,
   selected,
   onSelect
 }: {
   cell: TopoCell;
+  metric: TopoMetric;
   selected: boolean;
   onSelect: () => void;
 }) {
@@ -99,10 +123,10 @@ function TopoBlock({
       style={{ gridColumn: cell.col + 1, gridRow: cell.row + 1 }}
       onClick={onSelect}
       aria-pressed={selected}
-      aria-label={`${cell.label} cluster, score ${cell.score.toFixed(0)}`}
+      aria-label={`${cell.label} cluster, ${metric} ${cell.value.toFixed(0)}`}
     >
       <span className="ui-topo__block-label">{cell.label}</span>
-      <span className="ui-topo__block-score">{cell.score.toFixed(0)}</span>
+      <span className="ui-topo__block-score">{cell.value.toFixed(0)}</span>
       <span className="ui-topo__block-count">{cell.memberCount} files</span>
     </button>
   );

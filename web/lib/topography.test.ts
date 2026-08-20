@@ -1,9 +1,25 @@
 import { describe, expect, it } from 'vitest';
-import { layoutTopography, topographyClusterKey, topographyRiskTone } from './topography';
+import {
+  hotspotMetricValue,
+  layoutTopography,
+  topographyClusterKey,
+  topographyRiskTone
+} from './topography';
 import type { HotspotRow } from './types';
 
-function hot(path: string, score: number): HotspotRow {
-  return { filePath: path, score, changeCount: score, reasons: [] };
+function hot(
+  path: string,
+  score: number,
+  extras?: Partial<HotspotRow>
+): HotspotRow {
+  return {
+    filePath: path,
+    score,
+    changeCount: extras?.changeCount ?? score,
+    dependentCount: extras?.dependentCount,
+    findingsCount: extras?.findingsCount,
+    reasons: []
+  };
 }
 
 describe('layoutTopography', () => {
@@ -23,5 +39,18 @@ describe('layoutTopography', () => {
     expect(cells[0]?.memberCount).toBe(2);
     expect(cells[0]?.weight).toBe(4);
     expect(topographyRiskTone(50)).toBe('high');
+  });
+
+  it('can size clusters by dependents metric', () => {
+    const cells = layoutTopography(
+      [
+        hot('api/a.ts', 10, { dependentCount: 50 }),
+        hot('web/b.tsx', 90, { dependentCount: 2 })
+      ],
+      { metric: 'dependentCount' }
+    );
+    expect(hotspotMetricValue(cells[0]!.files[0]!, 'dependentCount')).toBe(50);
+    expect(cells[0]?.label).toBe('api');
+    expect(cells[0]?.value).toBe(50);
   });
 });

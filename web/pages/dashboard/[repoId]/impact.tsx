@@ -19,17 +19,26 @@ import {
 } from '../../../lib/dashboard';
 import { isDemoMode } from '../../../lib/demoMode';
 import { repoApiPath } from '../../../lib/serverApi';
-import type { FileImpactAnalysis, PullImpactAnalysis } from '../../../lib/types';
+import type { FileImpactAnalysis, PullImpactAnalysis, SymbolImpactAnalysis } from '../../../lib/types';
 
-type ImpactMode = 'file' | 'pull';
+type ImpactMode = 'file' | 'pull' | 'symbol';
+
+function resolveImpactMode(query: {
+  file?: string | string[];
+  pull?: string | string[];
+  pullNumber?: string | string[];
+  symbol?: string | string[];
+  symbolName?: string | string[];
+}): ImpactMode {
+  if (typeof query.symbol === 'string' || typeof query.symbolName === 'string') return 'symbol';
+  if (typeof query.pull === 'string' || typeof query.pullNumber === 'string') return 'pull';
+  return 'file';
+}
 
 export default function ImpactPage() {
   const router = useRouter();
   const repoId = typeof router.query.repoId === 'string' ? router.query.repoId : null;
-  const queryMode: ImpactMode =
-    typeof router.query.pull === 'string' || typeof router.query.pullNumber === 'string'
-      ? 'pull'
-      : 'file';
+  const queryMode = resolveImpactMode(router.query);
   const initialFile =
     typeof router.query.file === 'string' ? router.query.file : 'api/src/services/PaymentService.ts';
   const initialPull =
@@ -38,6 +47,12 @@ export default function ImpactPage() {
       : typeof router.query.pullNumber === 'string'
         ? router.query.pullNumber
         : '42';
+  const initialSymbol =
+    typeof router.query.symbol === 'string'
+      ? router.query.symbol
+      : typeof router.query.symbolName === 'string'
+        ? router.query.symbolName
+        : 'PaymentService';
 
   const { pulls, analytics, hotspots, error: repoError, loading: repoLoading } = useRepoData(repoId);
   const indexStatus = useRepoIndexStatus(repoId);
@@ -54,8 +69,10 @@ export default function ImpactPage() {
   const [mode, setMode] = useState<ImpactMode>(queryMode);
   const [filePath, setFilePath] = useState(initialFile);
   const [pullNumber, setPullNumber] = useState(initialPull);
+  const [symbolName, setSymbolName] = useState(initialSymbol);
   const [fileResult, setFileResult] = useState<FileImpactAnalysis | null>(null);
   const [pullResult, setPullResult] = useState<PullImpactAnalysis | null>(null);
+  const [symbolResult, setSymbolResult] = useState<SymbolImpactAnalysis | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -64,13 +81,23 @@ export default function ImpactPage() {
     if (typeof router.query.file === 'string') setFilePath(router.query.file);
     if (typeof router.query.pull === 'string') setPullNumber(router.query.pull);
     if (typeof router.query.pullNumber === 'string') setPullNumber(router.query.pullNumber);
-  }, [queryMode, router.query.file, router.query.pull, router.query.pullNumber]);
+    if (typeof router.query.symbol === 'string') setSymbolName(router.query.symbol);
+    if (typeof router.query.symbolName === 'string') setSymbolName(router.query.symbolName);
+  }, [
+    queryMode,
+    router.query.file,
+    router.query.pull,
+    router.query.pullNumber,
+    router.query.symbol,
+    router.query.symbolName
+  ]);
 
   async function analyzeFile(path: string) {
     if (!repoId || !path.trim()) return;
     setLoading(true);
     setError(null);
     setPullResult(null);
+    setSymbolResult(null);
     try {
       if (isDemoMode()) {
         await demoDelay(250);
@@ -104,6 +131,7 @@ export default function ImpactPage() {
     setLoading(true);
     setError(null);
     setFileResult(null);
+    setSymbolResult(null);
     try {
       if (isDemoMode()) {
         await demoDelay(250);
@@ -158,6 +186,78 @@ export default function ImpactPage() {
     }
   }
 
+  async function analyzeSymbol(name: string) {
+    if (!repoId || !name.trim()) return;
+    setLoading(true);
+    setError(null);
+    setFileResult(null);
+    setPullResult(null);
+    try {
+      if (isDemoMode()) {
+        await demoDelay(250);
+        setSymbolResult({
+          mode: 'symbol',
+          target: {
+            symbolId: 'demo-symbol',
+            name: name.trim(),
+            type: 'function',
+            filePath: 'api/src/services/PaymentService.ts'
+          },
+          revisionSha: 'demo',
+          risk: 'HIGH',
+          confidence: 'MEDIUM',
+          riskFactors: [
+            {
+              id: 'direct',
+              label: 'Direct callers',
+              detail: '3 symbols call this target',
+              severity: 'warn'
+            },
+            {
+              id: 'cycle',
+              label: 'Call cycle',
+              detail: 'Demo cycle signal for illustration',
+              severity: 'danger'
+            }
+          ],
+          directCallers: [
+            { symbolId: '1', name: 'checkout', type: 'function' },
+            { symbolId: '2', name: 'renew', type: 'function' },
+            { symbolId: '3', name: 'workerTick', type: 'function' }
+          ],
+          transitiveCallers: [{ symbolId: '4', name: 'handleWebhook', type: 'function' }],
+          cycleDetected: true,
+          relevantTests: [
+            {
+              filePath: 'api/src/services/PaymentService.test.ts',
+              reason: 'Imports the containing module directly.',
+              confidence: 'HIGH'
+            }
+          ],
+          coChanges: [],
+          hotspot: { score: 62, changeCount: 14, reasons: ['high churn'] },
+          checklist: [
+            'Inspect direct callers before changing the symbol signature.',
+            'Run PaymentService tests.',
+            'Break or carefully review the call cycle before merging.'
+          ],
+          summary: `Demo symbol ${name.trim()} has 3 direct and 1 transitive callers. Call cycle detected.`
+        });
+        return;
+      }
+      const response = await fetch(
+        repoApiPath(repoId, `impact?symbolName=${encodeURIComponent(name.trim())}&depth=2`)
+      );
+      if (!response.ok) throw new Error('Symbol not found — check the name or index the repo.');
+      setSymbolResult((await response.json()) as SymbolImpactAnalysis);
+    } catch (err) {
+      setSymbolResult(null);
+      setError(err instanceof Error ? err.message : 'Symbol impact analysis failed');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
     if (!repoId) return;
     if (queryMode === 'pull') {
@@ -170,12 +270,30 @@ export default function ImpactPage() {
       );
       return;
     }
+    if (queryMode === 'symbol') {
+      void analyzeSymbol(
+        typeof router.query.symbol === 'string'
+          ? router.query.symbol
+          : typeof router.query.symbolName === 'string'
+            ? router.query.symbolName
+            : 'PaymentService'
+      );
+      return;
+    }
     void analyzeFile(
       typeof router.query.file === 'string'
         ? router.query.file
         : 'api/src/services/PaymentService.ts'
     );
-  }, [repoId, queryMode, router.query.file, router.query.pull, router.query.pullNumber]);
+  }, [
+    repoId,
+    queryMode,
+    router.query.file,
+    router.query.pull,
+    router.query.pullNumber,
+    router.query.symbol,
+    router.query.symbolName
+  ]);
 
   function switchMode(next: ImpactMode) {
     if (!repoId) return;
@@ -186,9 +304,15 @@ export default function ImpactPage() {
         undefined,
         { shallow: true }
       );
-    } else {
+    } else if (next === 'pull') {
       void router.replace(
         { pathname: `/dashboard/${repoId}/impact`, query: { pull: pullNumber.trim() } },
+        undefined,
+        { shallow: true }
+      );
+    } else {
+      void router.replace(
+        { pathname: `/dashboard/${repoId}/impact`, query: { symbol: symbolName.trim() } },
         undefined,
         { shallow: true }
       );
@@ -207,16 +331,26 @@ export default function ImpactPage() {
       void analyzeFile(filePath.trim());
       return;
     }
+    if (mode === 'pull') {
+      void router.replace(
+        { pathname: `/dashboard/${repoId}/impact`, query: { pull: pullNumber.trim() } },
+        undefined,
+        { shallow: true }
+      );
+      void analyzePull(pullNumber.trim());
+      return;
+    }
     void router.replace(
-      { pathname: `/dashboard/${repoId}/impact`, query: { pull: pullNumber.trim() } },
+      { pathname: `/dashboard/${repoId}/impact`, query: { symbol: symbolName.trim() } },
       undefined,
       { shallow: true }
     );
-    void analyzePull(pullNumber.trim());
+    void analyzeSymbol(symbolName.trim());
   }
 
   const base = repoId ? `/dashboard/${repoId}` : '';
-  const result = mode === 'file' ? fileResult : pullResult;
+  const result =
+    mode === 'file' ? fileResult : mode === 'pull' ? pullResult : symbolResult;
 
   return (
     <DashboardLayout activeNav="impact">
@@ -245,6 +379,15 @@ export default function ImpactPage() {
           <button
             type="button"
             role="tab"
+            aria-selected={mode === 'symbol'}
+            className={`ui-impact-mode${mode === 'symbol' ? ' ui-impact-mode--active' : ''}`}
+            onClick={() => switchMode('symbol')}
+          >
+            Symbol impact
+          </button>
+          <button
+            type="button"
+            role="tab"
             aria-selected={mode === 'pull'}
             className={`ui-impact-mode${mode === 'pull' ? ' ui-impact-mode--active' : ''}`}
             onClick={() => switchMode('pull')}
@@ -255,7 +398,11 @@ export default function ImpactPage() {
 
         <form className="ui-impact-form" onSubmit={handleSubmit}>
           <label className="ui-field-label" htmlFor="impact-input">
-            {mode === 'file' ? 'Module path' : 'Pull request number'}
+            {mode === 'file'
+              ? 'Module path'
+              : mode === 'symbol'
+                ? 'Symbol name'
+                : 'Pull request number'}
           </label>
           <div className="ui-impact-form__row">
             {mode === 'file' ? (
@@ -265,6 +412,15 @@ export default function ImpactPage() {
                 value={filePath}
                 onChange={(event) => setFilePath(event.target.value)}
                 placeholder="api/src/services/PaymentService.ts"
+                spellCheck={false}
+              />
+            ) : mode === 'symbol' ? (
+              <input
+                id="impact-input"
+                className="ui-input"
+                value={symbolName}
+                onChange={(event) => setSymbolName(event.target.value)}
+                placeholder="PaymentService"
                 spellCheck={false}
               />
             ) : (
@@ -290,6 +446,10 @@ export default function ImpactPage() {
           <FileImpactView result={fileResult} base={base} />
         ) : null}
 
+        {symbolResult && mode === 'symbol' && !loading ? (
+          <SymbolImpactView result={symbolResult} base={base} />
+        ) : null}
+
         {pullResult && mode === 'pull' && !loading ? (
           <PullImpactView result={pullResult} base={base} />
         ) : null}
@@ -305,11 +465,19 @@ export default function ImpactPage() {
         {!loading && !result && !error ? (
           <EmptyState
             icon={MagnifyingGlass}
-            title={mode === 'file' ? 'Enter a module path' : 'Enter a pull number'}
+            title={
+              mode === 'file'
+                ? 'Enter a module path'
+                : mode === 'symbol'
+                  ? 'Enter a symbol name'
+                  : 'Enter a pull number'
+            }
             description={
               mode === 'file'
                 ? 'Try api/src/services/PaymentService.ts in demo mode.'
-                : 'Try pull 42 in demo mode.'
+                : mode === 'symbol'
+                  ? 'Try PaymentService in demo mode.'
+                  : 'Try pull 42 in demo mode.'
             }
           />
         ) : null}
@@ -377,6 +545,54 @@ function FileImpactView({ result, base }: { result: FileImpactAnalysis; base: st
               View topography
             </Link>
           </div>
+        </BentoPanel>
+      ) : null}
+    </>
+  );
+}
+
+function SymbolImpactView({ result, base }: { result: SymbolImpactAnalysis; base: string }) {
+  return (
+    <>
+      <p className="ui-impact-page__summary">{result.summary}</p>
+      <ImpactKpis
+        direct={result.directCallers.length}
+        transitive={result.transitiveCallers.length}
+        tests={result.relevantTests.length}
+        risk={result.risk}
+        confidence={result.confidence}
+      />
+      <RiskFactors factors={result.riskFactors} />
+      <BentoPanel title="Caller blast map">
+        <ImpactBlastMap
+          target={`${result.target.type} ${result.target.name}`}
+          directDependents={result.directCallers.map((c) => `${c.name} (${c.type})`)}
+          transitiveDependents={result.transitiveCallers.map((c) => `${c.name} (${c.type})`)}
+          outboundImports={[result.target.filePath]}
+          baseHref={base}
+        />
+        {base ? (
+          <p className="ui-impact-blast__link">
+            <Link href={`${base}/impact?file=${encodeURIComponent(result.target.filePath)}`}>
+              Open containing file impact →
+            </Link>
+          </p>
+        ) : null}
+      </BentoPanel>
+      <ImpactLists
+        base={base}
+        risk={result.risk}
+        directDependents={result.directCallers.map((c) => `${c.name} · ${result.target.filePath}`)}
+        transitiveDependents={result.transitiveCallers.map((c) => c.name)}
+        checklist={result.checklist}
+        tests={result.relevantTests}
+      />
+      {result.cycleDetected ? (
+        <BentoPanel title="Call cycle">
+          <p className="ui-finding-card__desc">
+            This symbol is part of a strongly connected call component — treat signature changes as
+            high risk.
+          </p>
         </BentoPanel>
       ) : null}
     </>

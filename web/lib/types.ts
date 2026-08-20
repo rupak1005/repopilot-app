@@ -122,6 +122,28 @@ export type PullImpactAnalysis = {
   summary: string;
 };
 
+export type SymbolImpactAnalysis = {
+  mode: 'symbol';
+  target: {
+    symbolId: string;
+    name: string;
+    type: string;
+    filePath: string;
+  };
+  revisionSha: string;
+  risk: 'LOW' | 'MEDIUM' | 'HIGH';
+  confidence: 'LOW' | 'MEDIUM' | 'HIGH';
+  riskFactors: FileImpactAnalysis['riskFactors'];
+  directCallers: Array<{ symbolId: string; name: string; type: string }>;
+  transitiveCallers: Array<{ symbolId: string; name: string; type: string }>;
+  cycleDetected: boolean;
+  relevantTests: ImpactTestRecommendation[];
+  coChanges: Array<{ file: string; pairedWith: string; count: number }>;
+  hotspot: { score: number; changeCount: number; reasons: string[] } | null;
+  checklist: string[];
+  summary: string;
+};
+
 export type RepositoryAnalytics = {
   totalReviews: number;
   completedReviews: number;

@@ -8,28 +8,25 @@
 | Phase | Name | Status |
 |------:|------|--------|
 | 0–3 | Audits, design system, shell, context graph | **Done** |
-| 4 | Real dependency graph | **In progress** (clustering / neighborhood / path / deep links) |
-| 5 | Impact analysis | **In progress** — file + PR modes, risk factors, blast map |
-| 6 | Codebase topography | **Started** — 2D directory landscape on Topography page |
+| 4 | Real dependency graph | **In progress** |
+| 5 | Impact analysis | **In progress** — file / symbol / PR modes |
+| 6 | Codebase topography | **In progress** — 2D map + metric toggles |
 | 7–35 | Remaining | Not started / partial |
 
-## Phase 5 (continued)
+## Phase 5
 
-- [x] File impact risk factors + confidence
-- [x] Blast radius map
-- [x] PR impact mode (`GET …/impact?pullNumber=`) aggregating changed files
-- [x] Impact page File / PR tabs; PR detail uses live pull impact
-- [ ] Symbol impact mode
+- [x] File impact risk factors + confidence + blast map
+- [x] PR impact aggregation
+- [x] Symbol impact (`symbolName` / `symbolId`) with callers + cycle signal
 - [ ] Canvas ArchitectureGraph blast overlay
 
-## Phase 6 (started)
+## Phase 6
 
-- [x] Rename Hotspots → Topography in nav (Phase 2)
-- [x] Raise hotspot fetch to `topK=40` on topography page
-- [x] 2D topography map: directory clusters sized/colored by hotspot score
-- [ ] Time slider / metric toggles / complexity metrics
-- [ ] Optional 3D mode (explicitly deferred)
+- [x] 2D topography clusters
+- [x] Metric toggles: hotspot score / churn / dependents / findings
+- [ ] Time slider / revision-scoped hotspots
+- [ ] Optional 3D (deferred)
 
 ## Next action
 
-Continue Phase 6 (metrics/time) or Phase 5 symbol impact — **ask before committing**.
+Canvas blast overlay or time-window topography — ask before committing.

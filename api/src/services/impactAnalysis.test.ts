@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   analyzeFileImpact,
+  analyzeSymbolImpact,
   buildRiskFactors,
   computeImpactConfidence,
   computeRisk,
@@ -60,5 +61,11 @@ describe('mergePullRisks', () => {
     expect(mergePullRisks(['LOW', 'MEDIUM', 'LOW'])).toBe('MEDIUM');
     expect(mergePullRisks(['MEDIUM', 'HIGH'])).toBe('HIGH');
     expect(mergePullRisks([])).toBe('LOW');
+  });
+});
+
+describe('analyzeSymbolImpact', () => {
+  it('is exported for symbol impact mode', () => {
+    expect(typeof analyzeSymbolImpact).toBe('function');
   });
 });

@@ -1,5 +1,8 @@
 import { getPrisma } from '../db/prisma';
-import { getModuleDependencyTraversal } from './dependencyGraphQueries';
+import {
+  getModuleDependencyTraversal,
+  getSymbolDependencyTraversal
+} from './dependencyGraphQueries';
 import { getCoChanges } from './engineeringIntelligence';
 import {
   buildFileChangesFromRevisions,
@@ -611,4 +614,227 @@ export async function analyzePullImpact(args: {
 /** Pure helper for unit tests — merges per-file risks into a PR risk. */
 export function mergePullRisks(risks: ImpactRisk[]): ImpactRisk {
   return risks.reduce<ImpactRisk>((acc, risk) => maxRisk(acc, risk), 'LOW');
+}
+
+export type SymbolImpactAnalysisResult = {
+  mode: 'symbol';
+  target: {
+    symbolId: string;
+    name: string;
+    type: string;
+    filePath: string;
+  };
+  revisionSha: string;
+  risk: ImpactRisk;
+  confidence: ImpactConfidence;
+  riskFactors: ImpactRiskFactor[];
+  directCallers: Array<{ symbolId: string; name: string; type: string }>;
+  transitiveCallers: Array<{ symbolId: string; name: string; type: string }>;
+  cycleDetected: boolean;
+  relevantTests: ImpactTestRecommendation[];
+  coChanges: Array<{ file: string; pairedWith: string; count: number }>;
+  hotspot: { score: number; changeCount: number; reasons: string[] } | null;
+  checklist: string[];
+  summary: string;
+};
+
+async function resolveSymbolTarget(args: {
+  repositoryId: string;
+  revisionId: string;
+  symbolId?: string;
+  symbolName?: string;
+}): Promise<{
+  symbolId: string;
+  name: string;
+  type: string;
+  filePath: string;
+} | null> {
+  const prisma = getPrisma();
+  if (args.symbolId?.trim()) {
+    const rows = (await prisma.$queryRawUnsafe(
+      `
+        SELECT s.id AS "symbolId", s.name, s.type, f.path AS "filePath"
+        FROM "Symbol" s
+        JOIN "File" f ON f.id = s."fileId"
+        WHERE f."repositoryId" = $1
+          AND f."revisionId" = $2
+          AND s.id = $3::uuid
+        LIMIT 1
+      `,
+      args.repositoryId,
+      args.revisionId,
+      args.symbolId.trim()
+    )) as Array<{ symbolId: string; name: string; type: string; filePath: string }>;
+    return rows[0] ?? null;
+  }
+
+  const name = args.symbolName?.trim();
+  if (!name) return null;
+
+  const rows = (await prisma.$queryRawUnsafe(
+    `
+      SELECT s.id AS "symbolId", s.name, s.type, f.path AS "filePath"
+      FROM "Symbol" s
+      JOIN "File" f ON f.id = s."fileId"
+      WHERE f."repositoryId" = $1
+        AND f."revisionId" = $2
+        AND s.name = $3
+      ORDER BY s."startLine" ASC
+      LIMIT 5
+    `,
+    args.repositoryId,
+    args.revisionId,
+    name
+  )) as Array<{ symbolId: string; name: string; type: string; filePath: string }>;
+
+  return rows[0] ?? null;
+}
+
+export async function analyzeSymbolImpact(args: {
+  repositoryId: string;
+  symbolId?: string;
+  symbolName?: string;
+  revisionSha?: string;
+  depth?: number;
+}): Promise<SymbolImpactAnalysisResult | null> {
+  const revision = await resolveRepositoryRevision({
+    repositoryId: args.repositoryId,
+    revisionSha: args.revisionSha
+  });
+  if (!revision) return null;
+
+  const target = await resolveSymbolTarget({
+    repositoryId: args.repositoryId,
+    revisionId: revision.id,
+    symbolId: args.symbolId,
+    symbolName: args.symbolName
+  });
+  if (!target) return null;
+
+  const traversal = await getSymbolDependencyTraversal({
+    repositoryId: args.repositoryId,
+    symbolId: target.symbolId,
+    revisionSha: revision.revisionSha,
+    depthLimit: args.depth
+  });
+  if (!traversal) return null;
+
+  const directCallers = traversal.directCallers;
+  const transitiveCallers = traversal.transitiveCallers;
+  const relevantTests = await findTestsForModule({
+    revisionId: revision.id,
+    filePath: target.filePath,
+    dependentModules: []
+  });
+  const coChanges = await getCoChanges({
+    repositoryId: args.repositoryId,
+    filePath: target.filePath,
+    topK: 5
+  });
+
+  const prisma = getPrisma();
+  const hotspotRows = (await prisma.$queryRawUnsafe(
+    `
+      SELECT "score", "changeCount", "reasons"
+      FROM "ModuleHotspot"
+      WHERE "repositoryId" = $1
+        AND "filePath" = $2
+      LIMIT 1
+    `,
+    args.repositoryId,
+    target.filePath
+  )) as Array<{ score: number; changeCount: number; reasons: string[] }>;
+  const hotspotRow = hotspotRows[0];
+
+  const risk = computeRisk({
+    directCount: directCallers.length,
+    transitiveCount: transitiveCallers.length,
+    hotspotScore: hotspotRow?.score ?? 0,
+    testCount: relevantTests.length
+  });
+  const confidence = computeImpactConfidence({
+    directCount: directCallers.length,
+    transitiveCount: transitiveCallers.length,
+    testCount: relevantTests.length,
+    hasHotspot: Boolean(hotspotRow && hotspotRow.score > 0)
+  });
+
+  const riskFactors = buildRiskFactors({
+    directCount: directCallers.length,
+    transitiveCount: transitiveCallers.length,
+    testCount: relevantTests.length,
+    hotspotScore: hotspotRow?.score ?? 0,
+    coChangeCount: coChanges.length
+  }).map((factor) => {
+    if (factor.id === 'direct') {
+      return {
+        ...factor,
+        label: 'Direct callers',
+        detail: `${directCallers.length} symbol${directCallers.length === 1 ? '' : 's'} call this target`
+      };
+    }
+    if (factor.id === 'transitive') {
+      return {
+        ...factor,
+        label: 'Transitive callers',
+        detail: `${transitiveCallers.length} indirect caller${transitiveCallers.length === 1 ? '' : 's'}`
+      };
+    }
+    return factor;
+  });
+
+  if (traversal.cycleDetected) {
+    riskFactors.unshift({
+      id: 'cycle',
+      label: 'Call cycle',
+      detail: 'This symbol participates in a strongly connected call component',
+      severity: 'danger'
+    });
+  }
+
+  const checklist = [
+    'Inspect direct callers before changing the symbol signature or behavior.',
+    relevantTests.length > 0
+      ? `Run ${relevantTests.length} recommended test file${relevantTests.length === 1 ? '' : 's'} for ${target.filePath}.`
+      : `Add tests covering ${target.name} in ${target.filePath}.`,
+    traversal.cycleDetected
+      ? 'Break or carefully review the call cycle before merging.'
+      : 'Confirm no unintended recursive call paths.',
+    risk === 'HIGH'
+      ? 'High caller blast radius — prefer a compatibility shim or staged rollout.'
+      : 'Re-run search for remaining references after the change.'
+  ];
+
+  const summary = [
+    `${target.type} ${target.name} in ${target.filePath} has ${directCallers.length} direct and ${transitiveCallers.length} transitive caller(s).`,
+    traversal.cycleDetected ? 'Call cycle detected.' : null,
+    relevantTests.length > 0
+      ? `${relevantTests.length} related test file(s) found.`
+      : 'No related test files found for the containing module.'
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  return {
+    mode: 'symbol',
+    target,
+    revisionSha: revision.revisionSha,
+    risk,
+    confidence,
+    riskFactors,
+    directCallers,
+    transitiveCallers,
+    cycleDetected: traversal.cycleDetected,
+    relevantTests,
+    coChanges,
+    hotspot: hotspotRow
+      ? {
+          score: hotspotRow.score,
+          changeCount: hotspotRow.changeCount,
+          reasons: Array.isArray(hotspotRow.reasons) ? hotspotRow.reasons : []
+        }
+      : null,
+    checklist,
+    summary
+  };
 }
