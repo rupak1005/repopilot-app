@@ -17,6 +17,7 @@
 }
 
 .public-header {
+  position: relative;
   height: var(--header-height);
   flex-shrink: 0;
   display: flex;

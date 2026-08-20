@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { Button } from '../components/ui/Button';
 import { DifferentiatorsStrip } from '../components/ui/DifferentiatorsStrip';
 import { ErrorBanner } from '../components/ui/ErrorBanner';
+import { LandingDecor } from '../components/ui/LandingDecor';
 import { PublicPageLayout } from '../components/ui/PublicPageLayout';
 import { parseGithubRepoUrl } from '@repopilot/common';
 import { EXAMPLE_REPOS, githubUrl } from '../lib/exampleRepos';
@@ -91,6 +92,7 @@ export default function LandingPage() {
       pageClassName="landing-page"
       mainClassName="landing-page__main"
       shellClassName="landing-shell"
+      decorVariant="none"
       seo={{
         title: 'Repository intelligence',
         description: DEFAULT_DESCRIPTION,
@@ -99,6 +101,7 @@ export default function LandingPage() {
       }}
     >
       <div className="landing-hero">
+        <LandingDecor />
         <div className="landing-card landing-card--hero">
           <p className="landing-brand">{LANDING_BRAND}</p>
           <h1>{LANDING_HEADLINE}</h1>

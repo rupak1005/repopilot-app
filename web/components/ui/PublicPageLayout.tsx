@@ -10,7 +10,8 @@ type PublicPageLayoutProps = {
   pageClassName: string;
   mainClassName: string;
   shellClassName?: string;
-  decorVariant?: 'full' | 'top';
+  /** Omit to hide shell-level sparkles (e.g. when the page mounts its own). */
+  decorVariant?: 'full' | 'top' | 'none';
   seo: SeoHeadProps;
   children: ReactNode;
 };
@@ -33,7 +34,7 @@ export function PublicPageLayout({
       <PublicSiteHeader active={active} />
       <main id={MAIN_CONTENT_ID} className={mainClassName} tabIndex={-1}>
         <div className={shellClass}>
-          <LandingDecor variant={decorVariant} />
+          {decorVariant !== 'none' ? <LandingDecor variant={decorVariant} /> : null}
           {children}
         </div>
       </main>

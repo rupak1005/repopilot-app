@@ -16,8 +16,8 @@
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
-  gap: var(--space-12);
-  padding: var(--space-6) var(--space-5) var(--space-12);
+  gap: var(--space-16);
+  padding: var(--space-12) var(--space-5) var(--space-12);
   overflow: visible;
 }
 
@@ -28,7 +28,9 @@
 }
 
 .landing-hero {
+  position: relative;
   width: 100%;
+  z-index: 1;
 }
 
 .landing-card {
@@ -147,6 +149,11 @@
 
 .landing-section {
   width: 100%;
+  padding-top: var(--space-4);
+}
+
+.landing-section--why {
+  padding-top: var(--space-6);
 }
 
 .landing-section__title {
