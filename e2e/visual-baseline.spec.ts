@@ -35,7 +35,17 @@ test.describe('visual baseline', () => {
     await page.goto(`/dashboard/${DEMO_REPO_ID}/architecture`);
     await expect(page.getByRole('heading', { name: /codebase fits together/i })).toBeVisible();
     await settleFonts(page);
-    await expect(page.locator('.ui-diagram-page')).toHaveScreenshot('architecture.png', shot);
+
+    const target = page.locator('.ui-diagram-page');
+    // Lock height: Fontshare metrics on CI Linux shift full-element height (~26px)
+    // and Playwright rejects size-mismatched snapshots even when maxDiffPixelRatio is set.
+    await target.evaluate((el) => {
+      el.style.boxSizing = 'border-box';
+      el.style.height = '1400px';
+      el.style.maxHeight = '1400px';
+      el.style.overflow = 'hidden';
+    });
+    await expect(target).toHaveScreenshot('architecture.png', shot);
   });
 
   test('impact empty state', async ({ page }) => {
