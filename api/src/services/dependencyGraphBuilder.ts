@@ -5,6 +5,7 @@ import {
 } from '@repopilot/common';
 import { getPrisma, prismaInteractiveTxOptions } from '../db/prisma';
 import { resolveModuleSpecifier } from '../repo/moduleResolve';
+import { collectPathAliasesFromFiles } from '../repo/tsconfigPaths';
 import {
   createTreeSitterParser,
   extractGoImports,
@@ -291,6 +292,7 @@ function extractEdgesForSymbol(args: {
   importBindings: Map<string, ImportBinding>;
   filesByPath: Map<string, FileWithRecords>;
   knownFiles: Set<string>;
+  pathAliases: ReturnType<typeof collectPathAliasesFromFiles>;
 }): SymbolEdge[] {
   const edges = new Map<string, SymbolEdge>();
 
@@ -321,7 +323,8 @@ function extractEdgesForSymbol(args: {
     const resolvedPath = resolveModuleSpecifier(
       args.currentFile.path,
       binding.module,
-      args.knownFiles
+      args.knownFiles,
+      args.pathAliases
     );
     if (!resolvedPath) return;
 
@@ -354,7 +357,8 @@ function extractEdgesForSymbol(args: {
     const resolvedPath = resolveModuleSpecifier(
       args.currentFile.path,
       binding.module,
-      args.knownFiles
+      args.knownFiles,
+      args.pathAliases
     );
     if (!resolvedPath) return;
 
@@ -563,6 +567,7 @@ export async function buildDependencyGraph(args: {
 
   const filesByPath = new Map(files.map((file) => [file.path, file]));
   const knownFiles = new Set(files.map((file) => file.path));
+  const pathAliases = collectPathAliasesFromFiles(files);
 
   let symbolEdgesAdded = 0;
   let moduleEdgesAdded = 0;
@@ -609,7 +614,8 @@ export async function buildDependencyGraph(args: {
         currentFile: file,
         importBindings,
         filesByPath,
-        knownFiles
+        knownFiles,
+        pathAliases
       });
 
       for (const edge of edges) {
@@ -625,7 +631,8 @@ export async function buildDependencyGraph(args: {
 
     for (const binding of importBindings.values()) {
       const resolvedModule =
-        resolveModuleSpecifier(file.path, binding.module, knownFiles) ?? binding.module;
+        resolveModuleSpecifier(file.path, binding.module, knownFiles, pathAliases) ??
+        binding.module;
       const known = knownFiles.has(resolvedModule);
       const key = `${file.path}:${resolvedModule}`;
       moduleEdges.set(key, {

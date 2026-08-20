@@ -28,7 +28,8 @@
 | 21 | ELK System View | **Done foundation** — Flow / System layout toggle |
 | 22 | Graph minimap | **Done foundation** — overview + click-to-pan |
 | 23 | Graph share deep links | **Done foundation** — `?layout=` + Copy link |
-| 24–35 | Remaining | Not started / partial |
+| 24 | Tsconfig path aliases | **Done foundation** — indexed `paths` at graph build |
+| 25–35 | Remaining | Not started / partial |
 
 ## Phase 5
 
@@ -48,6 +49,7 @@
 
 - [x] Module cycle inspector (`graph?op=cycles`)
 - [x] `@/` import alias resolve at graph build (package-root heuristic)
+- [x] Full `tsconfig` / `jsconfig` `paths` resolve at graph build
 
 ## Phase 7
 
@@ -165,6 +167,13 @@
 - [x] Selection sync to `?file=` + Copy share link control
 - [x] `architectureHref` / `architectureRouteQuery` preserve layout with rev/blast
 
+## Phase 24
+
+- [x] Parse indexed `tsconfig` / `jsconfig` `compilerOptions.paths`
+- [x] Prefer alias targets when resolving JS/TS module edges
+- [x] Keep `@/` package-root heuristic as fallback
+- [x] Unit tests for parse / expand / resolve
+
 ## Next action
 
-Phase 24+ (deferred 3D topography, Planning/Wiki depth, Findings polish, full tsconfig paths, impact calibration fixtures).
+Phase 25+ (deferred 3D topography, Planning/Wiki depth, Findings polish, impact calibration fixtures).

@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { aliasCandidateBases, type PathAliasRule } from './tsconfigPaths';
 
 export function normalizeRepoPath(filePath: string): string {
   return path.posix.normalize(filePath);
@@ -107,12 +108,18 @@ function jsAliasBases(fromFilePath: string): string[] {
 export function resolveJsModule(
   fromFilePath: string,
   moduleSpecifier: string,
-  knownFiles: Set<string>
+  knownFiles: Set<string>,
+  pathAliases: PathAliasRule[] = []
 ): string | null {
   if (moduleSpecifier.startsWith('.')) {
     const baseDir = path.posix.dirname(fromFilePath);
     const resolvedBase = normalizeRepoPath(path.posix.join(baseDir, moduleSpecifier));
     return pickKnown(jsCandidates(resolvedBase), knownFiles);
+  }
+
+  for (const base of aliasCandidateBases(moduleSpecifier, pathAliases)) {
+    const hit = pickKnown(jsCandidates(base), knownFiles);
+    if (hit) return hit;
   }
 
   // Common TS path alias: `@/…` → package root or repo root (no full tsconfig parse).
@@ -131,10 +138,11 @@ export function resolveJsModule(
 export function resolveModuleSpecifier(
   fromFilePath: string,
   moduleSpecifier: string,
-  knownFiles: Set<string>
+  knownFiles: Set<string>,
+  pathAliases: PathAliasRule[] = []
 ): string | null {
   const ext = path.extname(fromFilePath).toLowerCase();
   if (ext === '.py') return resolvePythonModule(fromFilePath, moduleSpecifier, knownFiles);
   if (ext === '.go') return resolveGoModule(fromFilePath, moduleSpecifier, knownFiles);
-  return resolveJsModule(fromFilePath, moduleSpecifier, knownFiles);
+  return resolveJsModule(fromFilePath, moduleSpecifier, knownFiles, pathAliases);
 }
