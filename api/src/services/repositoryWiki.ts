@@ -16,20 +16,6 @@ export type WikiPageDetail = WikiPage & {
 
 const MARKDOWN_EXT = /\.(md|mdx)$/i;
 
-/** Decode %2F (and double-encoding) so DB path lookup matches indexed files. */
-export function normalizeWikiFilePath(raw: string): string {
-  let path = raw.trim().replace(/\\/g, '/');
-  for (let i = 0; i < 2; i++) {
-    if (!/%[0-9A-Fa-f]{2}/.test(path)) break;
-    try {
-      path = decodeURIComponent(path);
-    } catch {
-      break;
-    }
-  }
-  return path;
-}
-
 export function classifyWikiPath(filePath: string): WikiPageKind | null {
   if (!MARKDOWN_EXT.test(filePath)) return null;
   const lower = filePath.toLowerCase().replace(/\\/g, '/');
@@ -124,7 +110,7 @@ export async function getRepositoryWikiPage(args: {
   path: string;
   revisionSha?: string;
 }): Promise<{ revisionSha: string | null; page: WikiPageDetail | null }> {
-  const filePath = normalizeWikiFilePath(args.path);
+  const filePath = args.path.trim().replace(/\\/g, '/');
   if (!filePath || !classifyWikiPath(filePath)) {
     return { revisionSha: null, page: null };
   }

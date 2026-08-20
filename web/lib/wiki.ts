@@ -22,16 +22,7 @@ export function parseWikiKindFilter(value: string | string[] | undefined): WikiK
 
 export function parseWikiPathQuery(value: string | string[] | undefined): string | null {
   if (typeof value !== 'string') return null;
-  let path = value.trim().replace(/\\/g, '/');
-  // Next may leave %2F encoded in ?path=; decode so Read hits the indexed file.
-  for (let i = 0; i < 2; i++) {
-    if (!/%[0-9A-Fa-f]{2}/.test(path)) break;
-    try {
-      path = decodeURIComponent(path);
-    } catch {
-      break;
-    }
-  }
+  const path = value.trim().replace(/\\/g, '/');
   return path.length > 0 ? path : null;
 }
 
