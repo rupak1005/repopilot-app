@@ -53,7 +53,7 @@
 
 1. **Phase 3 (done):** Persist edge `kind` + provenance on write; introduce stable node URNs (`file:…`, `symbol:…`); bounded `shortestPath` query
 2. **Phase 4 (done foundation):** Directory clustering; `GET …/graph?op=neighborhood`; path-trace UI; module cycle inspector
-3. Resolve TS path aliases at index time (`@/` → file)
+3. Resolve TS path aliases at index time (`@/` → file) — **done** (heuristic package-root resolve; full tsconfig paths deferred)
 4. Optional ELK hierarchical System View
 5. Evaluate server-only overview for 10k+ node repos
 

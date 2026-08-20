@@ -95,15 +95,37 @@ export function resolveGoModule(
   return null;
 }
 
+function jsAliasBases(fromFilePath: string): string[] {
+  const parts = fromFilePath.split('/').filter(Boolean);
+  const bases: string[] = [''];
+  if (parts.length > 0) bases.unshift(parts[0]!);
+  if (parts.length > 1 && parts[1] === 'src') bases.unshift(`${parts[0]}/src`);
+  // Dedupe while keeping package-root preference first.
+  return [...new Set(bases)];
+}
+
 export function resolveJsModule(
   fromFilePath: string,
   moduleSpecifier: string,
   knownFiles: Set<string>
 ): string | null {
-  if (!moduleSpecifier.startsWith('.')) return null;
-  const baseDir = path.posix.dirname(fromFilePath);
-  const resolvedBase = normalizeRepoPath(path.posix.join(baseDir, moduleSpecifier));
-  return pickKnown(jsCandidates(resolvedBase), knownFiles);
+  if (moduleSpecifier.startsWith('.')) {
+    const baseDir = path.posix.dirname(fromFilePath);
+    const resolvedBase = normalizeRepoPath(path.posix.join(baseDir, moduleSpecifier));
+    return pickKnown(jsCandidates(resolvedBase), knownFiles);
+  }
+
+  // Common TS path alias: `@/…` → package root or repo root (no full tsconfig parse).
+  if (moduleSpecifier.startsWith('@/')) {
+    const rest = moduleSpecifier.slice(2);
+    for (const base of jsAliasBases(fromFilePath)) {
+      const resolvedBase = base ? normalizeRepoPath(path.posix.join(base, rest)) : rest;
+      const hit = pickKnown(jsCandidates(resolvedBase), knownFiles);
+      if (hit) return hit;
+    }
+  }
+
+  return null;
 }
 
 export function resolveModuleSpecifier(

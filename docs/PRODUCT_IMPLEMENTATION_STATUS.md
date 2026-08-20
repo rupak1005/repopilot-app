@@ -30,7 +30,8 @@
 ## Phase 4 extras
 
 - [x] Module cycle inspector (`graph?op=cycles`)
+- [x] `@/` import alias resolve at graph build (package-root heuristic)
 
 ## Next action
 
-Resolve `@/` path aliases at index time, or Phase 7 — ask before committing.
+Phase 7 (Ask / Search UX polish) or full tsconfig paths — ask before committing.
