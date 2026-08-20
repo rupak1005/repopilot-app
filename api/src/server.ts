@@ -14,7 +14,8 @@ import {
 import { fetchPublicRepositoryMeta, searchPublicRepositories } from './services/githubPublic';
 import {
   getModuleDependencyTraversal,
-  getSymbolDependencyTraversal
+  getSymbolDependencyTraversal,
+  listModuleCycles
 } from './services/dependencyGraphQueries';
 import {
   getRepositoryRevisionStatus,
@@ -784,6 +785,24 @@ async function bootstrap() {
         seedPath: query.seed ?? query.filePath,
         revisionSha: query.revisionSha,
         depth,
+        limit
+      });
+      if (!result) {
+        reply.code(404);
+        return { error: 'revision not found for repository' };
+      }
+      return result;
+    }
+
+    if (query.op === 'cycles') {
+      const limit = query.limit ? Number(query.limit) : undefined;
+      if (query.limit && (!Number.isFinite(limit) || Number(limit) < 1)) {
+        reply.code(400);
+        return { error: 'limit must be a positive integer' };
+      }
+      const result = await listModuleCycles({
+        repositoryId: params.repoId,
+        revisionSha: query.revisionSha,
         limit
       });
       if (!result) {

@@ -79,6 +79,8 @@ type ArchitectureGraphProps = {
   expandedClusters?: string[];
   /** When set, dims everything outside the impact blast radius. */
   blastOverlay?: BlastOverlay | null;
+  /** Import cycles (module SCCs) for the cycle inspector. */
+  moduleCycles?: string[][];
   onGraphRebuilt?: () => void;
   onExpandCluster?: (clusterId: string) => void;
   onCollapseCluster?: (clusterId: string) => void;
@@ -268,6 +270,7 @@ export function ArchitectureGraphView({
   initialSelectedId = null,
   expandedClusters = [],
   blastOverlay = null,
+  moduleCycles = [],
   onGraphRebuilt,
   onExpandCluster,
   onCollapseCluster,
@@ -291,6 +294,7 @@ export function ArchitectureGraphView({
   const [pathNodeIds, setPathNodeIds] = useState<Set<string> | null>(null);
   const [pathHint, setPathHint] = useState<string | null>(null);
   const [expandingNeighborhood, setExpandingNeighborhood] = useState(false);
+  const [activeCycleIndex, setActiveCycleIndex] = useState<number | null>(null);
 
   const filtered = useMemo(() => filterForceGraphData(data, layer), [data, layer]);
   const layoutData = useMemo(() => layoutWithDagre(filtered), [filtered]);
@@ -336,7 +340,27 @@ export function ArchitectureGraphView({
     setPathStartId(null);
     setPathNodeIds(null);
     setPathHint(null);
+    setActiveCycleIndex(null);
   }, [layer, data]);
+
+  function highlightCycle(index: number) {
+    const cycle = moduleCycles[index];
+    if (!cycle || cycle.length === 0) return;
+    setActiveCycleIndex(index);
+    setPathNodeIds(new Set(cycle));
+    setPathHint(`Import cycle · ${cycle.length} modules: ${cycle.join(' ↔ ')}`);
+    setSelectedId(cycle[0]!);
+    setPulseId(cycle[0]!);
+    for (const path of cycle) {
+      onExpandCluster?.(clusterIdForPrefix(directoryClusterKey(path)));
+    }
+  }
+
+  function clearCycleHighlight() {
+    setActiveCycleIndex(null);
+    setPathNodeIds(null);
+    setPathHint(null);
+  }
 
   useEffect(() => {
     if (!selectedId || !repoId || isDemoMode() || parseClusterId(selectedId)) {
@@ -848,6 +872,12 @@ export function ArchitectureGraphView({
             <span>{stats.hotspots} hotspots</span>
           </>
         ) : null}
+        {moduleCycles.length > 0 ? (
+          <>
+            <span aria-hidden>·</span>
+            <span>{moduleCycles.length} import cycles</span>
+          </>
+        ) : null}
       </div>
     </div>
   );
@@ -887,6 +917,30 @@ export function ArchitectureGraphView({
           Click a cluster to expand it, or a file to inspect. Shift-click two modules to trace an
           import path.
         </p>
+        {moduleCycles.length > 0 ? (
+          <div className="ui-diagram__cycles">
+            <p className="label-caps">Import cycles ({moduleCycles.length})</p>
+            <ul className="ui-diagram__cycle-list">
+              {moduleCycles.slice(0, 8).map((cycle, index) => (
+                <li key={cycle.join('|')}>
+                  <button
+                    type="button"
+                    className={`ui-diagram__cycle-btn${
+                      activeCycleIndex === index ? ' ui-diagram__cycle-btn--active' : ''
+                    }`}
+                    onClick={() =>
+                      activeCycleIndex === index ? clearCycleHighlight() : highlightCycle(index)
+                    }
+                  >
+                    {cycle.length} modules · {cycle[0]?.split('/').pop()}
+                    {cycle.length > 1 ? ` ↔ ${cycle[1]?.split('/').pop()}` : ''}
+                    {cycle.length > 2 ? ` +${cycle.length - 2}` : ''}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
       </div>
     ) : null;
 

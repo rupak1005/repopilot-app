@@ -37,24 +37,24 @@
 | Edge kinds: imports, calls, tests, owns, … | **imports, calls only** (API labels) |
 | Edge provenance with line/confidence | Partial — no DB columns |
 | Progressive neighborhood | Partial — full architecture capped at 80 nodes client-side |
-| Path tracing A→B | Missing |
-| Minimap / ELK layouts | Missing (dagre + force only) |
-| Deep links (view/selection/zoom) | Partial (`?file=` on impact/search) |
+| Path tracing A→B | Done (`op=shortestPath` + Shift-click) |
+| Minimap / ELK layouts | Missing (dagre + force; ELK deferred) |
+| Deep links (view/selection/zoom) | Partial (`?file=`, `?blast=1`) |
+| Cycle inspector | Done (`op=cycles` + architecture panel) |
 
 ## Technical debt
 
-1. Client 80-node hard cap
-2. Unresolved `@/` aliases pollute graph IDs
-3. Transitive neighbor expand draws star edges to seed (not true paths)
-4. No clustering / LOD / server-side neighborhood pagination
-5. Symbol “calls” not type-aware
+1. Unresolved `@/` aliases pollute graph IDs
+2. Transitive neighbor expand draws star edges to seed (not true paths)
+3. Symbol “calls” not type-aware
+4. No ELK hierarchical System View (dagre LR is the current hierarchical layout)
 
 ## Migration plan
 
 1. **Phase 3 (done):** Persist edge `kind` + provenance on write; introduce stable node URNs (`file:…`, `symbol:…`); bounded `shortestPath` query
-2. **Phase 4 (in progress):** Directory clustering replaces client 80-cap; `GET …/graph?op=neighborhood`; path-trace UI via shortestPath
+2. **Phase 4 (done foundation):** Directory clustering; `GET …/graph?op=neighborhood`; path-trace UI; module cycle inspector
 3. Resolve TS path aliases at index time (`@/` → file)
-4. Add cycle inspector UI + ELK hierarchical System View
+4. Optional ELK hierarchical System View
 5. Evaluate server-only overview for 10k+ node repos
 
 ## Risk

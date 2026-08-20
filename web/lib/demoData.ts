@@ -138,6 +138,7 @@ export const DEMO_ARCHITECTURE: ArchitectureGraph = {
     { fromModule: 'api/src/server.ts', toModule: 'api/src/services/searchIndex.ts' },
     { fromModule: 'api/src/server.ts', toModule: 'api/src/services/engineeringIntelligence.ts' },
     { fromModule: 'api/src/services/codebaseQa.ts', toModule: 'api/src/services/searchIndex.ts' },
+    { fromModule: 'api/src/services/searchIndex.ts', toModule: 'api/src/services/codebaseQa.ts' },
     { fromModule: 'api/src/services/prReview.ts', toModule: 'api/src/services/codebaseQa.ts' },
     { fromModule: 'web/lib/dashboard.tsx', toModule: 'web/components/AppShell.tsx' },
     { fromModule: 'web/pages/dashboard/[repoId]/ask.tsx', toModule: 'web/lib/dashboard.tsx' },

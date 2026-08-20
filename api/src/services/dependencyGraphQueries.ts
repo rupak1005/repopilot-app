@@ -313,3 +313,61 @@ export async function getModuleDependencyTraversal(args: {
 }
 
 export { breadthFirstExpand, findStronglyConnectedComponents };
+
+/** SCCs that are actual cycles (size > 1 or self-loop). */
+export function cyclicComponents(adjacency: AdjacencyMap): string[][] {
+  return findStronglyConnectedComponents(adjacency).filter((component) => {
+    const selfLoop =
+      component.length === 1 && adjacency.get(component[0]!)?.has(component[0]!) === true;
+    return component.length > 1 || selfLoop;
+  });
+}
+
+export type ModuleCyclesResult = {
+  revisionSha: string;
+  cycles: string[][];
+  count: number;
+};
+
+export async function listModuleCycles(args: {
+  repositoryId: string;
+  revisionSha?: string;
+  /** Max cycles to return (largest first). */
+  limit?: number;
+}): Promise<ModuleCyclesResult | null> {
+  const limit = Math.max(1, Math.min(args.limit ?? 25, 100));
+  const revision = await resolveRepositoryRevision({
+    repositoryId: args.repositoryId,
+    revisionSha: args.revisionSha
+  });
+  if (!revision) return null;
+
+  const prisma = getPrisma();
+  const rows = (await prisma.$queryRawUnsafe(
+    `
+      SELECT "fromModule", "toModule"
+      FROM "ModuleDependency"
+      WHERE "revisionId" = $1
+    `,
+    revision.id
+  )) as Array<{ fromModule: string; toModule: string }>;
+
+  const adjacency: AdjacencyMap = new Map();
+  for (const row of rows) {
+    if (!adjacency.has(row.fromModule)) adjacency.set(row.fromModule, new Set());
+    adjacency.get(row.fromModule)!.add(row.toModule);
+    if (!adjacency.has(row.toModule)) adjacency.set(row.toModule, new Set());
+  }
+
+  const cycles = cyclicComponents(adjacency)
+    .map((c) => [...c].sort())
+    .sort((a, b) => b.length - a.length || a[0]!.localeCompare(b[0]!))
+    .slice(0, limit);
+
+  return {
+    revisionSha: revision.revisionSha,
+    cycles,
+    count: cycles.length
+  };
+}
+

@@ -34,6 +34,7 @@ export default function ArchitecturePage() {
   const [expandedClusters, setExpandedClusters] = useState<string[]>([]);
   const [neighborhoodOverlay, setNeighborhoodOverlay] = useState<ForceGraphData | null>(null);
   const [blastOverlay, setBlastOverlay] = useState<BlastOverlay | null>(null);
+  const [moduleCycles, setModuleCycles] = useState<string[][]>([]);
   const prevIndexState = useRef<string | undefined>(undefined);
   const deepFile = typeof router.query.file === 'string' ? router.query.file : null;
   const wantBlast = router.query.blast === '1' || router.query.blast === 'true';
@@ -105,7 +106,33 @@ export default function ArchitecturePage() {
     setExpandedClusters([]);
     setNeighborhoodOverlay(null);
     setBlastOverlay(null);
+    setModuleCycles([]);
   }, [graph]);
+
+  useEffect(() => {
+    if (!repoId || !graph) return;
+    if (isDemoMode()) {
+      setModuleCycles([
+        ['api/src/services/codebaseQa.ts', 'api/src/services/searchIndex.ts']
+      ]);
+      return;
+    }
+    let cancelled = false;
+    async function loadCycles() {
+      try {
+        const response = await fetch(repoApiPath(repoId!, 'graph?op=cycles&limit=25'));
+        if (!response.ok) return;
+        const payload = (await response.json()) as { cycles?: string[][] };
+        if (!cancelled) setModuleCycles(payload.cycles ?? []);
+      } catch {
+        if (!cancelled) setModuleCycles([]);
+      }
+    }
+    void loadCycles();
+    return () => {
+      cancelled = true;
+    };
+  }, [repoId, graph]);
 
   useEffect(() => {
     if (!wantBlast || !deepFile || !repoId) {
@@ -223,6 +250,7 @@ export default function ArchitecturePage() {
             initialSelectedId={deepFile}
             expandedClusters={expandedClusters}
             blastOverlay={blastOverlay}
+            moduleCycles={moduleCycles}
             onGraphRebuilt={() => setReloadToken((n) => n + 1)}
             onExpandCluster={(clusterId) => {
               setExpandedClusters((prev) =>

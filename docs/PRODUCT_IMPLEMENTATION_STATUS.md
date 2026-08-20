@@ -8,9 +8,9 @@
 | Phase | Name | Status |
 |------:|------|--------|
 | 0–3 | Audits, design system, shell, context graph | **Done** |
-| 4 | Real dependency graph | **In progress** |
-| 5 | Impact analysis | **In progress** — file / symbol / PR modes |
-| 6 | Codebase topography | **In progress** — 2D map + metrics + lookback |
+| 4 | Real dependency graph | **Done foundation** — clusters, path, neighborhood, cycles |
+| 5 | Impact analysis | **Done foundation** — file / symbol / PR + blast overlay |
+| 6 | Codebase topography | **Done foundation** — 2D map + metrics + lookback |
 | 7–35 | Remaining | Not started / partial |
 
 ## Phase 5
@@ -27,6 +27,10 @@
 - [x] Time window lookback (7d / 30d / 90d / 1y) via `windowDays`
 - [ ] Optional 3D (deferred)
 
+## Phase 4 extras
+
+- [x] Module cycle inspector (`graph?op=cycles`)
+
 ## Next action
 
-Optional ELK/symbol graph views, or Phase 7 — ask before committing.
+Resolve `@/` path aliases at index time, or Phase 7 — ask before committing.

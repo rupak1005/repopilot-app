@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   breadthFirstExpand,
+  cyclicComponents,
   findStronglyConnectedComponents
 } from './dependencyGraphQueries';
 
@@ -38,6 +39,24 @@ describe('dependencyGraphQueries (unit)', () => {
     const components = findStronglyConnectedComponents(adjacency);
     expect(components).toEqual(
       expect.arrayContaining([expect.arrayContaining(['A', 'B'])])
+    );
+  });
+
+  it('filters SCCs down to real cycles', () => {
+    const adjacency = new Map<string, Set<string>>([
+      ['A', new Set(['B'])],
+      ['B', new Set(['A'])],
+      ['C', new Set(['D'])],
+      ['D', new Set()],
+      ['E', new Set(['E'])]
+    ]);
+    const cycles = cyclicComponents(adjacency);
+    expect(cycles).toHaveLength(2);
+    expect(cycles).toEqual(
+      expect.arrayContaining([
+        expect.arrayContaining(['A', 'B']),
+        expect.arrayContaining(['E'])
+      ])
     );
   });
 });
