@@ -21,12 +21,16 @@ import { isDemoMode } from '../../../lib/demoMode';
 import { type RevisionRow } from '../../../lib/history';
 import {
   REVISION_QUERY_KEY,
+  architectureHref,
+  architectureRouteQuery,
   matchRevisionValue,
+  parseArchitectureLayoutQuery,
   parseRevisionQuery,
   revisionSelectLabel,
   withRevisionSha
 } from '../../../lib/revisionScope';
 import { repoApiPath } from '../../../lib/serverApi';
+import type { GraphLayoutAlgo } from '../../../lib/elkLayout';
 
 const DEMO_EXPLANATION =
   'RepoPilot maps your codebase into a system diagram: the API layer handles sync, search, and reviews; the web dashboard consumes those endpoints; shared IDs live in common. Orange borders mark churn hotspots from git history.';
@@ -47,6 +51,8 @@ export default function ArchitecturePage() {
   const deepFile = typeof router.query.file === 'string' ? router.query.file : null;
   const wantBlast = router.query.blast === '1' || router.query.blast === 'true';
   const revisionSha = parseRevisionQuery(router.query[REVISION_QUERY_KEY]);
+  const layoutQuery = parseArchitectureLayoutQuery(router.query.layout);
+  const initialLayoutAlgo: GraphLayoutAlgo = layoutQuery === 'system' ? 'elk' : 'dagre';
   const [revisions, setRevisions] = useState<RevisionRow[]>([]);
 
   useEffect(() => {
@@ -249,16 +255,49 @@ export default function ArchitecturePage() {
 
   function onRevisionChange(next: string) {
     if (!repoId) return;
-    const query: Record<string, string> = {};
-    if (deepFile) query.file = deepFile;
-    if (wantBlast) query.blast = '1';
-    if (next) query[REVISION_QUERY_KEY] = next;
     void router.replace(
-      { pathname: `/dashboard/${repoId}/architecture`, query },
+      {
+        pathname: `/dashboard/${repoId}/architecture`,
+        query: architectureRouteQuery({
+          file: deepFile,
+          blast: wantBlast,
+          layout: layoutQuery,
+          revisionSha: next || null
+        })
+      },
       undefined,
       { shallow: true }
     );
   }
+
+  function syncArchitectureQuery(patch: {
+    file?: string | null;
+    layout?: 'flow' | 'system';
+  }) {
+    if (!repoId) return;
+    void router.replace(
+      {
+        pathname: `/dashboard/${repoId}/architecture`,
+        query: architectureRouteQuery({
+          file: patch.file !== undefined ? patch.file : deepFile,
+          blast: wantBlast,
+          layout: patch.layout ?? layoutQuery,
+          revisionSha
+        })
+      },
+      undefined,
+      { shallow: true }
+    );
+  }
+
+  const shareUrl = repoId
+    ? architectureHref(repoId, {
+        file: deepFile ?? undefined,
+        blast: wantBlast,
+        layout: layoutQuery,
+        revisionSha
+      })
+    : null;
 
   const selectedRevisionValue = matchRevisionValue(revisions, revisionSha);
 
@@ -332,9 +371,19 @@ export default function ArchitecturePage() {
             revisionSha={revisionSha}
             loading={loading}
             initialSelectedId={deepFile}
+            initialLayoutAlgo={initialLayoutAlgo}
             expandedClusters={expandedClusters}
             blastOverlay={blastOverlay}
             moduleCycles={moduleCycles}
+            shareUrl={shareUrl}
+            onSelectedIdChange={(id) => {
+              // Clusters are not file deep links.
+              if (id && id.startsWith('cluster:')) return;
+              syncArchitectureQuery({ file: id });
+            }}
+            onLayoutAlgoChange={(algo) => {
+              syncArchitectureQuery({ layout: algo === 'elk' ? 'system' : 'flow' });
+            }}
             onGraphRebuilt={() => setReloadToken((n) => n + 1)}
             onExpandCluster={(clusterId) => {
               setExpandedClusters((prev) =>

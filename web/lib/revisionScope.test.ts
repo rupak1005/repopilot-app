@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   architectureHref,
+  architectureRouteQuery,
   impactHref,
   impactRouteQuery,
   matchRevisionValue,
+  parseArchitectureLayoutQuery,
   parseRevisionQuery,
   revisionSelectLabel,
   withRevisionSha
@@ -28,6 +30,29 @@ describe('revisionScope', () => {
     expect(architectureHref('r1', { file: 'a.ts', blast: true, revisionSha: 'abc1234' })).toBe(
       '/dashboard/r1/architecture?file=a.ts&blast=1&rev=abc1234'
     );
+    expect(architectureHref('r1', { layout: 'system', file: 'a.ts' })).toBe(
+      '/dashboard/r1/architecture?file=a.ts&layout=system'
+    );
+    expect(architectureHref('r1', { layout: 'flow' })).toBe('/dashboard/r1/architecture');
+  });
+
+  it('parses architecture layout query', () => {
+    expect(parseArchitectureLayoutQuery('system')).toBe('system');
+    expect(parseArchitectureLayoutQuery('elk')).toBe('system');
+    expect(parseArchitectureLayoutQuery('flow')).toBe('flow');
+    expect(parseArchitectureLayoutQuery(undefined)).toBe('flow');
+  });
+
+  it('builds architecture route query bags', () => {
+    expect(
+      architectureRouteQuery({
+        file: 'a.ts',
+        blast: true,
+        layout: 'system',
+        revisionSha: 'abc1234'
+      })
+    ).toEqual({ file: 'a.ts', blast: '1', layout: 'system', rev: 'abc1234' });
+    expect(architectureRouteQuery({ layout: 'flow' })).toEqual({});
   });
 
   it('builds impact deep links', () => {

@@ -34,7 +34,8 @@ const PHOSPHOR_ICONS = [
   'Notebook',
   'Path',
   'Warning',
-  'FlowArrow'
+  'FlowArrow',
+  'LinkSimple'
 ] as const;
 
 vi.mock('@phosphor-icons/react', () => {

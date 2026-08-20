@@ -20,7 +20,20 @@ export type ArchitectureHrefOpts = {
   revisionSha?: string | null;
   file?: string;
   blast?: boolean;
+  /** Flow = dagre (default, omitted from URL); System = ELK. */
+  layout?: 'flow' | 'system' | null;
 };
+
+/** Query key for Architecture layout (`?layout=system`). */
+export const LAYOUT_QUERY_KEY = 'layout';
+
+export function parseArchitectureLayoutQuery(
+  value: string | string[] | undefined
+): 'flow' | 'system' {
+  const raw = typeof value === 'string' ? value.trim().toLowerCase() : '';
+  if (raw === 'system' || raw === 'elk') return 'system';
+  return 'flow';
+}
 
 export function architectureHref(
   repoId: string,
@@ -33,9 +46,25 @@ export function architectureHref(
   const params = new URLSearchParams();
   if (opts.file) params.set('file', opts.file);
   if (opts.blast) params.set('blast', '1');
+  if (opts.layout === 'system') params.set(LAYOUT_QUERY_KEY, 'system');
   if (opts.revisionSha) params.set(REVISION_QUERY_KEY, opts.revisionSha);
   const q = params.toString();
   return q ? `/dashboard/${repoId}/architecture?${q}` : `/dashboard/${repoId}/architecture`;
+}
+
+/** Shallow-route query bag for Architecture, preserving shared deep-link keys. */
+export function architectureRouteQuery(opts: {
+  file?: string | null;
+  blast?: boolean;
+  layout?: 'flow' | 'system';
+  revisionSha?: string | null;
+}): Record<string, string> {
+  const query: Record<string, string> = {};
+  if (opts.file) query.file = opts.file;
+  if (opts.blast) query.blast = '1';
+  if (opts.layout === 'system') query[LAYOUT_QUERY_KEY] = 'system';
+  if (opts.revisionSha) query[REVISION_QUERY_KEY] = opts.revisionSha;
+  return query;
 }
 
 export type ImpactHrefOpts = {

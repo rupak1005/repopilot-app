@@ -27,7 +27,8 @@
 | 20 | Findings surface | **Done foundation** — repo-wide severity board |
 | 21 | ELK System View | **Done foundation** — Flow / System layout toggle |
 | 22 | Graph minimap | **Done foundation** — overview + click-to-pan |
-| 23–35 | Remaining | Not started / partial |
+| 23 | Graph share deep links | **Done foundation** — `?layout=` + Copy link |
+| 24–35 | Remaining | Not started / partial |
 
 ## Phase 5
 
@@ -158,6 +159,12 @@
 - [x] Camera sync via force-graph `onZoom`; click/Enter to `centerAt`
 - [x] Shared `graphMinimap` helpers + unit tests
 
+## Phase 23
+
+- [x] Architecture `?layout=system|flow` deep link (ELK / dagre)
+- [x] Selection sync to `?file=` + Copy share link control
+- [x] `architectureHref` / `architectureRouteQuery` preserve layout with rev/blast
+
 ## Next action
 
-Phase 23+ (deferred 3D topography, Planning/Wiki depth, Findings polish, full tsconfig paths).
+Phase 24+ (deferred 3D topography, Planning/Wiki depth, Findings polish, full tsconfig paths, impact calibration fixtures).

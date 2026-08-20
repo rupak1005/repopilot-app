@@ -10,6 +10,7 @@ import {
   Crosshair,
   DownloadSimple,
   FlowArrow,
+  LinkSimple,
   MagnifyingGlass,
   MagnifyingGlassMinus,
   MagnifyingGlassPlus,
@@ -91,6 +92,8 @@ type ArchitectureGraphProps = {
   revisionSha?: string | null;
   loading?: boolean;
   initialSelectedId?: string | null;
+  /** Initial Flow/System layout from `?layout=`. */
+  initialLayoutAlgo?: GraphLayoutAlgo;
   expandedClusters?: string[];
   /** When set, dims everything outside the impact blast radius. */
   blastOverlay?: BlastOverlay | null;
@@ -100,6 +103,12 @@ type ArchitectureGraphProps = {
   onExpandCluster?: (clusterId: string) => void;
   onCollapseCluster?: (clusterId: string) => void;
   onNeighborhoodLoaded?: (extra: ForceGraphData) => void;
+  /** Persist selection in the URL (`?file=`). */
+  onSelectedIdChange?: (id: string | null) => void;
+  /** Persist layout algorithm in the URL (`?layout=system`). */
+  onLayoutAlgoChange?: (algo: GraphLayoutAlgo) => void;
+  /** Absolute or path URL for the Copy link control. */
+  shareUrl?: string | null;
 };
 
 type InspectorProps = {
@@ -292,13 +301,17 @@ export function ArchitectureGraphView({
   revisionSha = null,
   loading = false,
   initialSelectedId = null,
+  initialLayoutAlgo = 'dagre',
   expandedClusters = [],
   blastOverlay = null,
   moduleCycles = [],
   onGraphRebuilt,
   onExpandCluster,
   onCollapseCluster,
-  onNeighborhoodLoaded
+  onNeighborhoodLoaded,
+  onSelectedIdChange,
+  onLayoutAlgoChange,
+  shareUrl = null
 }: ArchitectureGraphProps) {
   const fgRef = useRef<ForceGraphMethods | undefined>(undefined);
   const mermaidRef = useRef<MermaidDiagramHandle>(null);
@@ -314,7 +327,7 @@ export function ArchitectureGraphView({
   const [pulseId, setPulseId] = useState<string | null>(null);
   const [rebuilding, setRebuilding] = useState(false);
   const [renderer, setRenderer] = useState<DiagramRenderer>('interactive');
-  const [layoutAlgo, setLayoutAlgo] = useState<GraphLayoutAlgo>('dagre');
+  const [layoutAlgo, setLayoutAlgo] = useState<GraphLayoutAlgo>(initialLayoutAlgo);
   const [layoutData, setLayoutData] = useState<ForceGraphData>({ nodes: [], links: [] });
   const [layoutBusy, setLayoutBusy] = useState(false);
   const [pathStartId, setPathStartId] = useState<string | null>(null);
@@ -323,6 +336,7 @@ export function ArchitectureGraphView({
   const [expandingNeighborhood, setExpandingNeighborhood] = useState(false);
   const [activeCycleIndex, setActiveCycleIndex] = useState<number | null>(null);
   const [minimapCamera, setMinimapCamera] = useState<MinimapCamera | null>(null);
+  const [shareHint, setShareHint] = useState<string | null>(null);
   const reduceMotion = useReducedMotion();
 
   const filtered = useMemo(() => filterForceGraphData(data, layer), [data, layer]);
@@ -430,8 +444,7 @@ export function ArchitectureGraphView({
     setActiveCycleIndex(index);
     setPathNodeIds(new Set(cycle));
     setPathHint(`Import cycle · ${cycle.length} modules: ${cycle.join(' ↔ ')}`);
-    setSelectedId(cycle[0]!);
-    setPulseId(cycle[0]!);
+    selectModule(cycle[0]!);
     for (const path of cycle) {
       onExpandCluster?.(clusterIdForPrefix(directoryClusterKey(path)));
     }
@@ -599,6 +612,7 @@ export function ArchitectureGraphView({
     (id: string | null) => {
       setSelectedId(id);
       setPulseId(id);
+      onSelectedIdChange?.(id);
       if (!id || renderer !== 'interactive') return;
       if (parseClusterId(id)) return;
       const node = layoutData.nodes.find((n) => n.id === id) as GraphNode | undefined;
@@ -609,7 +623,7 @@ export function ArchitectureGraphView({
         if (fg && typeof fg.zoom === 'function') fg.zoom(2.2, ms);
       }
     },
-    [renderer, layoutData.nodes, reduceMotion]
+    [renderer, layoutData.nodes, reduceMotion, onSelectedIdChange]
   );
 
   useEffect(() => {
@@ -617,6 +631,34 @@ export function ArchitectureGraphView({
     setSelectedId(initialSelectedId);
     setPulseId(initialSelectedId);
   }, [initialSelectedId]);
+
+  useEffect(() => {
+    setLayoutAlgo(initialLayoutAlgo);
+  }, [initialLayoutAlgo]);
+
+  const applyLayoutAlgo = useCallback(
+    (algo: GraphLayoutAlgo) => {
+      setLayoutAlgo(algo);
+      onLayoutAlgoChange?.(algo);
+    },
+    [onLayoutAlgoChange]
+  );
+
+  async function copyShareLink() {
+    if (!shareUrl || typeof navigator === 'undefined' || !navigator.clipboard) return;
+    try {
+      const absolute =
+        shareUrl.startsWith('http') || typeof window === 'undefined'
+          ? shareUrl
+          : `${window.location.origin}${shareUrl}`;
+      await navigator.clipboard.writeText(absolute);
+      setShareHint('Link copied');
+      window.setTimeout(() => setShareHint(null), 1600);
+    } catch {
+      setShareHint('Copy failed');
+      window.setTimeout(() => setShareHint(null), 1600);
+    }
+  }
 
   async function tracePath(fromId: string, toId: string) {
     if (!repoId || isDemoMode()) {
@@ -858,6 +900,7 @@ export function ArchitectureGraphView({
           onNodeClick={(node, event) => handleNodeClick(node, event as unknown as MouseEvent)}
           onBackgroundClick={() => {
             setSelectedId(null);
+            onSelectedIdChange?.(null);
             setPathStartId(null);
             setPathNodeIds(null);
             setPathHint(null);
@@ -955,6 +998,15 @@ export function ArchitectureGraphView({
             <DownloadSimple size={16} weight="bold" />
           </IconButton>
         )}
+        {shareUrl ? (
+          <IconButton
+            label={shareHint ?? 'Copy share link'}
+            variant="subtle"
+            onClick={() => void copyShareLink()}
+          >
+            <LinkSimple size={16} weight="bold" />
+          </IconButton>
+        ) : null}
       </div>
 
       <div className="ui-diagram__stats">
@@ -1000,7 +1052,7 @@ export function ArchitectureGraphView({
         repoId={repoId}
         repoFullName={repoFullName}
         revisionSha={revisionSha}
-        onClose={() => setSelectedId(null)}
+        onClose={() => selectModule(null)}
         onSelectModule={selectModule}
         onExpandNeighborhood={
           selectedNode.kind === 'cluster' || parseClusterId(selectedNode.id)
@@ -1095,7 +1147,7 @@ export function ArchitectureGraphView({
                 role="tab"
                 aria-selected={layoutAlgo === id}
                 className={`ui-diagram__layout-btn${layoutAlgo === id ? ' ui-diagram__layout-btn--active' : ''}`}
-                onClick={() => setLayoutAlgo(id)}
+                onClick={() => applyLayoutAlgo(id)}
                 title={id === 'elk' ? 'ELK layered System View' : 'Dagre flow layout'}
               >
                 <AlgoIcon size={16} weight="bold" aria-hidden />
@@ -1156,7 +1208,7 @@ export function ArchitectureGraphView({
           repoId={repoId}
           repoFullName={repoFullName}
           revisionSha={revisionSha}
-          onClose={() => setSelectedId(null)}
+          onClose={() => selectModule(null)}
           onSelectModule={selectModule}
           onExpandNeighborhood={
             selectedNode.kind === 'cluster' || parseClusterId(selectedNode.id)

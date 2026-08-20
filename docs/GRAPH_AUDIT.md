@@ -39,7 +39,7 @@
 | Progressive neighborhood | Partial — full architecture capped at 80 nodes client-side |
 | Path tracing A→B | Done (`op=shortestPath` + Shift-click) |
 | Minimap / ELK layouts | ELK layered System View + interactive minimap (click-to-pan) |
-| Deep links (view/selection/zoom) | Partial (`?file=`, `?blast=1`, `?rev=`) |
+| Deep links (view/selection/zoom) | Selection + blast + rev + layout (`?file=&blast=&rev=&layout=`); Copy share link |
 | Cycle inspector | Done (`op=cycles` + architecture panel) |
 
 ## Technical debt
