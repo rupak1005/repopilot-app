@@ -1,3 +1,4 @@
+import { filePathFromNodeId } from '@repopilot/common';
 import { getPrisma } from '../db/prisma';
 import { getModuleArchitectureGraph } from './contextGraph';
 import { resolveRepositoryRevision } from './repositoryRevisions';
@@ -326,13 +327,13 @@ export async function getArchitectureGraph(args: {
   const slice = await getModuleArchitectureGraph(args);
   return {
     nodes: slice.nodes.map((node) => ({
-      filePath: node.filePath ?? node.id,
+      filePath: node.filePath ?? filePathFromNodeId(node.id) ?? node.id,
       isHotspot: node.isHotspot ?? false,
       score: node.score ?? 0
     })),
     edges: slice.edges.map((edge) => ({
-      fromModule: edge.from,
-      toModule: edge.to
+      fromModule: filePathFromNodeId(edge.from) ?? edge.from,
+      toModule: filePathFromNodeId(edge.to) ?? edge.to
     }))
   };
 }

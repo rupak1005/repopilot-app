@@ -1,4 +1,8 @@
 import path from 'node:path';
+import {
+  DEFAULT_CALL_CONFIDENCE,
+  defaultImportConfidence
+} from '@repopilot/common';
 import { getPrisma, prismaInteractiveTxOptions } from '../db/prisma';
 import { resolveModuleSpecifier } from '../repo/moduleResolve';
 import {
@@ -43,11 +47,20 @@ type ImportBinding = {
 type SymbolEdge = {
   fromSymbolId: string;
   toSymbolId: string;
+  sourceLine?: number;
+  confidence: number;
+  detector: string;
+  kind: string;
 };
 
 type ModuleEdge = {
   fromModule: string;
   toModule: string;
+  sourceFile: string;
+  sourceLine?: number;
+  confidence: number;
+  detector: string;
+  kind: string;
 };
 
 export type BuildDependencyGraphResult = {
@@ -281,20 +294,24 @@ function extractEdgesForSymbol(args: {
 }): SymbolEdge[] {
   const edges = new Map<string, SymbolEdge>();
 
-  const addEdge = (toSymbolId: string) => {
+  const addEdge = (toSymbolId: string, sourceLine?: number) => {
     const key = `${args.fromSymbolId}:${toSymbolId}`;
     if (!edges.has(key)) {
       edges.set(key, {
         fromSymbolId: args.fromSymbolId,
-        toSymbolId
+        toSymbolId,
+        sourceLine,
+        confidence: DEFAULT_CALL_CONFIDENCE,
+        detector: 'heuristic',
+        kind: 'calls'
       });
     }
   };
 
-  const resolveLocalIdentifier = (identifier: string) => {
+  const resolveLocalIdentifier = (identifier: string, sourceLine?: number) => {
     const localTarget = args.currentFile.symbols.find((symbol) => symbol.name === identifier);
     if (localTarget) {
-      addEdge(localTarget.id);
+      addEdge(localTarget.id, sourceLine);
       return;
     }
 
@@ -312,10 +329,10 @@ function extractEdgesForSymbol(args: {
     if (!targetFile) return;
 
     const toSymbolId = tryResolveImportedSymbol({ targetFile, binding });
-    if (toSymbolId) addEdge(toSymbolId);
+    if (toSymbolId) addEdge(toSymbolId, sourceLine);
   };
 
-  const resolveMemberExpression = (node: TreeSitterSyntaxNode) => {
+  const resolveMemberExpression = (node: TreeSitterSyntaxNode, sourceLine?: number) => {
     const objectNode = node.childForFieldName('object');
     const propertyNode = node.childForFieldName('property') ?? node.childForFieldName('attribute');
     if (!objectNode) return;
@@ -327,7 +344,7 @@ function extractEdgesForSymbol(args: {
 
     const localTarget = args.currentFile.symbols.find((symbol) => symbol.name === objectName);
     if (localTarget) {
-      addEdge(localTarget.id);
+      addEdge(localTarget.id, sourceLine);
       return;
     }
 
@@ -345,27 +362,28 @@ function extractEdgesForSymbol(args: {
     if (!targetFile) return;
 
     const toSymbolId = tryResolveImportedSymbol({ targetFile, binding, propertyName });
-    if (toSymbolId) addEdge(toSymbolId);
+    if (toSymbolId) addEdge(toSymbolId, sourceLine);
   };
 
   walk(args.declarationNode, (node) => {
+    const sourceLine = node.startPosition.row + 1;
     if (node.type === 'call_expression' || node.type === 'call') {
       const expressionNode = node.childForFieldName('function') ?? node.childForFieldName('expression');
       if (!expressionNode) return;
 
       if (expressionNode.type === 'identifier') {
-        resolveLocalIdentifier(nodeText(args.currentFile.content, expressionNode).trim());
+        resolveLocalIdentifier(nodeText(args.currentFile.content, expressionNode).trim(), sourceLine);
         return;
       }
 
       if (expressionNode.type === 'member_expression' || expressionNode.type === 'attribute') {
-        resolveMemberExpression(expressionNode);
+        resolveMemberExpression(expressionNode, sourceLine);
       }
       return;
     }
 
     if (node.type === 'member_expression' || node.type === 'attribute') {
-      resolveMemberExpression(node);
+      resolveMemberExpression(node, sourceLine);
     }
   });
 
@@ -406,27 +424,43 @@ async function replaceDependenciesForFile(args: {
     for (const edge of args.symbolEdges) {
       await tx.$executeRawUnsafe(
         `
-          INSERT INTO "SymbolDependency" ("revisionId", "fromSymbolId", "toSymbolId")
-          VALUES ($1, $2, $3)
+          INSERT INTO "SymbolDependency" (
+            "revisionId", "fromSymbolId", "toSymbolId",
+            "kind", "confidence", "sourceFile", "sourceLine", "detector"
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
           ON CONFLICT ("revisionId", "fromSymbolId", "toSymbolId") DO NOTHING
         `,
         args.revisionId,
         edge.fromSymbolId,
-        edge.toSymbolId
+        edge.toSymbolId,
+        edge.kind,
+        edge.confidence,
+        args.file.path,
+        edge.sourceLine ?? null,
+        edge.detector
       );
     }
 
     for (const edge of args.moduleEdges) {
       await tx.$executeRawUnsafe(
         `
-          INSERT INTO "ModuleDependency" ("repositoryId", "revisionId", "fromModule", "toModule")
-          VALUES ($1, $2, $3, $4)
+          INSERT INTO "ModuleDependency" (
+            "repositoryId", "revisionId", "fromModule", "toModule",
+            "kind", "confidence", "sourceFile", "sourceLine", "detector"
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
           ON CONFLICT ("revisionId", "fromModule", "toModule") DO NOTHING
         `,
         args.repositoryId,
         args.revisionId,
         edge.fromModule,
-        edge.toModule
+        edge.toModule,
+        edge.kind,
+        edge.confidence,
+        edge.sourceFile,
+        edge.sourceLine ?? null,
+        edge.detector
       );
     }
   }, prismaInteractiveTxOptions);
@@ -592,10 +626,15 @@ export async function buildDependencyGraph(args: {
     for (const binding of importBindings.values()) {
       const resolvedModule =
         resolveModuleSpecifier(file.path, binding.module, knownFiles) ?? binding.module;
+      const known = knownFiles.has(resolvedModule);
       const key = `${file.path}:${resolvedModule}`;
       moduleEdges.set(key, {
         fromModule: file.path,
-        toModule: resolvedModule
+        toModule: resolvedModule,
+        sourceFile: file.path,
+        confidence: defaultImportConfidence(known),
+        detector: 'tree-sitter',
+        kind: 'imports'
       });
     }
 

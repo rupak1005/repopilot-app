@@ -51,7 +51,7 @@
 
 ## Migration plan
 
-1. **Phase 3:** Persist edge `kind` + provenance on write; introduce stable node URNs
+1. **Phase 3 (in progress):** Persist edge `kind` + provenance on write; introduce stable node URNs (`file:…`, `symbol:…`); bounded `shortestPath` query
 2. **Phase 4:** Server `GET …/graph/neighborhood`; remove client 80-cap via clustering
 3. Resolve TS path aliases at index time (`@/` → file)
 4. Add path-trace + cycle inspector UI
@@ -59,4 +59,4 @@
 
 ## Risk
 
-High if we dual-write a polymorphic Context Graph before alias resolution and edge provenance land — false confidence in “world-class graph.”
+High if we dual-write a polymorphic Context Graph before alias resolution and edge provenance land — false confidence in “world-class graph.” Provenance columns + URNs reduce that risk for imports/calls; other node kinds remain deferred.

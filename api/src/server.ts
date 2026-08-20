@@ -43,7 +43,9 @@ import {
 } from './services/engineeringIntelligence';
 import {
   expandContext,
-  parseContextGraphView
+  parseContextGraphView,
+  resolveModulePathArg,
+  shortestModulePath
 } from './services/contextGraph';
 import { analyzeFileImpact, resolveIndexedFilePath } from './services/impactAnalysis';
 import { requireInternalApiAuth } from './middleware/internalAuth';
@@ -691,11 +693,40 @@ async function bootstrap() {
     const params = request.params as { repoId: string };
     const query = request.query as {
       view?: string;
+      op?: string;
       filePath?: string;
       symbolId?: string;
+      from?: string;
+      to?: string;
       revisionSha?: string;
       depth?: string;
+      hopLimit?: string;
     };
+
+    if (query.op === 'shortestPath') {
+      if (!query.from || !query.to) {
+        reply.code(400);
+        return { error: 'from and to are required for shortestPath' };
+      }
+      const hopLimit = query.hopLimit ? Number(query.hopLimit) : undefined;
+      if (query.hopLimit && (!Number.isFinite(hopLimit) || Number(hopLimit) < 1)) {
+        reply.code(400);
+        return { error: 'hopLimit must be a positive integer' };
+      }
+      const result = await shortestModulePath({
+        repositoryId: params.repoId,
+        fromPath: resolveModulePathArg(query.from),
+        toPath: resolveModulePathArg(query.to),
+        revisionSha: query.revisionSha,
+        hopLimit
+      });
+      if (!result) {
+        reply.code(404);
+        return { error: 'revision not found for repository' };
+      }
+      return result;
+    }
+
     const view = parseContextGraphView(query.view);
     const depth = query.depth ? Number(query.depth) : undefined;
 
