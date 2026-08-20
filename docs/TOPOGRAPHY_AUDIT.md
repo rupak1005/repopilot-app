@@ -18,23 +18,22 @@
 
 ## What is real
 
-- Formula: `changeCount * log(1+dependents) * (1+coChange) * (1+findings)` over ~30d window
+- Formula: `changeCount * log(1+dependents) * (1+coChange) * (1+findings)` over selectable window (7/30/90/365d)
 - Human-readable `reasons[]`
 - Links into Impact
 - 2D cluster map sized/colored by hotspot score
+- Metric toggles + lookback window on Topography
 
 ## Gaps vs world-class Topography
 
-- No time slider (30d/90d/1y)
-- No metric toggles (churn vs complexity vs coverage)
 - No 3D mode (intentionally deferred; 2D default)
-- Hotspots are repo-scoped, not revision-scoped
+- Hotspots are repo-scoped, not revision-scoped; non-30d windows recompute churn live
 
 ## Migration plan (Phase 6)
 
 1. **Started:** 2D directory-cluster topography on `/hotspots` (Topography) with `topK=40`
 2. Metric toggles without inventing fake complexity
-3. Time window once hotspot rows are revision-scoped
+3. Time window lookback (live churn for non-30d)
 4. Keep 3D optional and metric-mapped only
 5. Benchmark large repos before claiming landscape UX
 

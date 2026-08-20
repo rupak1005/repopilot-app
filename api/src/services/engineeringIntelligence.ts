@@ -1,7 +1,18 @@
 import { filePathFromNodeId } from '@repopilot/common';
 import { getPrisma } from '../db/prisma';
 import { getModuleArchitectureGraph } from './contextGraph';
+import { computeHotspotScore, hotspotExplanation } from './historyIngest';
 import { resolveRepositoryRevision } from './repositoryRevisions';
+
+export const HOTSPOT_WINDOW_DAYS = [7, 30, 90, 365] as const;
+export type HotspotWindowDays = (typeof HOTSPOT_WINDOW_DAYS)[number];
+
+/** Clamp to supported topography windows; default 30 (matches ModuleHotspot precompute). */
+export function parseHotspotWindowDays(raw?: string | number | null): HotspotWindowDays {
+  const n = typeof raw === 'number' ? raw : Number(raw);
+  if (HOTSPOT_WINDOW_DAYS.includes(n as HotspotWindowDays)) return n as HotspotWindowDays;
+  return 30;
+}
 
 export type HotspotResult = {
   filePath: string;
@@ -50,44 +61,99 @@ export type ArchitectureEdge = {
 export async function listModuleHotspots(args: {
   repositoryId: string;
   topK?: number;
+  /** Churn lookback in days. Non-30 windows are computed live from commit history. */
+  windowDays?: number;
 }): Promise<HotspotResult[]> {
   const topK = Math.max(1, args.topK ?? 10);
+  const windowDays = parseHotspotWindowDays(args.windowDays ?? 30);
+
+  if (windowDays === 30) {
+    const rows = (await getPrisma().$queryRawUnsafe(
+      `
+        SELECT
+          "filePath",
+          "score",
+          "changeCount",
+          "dependentCount",
+          "coChangeCount",
+          "findingsCount",
+          "reasons"
+        FROM "ModuleHotspot"
+        WHERE "repositoryId" = $1
+        ORDER BY "score" DESC
+        LIMIT $2
+      `,
+      args.repositoryId,
+      topK
+    )) as Array<{
+      filePath: string;
+      score: number;
+      changeCount: number;
+      dependentCount: number;
+      coChangeCount: number;
+      findingsCount: number;
+      reasons: string[];
+    }>;
+
+    return rows.map((row) => ({
+      filePath: row.filePath,
+      score: row.score,
+      changeCount: row.changeCount,
+      dependentCount: row.dependentCount,
+      coChangeCount: row.coChangeCount,
+      findingsCount: row.findingsCount,
+      reasons: Array.isArray(row.reasons) ? row.reasons : []
+    }));
+  }
+
+  // ponytail: reuse ModuleHotspot structural factors; only recompute churn + score for the window.
   const rows = (await getPrisma().$queryRawUnsafe(
     `
+      WITH changes AS (
+        SELECT
+          cfc."filePath" AS "filePath",
+          COUNT(*)::int AS "changeCount"
+        FROM "CommitFileChange" cfc
+        JOIN "CommitRecord" cr ON cr."id" = cfc."commitId"
+        WHERE cr."repositoryId" = $1
+          AND cr."authoredAt" > NOW() - ($2::text || ' days')::interval
+        GROUP BY cfc."filePath"
+      )
       SELECT
-        "filePath",
-        "score",
-        "changeCount",
-        "dependentCount",
-        "coChangeCount",
-        "findingsCount",
-        "reasons"
-      FROM "ModuleHotspot"
-      WHERE "repositoryId" = $1
-      ORDER BY "score" DESC
-      LIMIT $2
+        c."filePath" AS "filePath",
+        c."changeCount" AS "changeCount",
+        COALESCE(h."dependentCount", 0)::int AS "dependentCount",
+        COALESCE(h."coChangeCount", 0)::int AS "coChangeCount",
+        COALESCE(h."findingsCount", 0)::int AS "findingsCount"
+      FROM changes c
+      LEFT JOIN "ModuleHotspot" h
+        ON h."repositoryId" = $1 AND h."filePath" = c."filePath"
     `,
     args.repositoryId,
-    topK
+    String(windowDays)
   )) as Array<{
     filePath: string;
-    score: number;
     changeCount: number;
     dependentCount: number;
     coChangeCount: number;
     findingsCount: number;
-    reasons: string[];
   }>;
 
-  return rows.map((row) => ({
-    filePath: row.filePath,
-    score: row.score,
-    changeCount: row.changeCount,
-    dependentCount: row.dependentCount,
-    coChangeCount: row.coChangeCount,
-    findingsCount: row.findingsCount,
-    reasons: Array.isArray(row.reasons) ? row.reasons : []
-  }));
+  return rows
+    .map((row) => {
+      const score = computeHotspotScore(row);
+      return {
+        filePath: row.filePath,
+        score,
+        changeCount: row.changeCount,
+        dependentCount: row.dependentCount,
+        coChangeCount: row.coChangeCount,
+        findingsCount: row.findingsCount,
+        reasons: hotspotExplanation({ ...row, windowDays })
+      };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, topK);
 }
 
 export async function getCoChanges(args: {

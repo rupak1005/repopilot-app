@@ -104,10 +104,15 @@ export function hotspotExplanation(args: {
   dependentCount: number;
   coChangeCount: number;
   findingsCount: number;
+  windowDays?: number;
 }): string[] {
   const reasons: string[] = [];
   if (args.changeCount > 0) {
-    reasons.push(`Changed ${args.changeCount} time(s) in tracked history.`);
+    reasons.push(
+      args.windowDays
+        ? `Changed ${args.changeCount} time(s) in the last ${args.windowDays} days.`
+        : `Changed ${args.changeCount} time(s) in tracked history.`
+    );
   }
   if (args.dependentCount > 0) {
     reasons.push(`${args.dependentCount} direct module dependent(s).`);

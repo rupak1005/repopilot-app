@@ -9,6 +9,33 @@ export const TOPO_METRICS: Array<{ id: TopoMetric; label: string }> = [
   { id: 'findingsCount', label: 'Findings' }
 ];
 
+export const TOPO_WINDOWS = [
+  { days: 7, label: '7d' },
+  { days: 30, label: '30d' },
+  { days: 90, label: '90d' },
+  { days: 365, label: '1y' }
+] as const;
+
+export type TopoWindowDays = (typeof TOPO_WINDOWS)[number]['days'];
+
+export function parseTopoWindowDays(raw?: string | number | null): TopoWindowDays {
+  const n = typeof raw === 'number' ? raw : Number(raw);
+  if (TOPO_WINDOWS.some((w) => w.days === n)) return n as TopoWindowDays;
+  return 30;
+}
+
+/** Demo-only: scale 30d fixtures toward the selected lookback. */
+export function scaleHotspotsForWindow(rows: HotspotRow[], windowDays: TopoWindowDays): HotspotRow[] {
+  const factor = windowDays / 30;
+  return rows
+    .map((row) => ({
+      ...row,
+      changeCount: Math.max(0, Math.round(row.changeCount * factor)),
+      score: Math.round(row.score * factor * 10) / 10
+    }))
+    .sort((a, b) => b.score - a.score);
+}
+
 export type TopoCell = {
   id: string;
   kind: 'cluster' | 'file';

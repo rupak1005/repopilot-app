@@ -16,6 +16,12 @@ import {
 import { isDemoMode } from '../../../lib/demoMode';
 import { DEMO_HOTSPOTS } from '../../../lib/demoData';
 import { repoApiPath } from '../../../lib/serverApi';
+import {
+  TOPO_WINDOWS,
+  parseTopoWindowDays,
+  scaleHotspotsForWindow,
+  type TopoWindowDays
+} from '../../../lib/topography';
 import type { HotspotRow } from '../../../lib/types';
 
 export default function HotspotsPage() {
@@ -33,14 +39,20 @@ export default function HotspotsPage() {
     pendingIndexJobRepoId
   );
 
+  const [windowDays, setWindowDays] = useState<TopoWindowDays>(30);
   const [hotspots, setHotspots] = useState<HotspotRow[]>([]);
   const [topoError, setTopoError] = useState<string | null>(null);
   const [topoLoading, setTopoLoading] = useState(false);
 
   useEffect(() => {
+    if (!router.isReady) return;
+    setWindowDays(parseTopoWindowDays(router.query.window));
+  }, [router.isReady, router.query.window]);
+
+  useEffect(() => {
     if (!repoId) return;
     if (isDemoMode()) {
-      setHotspots(DEMO_HOTSPOTS);
+      setHotspots(scaleHotspotsForWindow(DEMO_HOTSPOTS, windowDays));
       setTopoError(null);
       return;
     }
@@ -49,7 +61,9 @@ export default function HotspotsPage() {
     async function load() {
       setTopoLoading(true);
       try {
-        const response = await fetch(repoApiPath(repoId!, 'hotspots?topK=40'));
+        const response = await fetch(
+          repoApiPath(repoId!, `hotspots?topK=40&windowDays=${windowDays}`)
+        );
         if (!response.ok) throw new Error('Could not load topography hotspots');
         const data = (await response.json()) as HotspotRow[];
         if (!cancelled) {
@@ -69,7 +83,17 @@ export default function HotspotsPage() {
     return () => {
       cancelled = true;
     };
-  }, [repoId, overviewHotspots]);
+  }, [repoId, overviewHotspots, windowDays]);
+
+  function selectWindow(days: TopoWindowDays) {
+    setWindowDays(days);
+    if (!repoId) return;
+    void router.replace(
+      { pathname: `/dashboard/${repoId}/hotspots`, query: days === 30 ? {} : { window: days } },
+      undefined,
+      { shallow: true }
+    );
+  }
 
   return (
     <DashboardLayout activeNav="hotspots">
@@ -82,12 +106,26 @@ export default function HotspotsPage() {
           </p>
         </div>
 
+        <div className="ui-topo__windows" role="group" aria-label="Churn lookback window">
+          {TOPO_WINDOWS.map((w) => (
+            <button
+              key={w.days}
+              type="button"
+              className={`ui-topo__window${windowDays === w.days ? ' ui-topo__window--active' : ''}`}
+              aria-pressed={windowDays === w.days}
+              onClick={() => selectWindow(w.days)}
+            >
+              {w.label}
+            </button>
+          ))}
+        </div>
+
         {error || topoError ? <ErrorBanner>{error ?? topoError}</ErrorBanner> : null}
         {needsIndex ? <IndexHint /> : null}
         {loading || topoLoading ? <p className="empty-state">Loading topography…</p> : null}
 
         <BentoPanel
-          title="2D landscape"
+          title={`2D landscape · last ${windowDays === 365 ? 'year' : `${windowDays} days`}`}
           action={<Flame size={18} weight="fill" color="var(--status-warn)" aria-hidden />}
         >
           <TopographyMap hotspots={hotspots} repoId={repoId} />

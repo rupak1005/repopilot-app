@@ -67,4 +67,15 @@ describe('hotspot scoring', () => {
     });
     expect(reasons.length).toBe(4);
   });
+
+  it('names the lookback window when provided', () => {
+    const reasons = hotspotExplanation({
+      changeCount: 2,
+      dependentCount: 0,
+      coChangeCount: 0,
+      findingsCount: 0,
+      windowDays: 90
+    });
+    expect(reasons[0]).toContain('90 days');
+  });
 });

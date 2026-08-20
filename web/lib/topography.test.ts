@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   hotspotMetricValue,
   layoutTopography,
+  parseTopoWindowDays,
+  scaleHotspotsForWindow,
   topographyClusterKey,
   topographyRiskTone
 } from './topography';
@@ -52,5 +54,19 @@ describe('layoutTopography', () => {
     expect(hotspotMetricValue(cells[0]!.files[0]!, 'dependentCount')).toBe(50);
     expect(cells[0]?.label).toBe('api');
     expect(cells[0]?.value).toBe(50);
+  });
+});
+
+describe('topo windows', () => {
+  it('parses supported lookbacks', () => {
+    expect(parseTopoWindowDays(7)).toBe(7);
+    expect(parseTopoWindowDays('365')).toBe(365);
+    expect(parseTopoWindowDays('x')).toBe(30);
+  });
+
+  it('scales demo hotspots with the lookback', () => {
+    const scaled = scaleHotspotsForWindow([hot('a.ts', 30, { changeCount: 30 })], 90);
+    expect(scaled[0]?.changeCount).toBe(90);
+    expect(scaled[0]?.score).toBe(90);
   });
 });

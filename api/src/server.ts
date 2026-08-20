@@ -477,12 +477,14 @@ async function bootstrap() {
 
   server.get('/api/v1/repositories/:repoId/hotspots', async (request) => {
     const params = request.params as { repoId: string };
-    const query = request.query as { topK?: string };
+    const query = request.query as { topK?: string; windowDays?: string };
     const topK = query.topK ? Number(query.topK) : undefined;
+    const windowDays = query.windowDays ? Number(query.windowDays) : undefined;
 
     return listModuleHotspots({
       repositoryId: params.repoId,
-      topK
+      topK,
+      windowDays
     });
   });
 

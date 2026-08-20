@@ -10,7 +10,7 @@
 | 0–3 | Audits, design system, shell, context graph | **Done** |
 | 4 | Real dependency graph | **In progress** |
 | 5 | Impact analysis | **In progress** — file / symbol / PR modes |
-| 6 | Codebase topography | **In progress** — 2D map + metric toggles |
+| 6 | Codebase topography | **In progress** — 2D map + metrics + lookback |
 | 7–35 | Remaining | Not started / partial |
 
 ## Phase 5
@@ -24,9 +24,9 @@
 
 - [x] 2D topography clusters
 - [x] Metric toggles: hotspot score / churn / dependents / findings
-- [ ] Time slider / revision-scoped hotspots
+- [x] Time window lookback (7d / 30d / 90d / 1y) via `windowDays`
 - [ ] Optional 3D (deferred)
 
 ## Next action
 
-Time-window topography, or optional ELK/symbol graph views — ask before committing.
+Optional ELK/symbol graph views, or Phase 7 — ask before committing.
