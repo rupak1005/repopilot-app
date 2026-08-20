@@ -8,6 +8,7 @@ type HotspotListProps = {
   hotspots: HotspotRow[];
   emptyMessage?: string;
   repoId?: string | null;
+  ranked?: boolean;
 };
 
 function metricTag(label: string, value: number | undefined): string | null {
@@ -15,7 +16,12 @@ function metricTag(label: string, value: number | undefined): string | null {
   return `${value} ${label}`;
 }
 
-export function HotspotList({ hotspots, emptyMessage = 'No hotspot data yet.', repoId }: HotspotListProps) {
+export function HotspotList({
+  hotspots,
+  emptyMessage = 'No hotspot data yet.',
+  repoId,
+  ranked = false
+}: HotspotListProps) {
   if (hotspots.length === 0) {
     return (
       <EmptyState compact className="ui-hotspot-empty" icon={File} title={emptyMessage} />
@@ -23,13 +29,13 @@ export function HotspotList({ hotspots, emptyMessage = 'No hotspot data yet.', r
   }
 
   return (
-    <div className="ui-hotspot-list">
-      {hotspots.map((hotspot) => {
+    <div className={`ui-hotspot-list${ranked ? ' ui-hotspot-list--ranked' : ''}`}>
+      {hotspots.map((hotspot, index) => {
         const color = hotspotScoreClass(hotspot.score);
         const extras = [
           metricTag('dependents', hotspot.dependentCount),
           metricTag('co-changes', hotspot.coChangeCount),
-          metricTag('review findings', hotspot.findingsCount)
+          metricTag('findings', hotspot.findingsCount)
         ].filter((tag): tag is string => Boolean(tag));
         const href = repoId
           ? `/dashboard/${repoId}/impact?file=${encodeURIComponent(hotspot.filePath)}`
@@ -39,7 +45,13 @@ export function HotspotList({ hotspots, emptyMessage = 'No hotspot data yet.', r
           <div key={hotspot.filePath} className="ui-hotspot-item">
             <div className="ui-hotspot-row">
               <div className="ui-hotspot-file">
-                <File size={16} weight="light" aria-hidden />
+                {ranked ? (
+                  <span className="ui-hotspot-rank" aria-hidden>
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                ) : (
+                  <File size={16} weight="light" aria-hidden />
+                )}
                 {href ? (
                   <Link href={href} className="mono ui-hotspot-file-link">
                     {hotspot.filePath}

@@ -65,10 +65,17 @@ export function TopographyMap({ hotspots, repoId }: TopographyMapProps) {
 
       {selected ? (
         <div className="ui-topo__inspector" aria-label={`${selected.label} cluster`}>
-          <p className="label-caps">Cluster</p>
-          <h3 className="ui-topo__inspector-title">{selected.label}/</h3>
+          <div className="ui-topo__inspector-head">
+            <div>
+              <p className="label-caps">Cluster</p>
+              <h3 className="ui-topo__inspector-title">{selected.label}/</h3>
+            </div>
+            <button type="button" className="ui-topo__inspector-clear" onClick={() => setSelectedId(null)}>
+              Clear
+            </button>
+          </div>
           <p className="ui-topo__inspector-meta">
-            Metric {selected.value.toFixed(0)} · peak score {selected.score.toFixed(0)} ·{' '}
+            Metric {selected.value.toFixed(0)} · peak {selected.score.toFixed(0)} ·{' '}
             {selected.memberCount} files · {selected.changeCount} changes
           </p>
           <ul className="ui-topo__files">
@@ -93,8 +100,7 @@ export function TopographyMap({ hotspots, repoId }: TopographyMapProps) {
         </div>
       ) : (
         <p className="ui-topo__hint">
-          Blocks are directory clusters. Size encodes the selected metric — click a block to
-          inspect files.
+          Larger blocks = hotter clusters for the selected metric. Click a block to inspect files.
         </p>
       )}
     </div>
@@ -120,14 +126,15 @@ function TopoBlock({
       className={`ui-topo__block ui-topo__block--w${cell.weight} ui-topo__block--${tone}${
         selected ? ' ui-topo__block--selected' : ''
       }`}
-      style={{ gridColumn: cell.col + 1, gridRow: cell.row + 1 }}
       onClick={onSelect}
       aria-pressed={selected}
       aria-label={`${cell.label} cluster, ${metric} ${cell.value.toFixed(0)}`}
     >
-      <span className="ui-topo__block-label">{cell.label}</span>
-      <span className="ui-topo__block-score">{cell.value.toFixed(0)}</span>
-      <span className="ui-topo__block-count">{cell.memberCount} files</span>
+      <span className="ui-topo__block-top">
+        <span className="ui-topo__block-label">{cell.label}</span>
+        <span className="ui-topo__block-score">{cell.value.toFixed(0)}</span>
+      </span>
+      <span className="ui-topo__block-count">{cell.memberCount} files · {cell.changeCount} changes</span>
     </button>
   );
 }

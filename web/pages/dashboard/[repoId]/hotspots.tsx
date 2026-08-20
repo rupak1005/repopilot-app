@@ -96,29 +96,32 @@ export default function HotspotsPage() {
     );
   }
 
+  const windowLabel = windowDays === 365 ? '1 year' : `${windowDays} days`;
+
   return (
     <DashboardLayout activeNav="hotspots">
-      <div className="canvas-inner">
-        <div className="page-title-block">
-          <h1>Topography</h1>
-          <p>
-            Engineering landscape from real hotspot scores — directory clusters sized by churn ×
-            dependents × findings. Open a file for blast radius.
-          </p>
-        </div>
-
-        <div className="ui-topo__windows" role="group" aria-label="Churn lookback window">
-          {TOPO_WINDOWS.map((w) => (
-            <button
-              key={w.days}
-              type="button"
-              className={`ui-topo__window${windowDays === w.days ? ' ui-topo__window--active' : ''}`}
-              aria-pressed={windowDays === w.days}
-              onClick={() => selectWindow(w.days)}
-            >
-              {w.label}
-            </button>
-          ))}
+      <div className="canvas-inner ui-topo-page">
+        <div className="ui-topo-page__header">
+          <div className="page-title-block">
+            <h1>Topography</h1>
+            <p>
+              Directory landscape sized by hotspot score — churn × dependents × findings. Click a
+              cluster, then open a file for blast radius.
+            </p>
+          </div>
+          <div className="ui-topo__windows" role="group" aria-label="Churn lookback window">
+            {TOPO_WINDOWS.map((w) => (
+              <button
+                key={w.days}
+                type="button"
+                className={`ui-topo__window${windowDays === w.days ? ' ui-topo__window--active' : ''}`}
+                aria-pressed={windowDays === w.days}
+                onClick={() => selectWindow(w.days)}
+              >
+                {w.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {error || topoError ? <ErrorBanner>{error ?? topoError}</ErrorBanner> : null}
@@ -126,16 +129,17 @@ export default function HotspotsPage() {
         {loading || topoLoading ? <p className="empty-state">Loading topography…</p> : null}
 
         <BentoPanel
-          title={`2D landscape · last ${windowDays === 365 ? 'year' : `${windowDays} days`}`}
+          title={`Landscape · last ${windowLabel}`}
           action={<Flame size={18} weight="fill" color="var(--status-warn)" aria-hidden />}
         >
           <TopographyMap hotspots={hotspots} repoId={repoId} />
         </BentoPanel>
 
-        <BentoPanel title={`Ranked hotspots (${hotspots.length})`}>
+        <BentoPanel title={`Ranked hotspots · ${hotspots.length}`}>
           <HotspotList
             hotspots={hotspots}
             repoId={repoId}
+            ranked
             emptyMessage="No hotspot data yet — run history ingest on the API."
           />
         </BentoPanel>
