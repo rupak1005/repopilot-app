@@ -27,7 +27,9 @@
 
 .ui-wiki-card__title {
   margin: var(--space-1) 0 var(--space-1);
+  font-family: var(--font-display);
   font-size: var(--text-h3, 1.15rem);
+  font-weight: 700;
   letter-spacing: -0.02em;
 }
 
@@ -71,13 +73,6 @@
   outline: 2px solid var(--diagram-accent, var(--color-link));
   outline-offset: 4px;
   border-radius: var(--radius-sm);
-}
-
-.ui-wiki-card__title {
-  font-family: var(--font-display);
-  font-size: var(--text-h3, 1.15rem);
-  font-weight: 700;
-  letter-spacing: -0.02em;
 }
 
 .ui-wiki-reader__bar {

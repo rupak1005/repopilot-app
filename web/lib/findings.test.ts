@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  applyFindingsBoardFilters,
   filterRepoFindings,
+  listFindingCategories,
   parseFindingsSeverity,
   sortFindingsBySeverity,
   type RepoFinding
@@ -55,5 +57,16 @@ describe('findings', () => {
       'MEDIUM',
       'LOW'
     ]);
+  });
+
+  it('filters by category and text query', () => {
+    expect(listFindingCategories(sample)).toEqual(['correctness', 'testing']);
+    expect(
+      applyFindingsBoardFilters(sample, {
+        severity: 'ALL',
+        category: 'testing',
+        query: 'medium'
+      }).map((f) => f.id)
+    ).toEqual(['3']);
   });
 });

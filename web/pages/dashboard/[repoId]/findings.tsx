@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
-import { Warning } from '@phosphor-icons/react';
+import { MagnifyingGlass, Warning } from '@phosphor-icons/react';
 import { DashboardLayout, useDashboardContext } from '../../../lib/dashboard';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { ErrorBanner } from '../../../components/ui/ErrorBanner';
@@ -10,8 +10,11 @@ import { demoDelay, demoRepoFindings } from '../../../lib/demoData';
 import { isDemoMode } from '../../../lib/demoMode';
 import {
   FINDING_SEVERITY_FILTERS,
+  applyFindingsBoardFilters,
   countRepoFindings,
-  filterRepoFindings,
+  listFindingCategories,
+  parseFindingsCategory,
+  parseFindingsQuery,
   parseFindingsSeverity,
   sortFindingsBySeverity,
   type RepoFinding
@@ -25,10 +28,16 @@ export default function FindingsPage() {
   const repoId = typeof router.query.repoId === 'string' ? router.query.repoId : null;
   const repoFullName = dash?.repoFullName;
   const severity = parseFindingsSeverity(router.query.severity);
+  const queryText = parseFindingsQuery(router.query.q);
   const [findings, setFindings] = useState<RepoFinding[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [draftQuery, setDraftQuery] = useState(queryText);
   const base = repoId ? `/dashboard/${repoId}` : '';
+
+  useEffect(() => {
+    setDraftQuery(queryText);
+  }, [queryText]);
 
   useEffect(() => {
     if (!repoId) return;
@@ -61,18 +70,30 @@ export default function FindingsPage() {
     };
   }, [repoId]);
 
+  const categories = useMemo(() => listFindingCategories(findings), [findings]);
+  const category = parseFindingsCategory(router.query.category, categories);
   const counts = useMemo(() => countRepoFindings(findings), [findings]);
-  const visible = useMemo(() => filterRepoFindings(findings, severity), [findings, severity]);
+  const visible = useMemo(
+    () => applyFindingsBoardFilters(findings, { severity, category, query: queryText }),
+    [findings, severity, category, queryText]
+  );
 
-  function setSeverity(next: FindingSeverityFilter) {
+  function replaceFilters(next: {
+    severity?: FindingSeverityFilter;
+    category?: string | null;
+    q?: string;
+  }) {
     if (!repoId) return;
     const query: Record<string, string> = {};
-    if (next !== 'ALL') query.severity = next;
-    void router.replace(
-      { pathname: `/dashboard/${repoId}/findings`, query },
-      undefined,
-      { shallow: true }
-    );
+    const sev = next.severity ?? severity;
+    const cat = next.category !== undefined ? next.category : category;
+    const q = next.q !== undefined ? next.q : queryText;
+    if (sev !== 'ALL') query.severity = sev;
+    if (cat) query.category = cat;
+    if (q.trim()) query.q = q.trim();
+    void router.replace({ pathname: `/dashboard/${repoId}/findings`, query }, undefined, {
+      shallow: true
+    });
   }
 
   return (
@@ -81,12 +102,37 @@ export default function FindingsPage() {
         <div className="page-title-block">
           <h1>Findings</h1>
           <p>
-            Review findings from the latest PR reviews across this repository — filter by severity,
-            then jump to the PR or cited files.
+            Review findings from the latest PR reviews — filter by severity, category, or text, then
+            jump to the PR or cited files.
           </p>
         </div>
 
         {error ? <ErrorBanner onDismiss={() => setError(null)}>{error}</ErrorBanner> : null}
+
+        <form
+          className="ui-findings-search"
+          onSubmit={(event) => {
+            event.preventDefault();
+            replaceFilters({ q: draftQuery });
+          }}
+        >
+          <label className="ui-findings-search__label" htmlFor="findings-q">
+            Search findings
+          </label>
+          <div className="ui-findings-search__row">
+            <MagnifyingGlass size={16} weight="bold" aria-hidden />
+            <input
+              id="findings-q"
+              type="search"
+              value={draftQuery}
+              onChange={(event) => setDraftQuery(event.target.value)}
+              placeholder="Title, file, PR, category…"
+            />
+            <button type="submit" className="ui-diagram__action">
+              Search
+            </button>
+          </div>
+        </form>
 
         <div className="ui-finding-filters" role="tablist" aria-label="Filter findings by severity">
           {FINDING_SEVERITY_FILTERS.map((key) => (
@@ -96,7 +142,7 @@ export default function FindingsPage() {
               role="tab"
               aria-selected={severity === key}
               className={`ui-finding-filter${severity === key ? ' ui-finding-filter--active' : ''}`}
-              onClick={() => setSeverity(key)}
+              onClick={() => replaceFilters({ severity: key })}
             >
               {key === 'ALL' ? 'All' : key.charAt(0) + key.slice(1).toLowerCase()}
               <span className="ui-finding-filter__count">{counts[key]}</span>
@@ -104,16 +150,42 @@ export default function FindingsPage() {
           ))}
         </div>
 
+        {categories.length > 0 ? (
+          <div className="ui-finding-filters" role="tablist" aria-label="Filter findings by category">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={!category}
+              className={`ui-finding-filter${!category ? ' ui-finding-filter--active' : ''}`}
+              onClick={() => replaceFilters({ category: null })}
+            >
+              All categories
+            </button>
+            {categories.map((name) => (
+              <button
+                key={name}
+                type="button"
+                role="tab"
+                aria-selected={category === name}
+                className={`ui-finding-filter${category === name ? ' ui-finding-filter--active' : ''}`}
+                onClick={() => replaceFilters({ category: name })}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+        ) : null}
+
         {loading ? <p className="empty-state">Loading findings…</p> : null}
 
         {!loading && visible.length === 0 ? (
           <EmptyState
             icon={Warning}
-            title={findings.length === 0 ? 'No findings yet' : 'No findings in this severity'}
+            title={findings.length === 0 ? 'No findings yet' : 'No findings match these filters'}
             description={
               findings.length === 0
                 ? 'Open a pull request and run a review to populate this board.'
-                : 'Try All or another severity filter.'
+                : 'Try clearing search, category, or severity.'
             }
             action={
               base ? (
@@ -147,6 +219,7 @@ export default function FindingsPage() {
                 finding={finding}
                 repoId={repoId}
                 repoFullName={repoFullName}
+                revisionSha={finding.headRevision}
               />
             </li>
           ))}

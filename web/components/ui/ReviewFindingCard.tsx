@@ -20,9 +20,16 @@ type ReviewFindingCardProps = {
   finding: ReviewFinding;
   repoId?: string | null;
   repoFullName?: string | null;
+  revisionSha?: string | null;
 };
 
-export function ReviewFindingCard({ finding, repoId, repoFullName }: ReviewFindingCardProps) {
+/** File:line citation chip with optional Investigate actions (Phase 7). */
+export function ReviewFindingCard({
+  finding,
+  repoId,
+  repoFullName,
+  revisionSha
+}: ReviewFindingCardProps) {
   return (
     <article className="ui-finding-card">
       <header className="ui-finding-card__head">
@@ -51,6 +58,7 @@ export function ReviewFindingCard({ finding, repoId, repoFullName }: ReviewFindi
                   lines={item.lines}
                   repoId={repoId}
                   repoFullName={repoFullName}
+                  revisionSha={revisionSha ?? undefined}
                 />
               </span>
             ))}

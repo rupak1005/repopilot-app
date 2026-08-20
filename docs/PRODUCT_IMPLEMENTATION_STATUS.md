@@ -32,7 +32,8 @@
 | 25 | Wiki (indexed docs) | **Done foundation** — markdown / ADR board |
 | 26 | Planning candidates | **Done foundation** — hotspot → Impact/Graph |
 | 27 | Wiki inline reader | **Done foundation** — `?path=` + markdown render |
-| 28–35 | Remaining | Not started / partial |
+| 28 | Findings board polish | **Done foundation** — category + search filters |
+| 29–35 | Remaining | Not started / partial |
 
 ## Phase 5
 
@@ -196,6 +197,12 @@
 - [x] Wiki inline reader (`?path=` + `?rev=`) with dependency-free markdown blocks
 - [x] Demo page bodies + reader deep links (`wikiHref`)
 
+## Phase 28
+
+- [x] Findings category chips + `?q=` text search over title/file/PR
+- [x] Evidence citations carry PR `headRevision` into Graph / Impact links
+- [x] Shared board filter helpers + tests
+
 ## Next action
 
-Phase 28+ (deferred 3D topography, Findings polish, impact calibration fixtures).
+Phase 29+ (deferred 3D topography, impact calibration fixtures).
