@@ -72,6 +72,13 @@
 - [x] Copy RepoPilot ID + links to History / MCP
 - [x] IndexHint mentions Settings re-index
 
+## Phase 12
+
+- [x] Overview pulse from live index status + PR/hotspot counts
+- [x] Quick actions: Ask, Search, Graph, Impact, History
+- [x] Hotspots panel link to Topography; Settings deep link
+- [x] Differentiator MCP copy de-branded to agents
+
 ## Next action
 
-Phase 12 (Overview polish) or revision-scoped graph viewing.
+Phase 13 (Docs / onboarding polish) or revision-scoped graph viewing.
