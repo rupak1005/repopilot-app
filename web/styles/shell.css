@@ -475,6 +475,8 @@ a.topbar-activity__item:hover {
 
 .canvas {
   flex: 1;
+  min-width: 0;
+  overflow-x: hidden;
   overflow-y: auto;
   padding: var(--space-6) var(--space-4);
   background: var(--color-background);

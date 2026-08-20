@@ -10,13 +10,15 @@
 .mcp-page__main {
   flex: 1;
   padding: var(--space-10) var(--space-6) var(--space-12);
-  overflow: visible;
+  overflow-x: hidden;
 }
 
 .mcp-page__shell {
   position: relative;
   max-width: 760px;
+  width: 100%;
   margin: 0 auto;
+  min-width: 0;
 }
 
 .mcp-page__notice {
@@ -37,20 +39,35 @@
 
 .canvas-inner--mcp {
   max-width: 760px;
+  width: 100%;
+  min-width: 0;
+  margin-inline: 0;
   padding-top: var(--space-2);
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   gap: var(--space-6);
 }
 
 .canvas-inner--mcp .page-title-block {
   margin-bottom: 0;
+  text-align: left;
 }
 
 .mcp-connect {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   gap: var(--space-8);
+  width: 100%;
+  min-width: 0;
+}
+
+.mcp-connect__config,
+.mcp-connect__setup,
+.mcp-connect__tools {
+  width: 100%;
+  min-width: 0;
 }
 
 .mcp-connect__section-title {
@@ -65,19 +82,26 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: var(--space-3);
+}
+
+@media (min-width: 720px) {
+  .mcp-connect__steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .mcp-connect__step {
   display: grid;
-  grid-template-columns: 32px 1fr;
+  grid-template-columns: 32px minmax(0, 1fr);
   gap: var(--space-3);
   padding: var(--space-4);
   border: var(--border-medium);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
   box-shadow: var(--shadow-hard-sm);
+  min-width: 0;
 }
 
 .mcp-connect__step-num {
@@ -104,6 +128,7 @@
   font-size: var(--text-caption);
   line-height: 1.5;
   color: var(--color-text-muted);
+  overflow-wrap: anywhere;
 }
 
 .mcp-connect__ids {
@@ -111,7 +136,8 @@
   display: grid;
   gap: var(--space-3);
   padding-top: var(--space-4);
-  border-top: var(--border-light);
+  border-top: var(--border-soft-width);
+  min-width: 0;
 }
 
 .mcp-connect__ids dt {
@@ -125,6 +151,7 @@
 .mcp-connect__ids dd {
   margin: var(--space-1) 0 0;
   font-size: var(--text-ui);
+  min-width: 0;
 }
 
 .mcp-connect__id-row {
@@ -132,6 +159,12 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
+  min-width: 0;
+}
+
+.mcp-connect__id-row .mono {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .mcp-connect__copy--inline {
@@ -166,6 +199,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
+  flex-shrink: 0;
   padding: var(--space-2) var(--space-3);
   border: var(--border-medium);
   border-radius: var(--radius-md);
@@ -179,12 +213,15 @@
 .mcp-connect__pre {
   margin: 0;
   padding: var(--space-4);
+  max-width: 100%;
   overflow-x: auto;
   border: var(--border-medium);
   border-radius: var(--radius-md);
   background: var(--color-surface-muted);
   font-size: var(--text-caption);
   line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .mcp-connect__hint {
@@ -198,8 +235,11 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: var(--space-3);
+  width: 100%;
+  min-width: 0;
 }
 
 .mcp-connect__tool {
@@ -212,6 +252,9 @@
   background: var(--color-surface);
   font-size: var(--text-ui);
   box-shadow: var(--shadow-hard-sm);
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .mcp-connect__tool-head {
@@ -220,6 +263,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
+  min-width: 0;
 }
 
 .mcp-connect__tool-link {
@@ -239,6 +283,7 @@
 .mcp-connect__tool-example {
   margin: 0;
   padding: var(--space-3);
+  max-width: 100%;
   overflow-x: auto;
   border: var(--border-soft-width);
   border-radius: var(--radius-sm);
@@ -246,10 +291,6 @@
   font-size: var(--text-micro);
   line-height: 1.45;
   color: var(--color-text-muted);
-}
-
-@media (max-width: 720px) {
-  .mcp-connect__steps {
-    grid-template-columns: 1fr;
-  }
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }

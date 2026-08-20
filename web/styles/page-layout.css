@@ -1,5 +1,7 @@
 .canvas-inner {
   max-width: var(--container-max);
+  width: 100%;
+  min-width: 0;
   margin: 0 auto;
   padding: var(--space-1) 0;
 }
