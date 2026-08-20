@@ -46,7 +46,8 @@ export default function HotspotsPage() {
 
   useEffect(() => {
     if (!router.isReady) return;
-    setWindowDays(parseTopoWindowDays(router.query.window));
+    const raw = router.query.window;
+    setWindowDays(parseTopoWindowDays(Array.isArray(raw) ? raw[0] : raw));
   }, [router.isReady, router.query.window]);
 
   useEffect(() => {

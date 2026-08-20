@@ -12,7 +12,7 @@ const MINI_W = 168;
 const MINI_H = 112;
 
 type GraphMinimapProps = {
-  nodes: Array<GraphPoint & { id: string; isHotspot?: boolean }>;
+  nodes: Array<{ id: string; x?: number; y?: number; isHotspot?: boolean }>;
   selectedId?: string | null;
   camera: MinimapCamera | null;
   viewWidth: number;
@@ -29,7 +29,12 @@ export function GraphMinimap({
   onNavigate
 }: GraphMinimapProps) {
   const bounds = useMemo(
-    () => boundsFromPoints(nodes.map((n) => ({ x: n.x, y: n.y }))),
+    () =>
+      boundsFromPoints(
+        nodes.map((n) =>
+          n.x != null && n.y != null ? { x: n.x, y: n.y } : null
+        )
+      ),
     [nodes]
   );
 

@@ -60,6 +60,9 @@ const DASHBOARD_TITLES: Record<NavKey, string> = {
   architecture: 'Dependency Graph',
   impact: 'Impact',
   history: 'History',
+  planning: 'Planning',
+  wiki: 'Wiki',
+  findings: 'Findings',
   settings: 'Settings',
   mcp: 'MCP'
 };

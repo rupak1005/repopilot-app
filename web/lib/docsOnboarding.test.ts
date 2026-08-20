@@ -11,6 +11,6 @@ describe('docsOnboarding', () => {
       'investigate',
       'agents'
     ]);
-    expect(ONBOARDING_STEPS.at(-1)?.href).toBe('/docs/mcp');
+    expect(ONBOARDING_STEPS[ONBOARDING_STEPS.length - 1]?.href).toBe('/docs/mcp');
   });
 });
