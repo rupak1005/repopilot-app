@@ -41,7 +41,7 @@
   max-width: 760px;
   width: 100%;
   min-width: 0;
-  margin-inline: 0;
+  margin-inline: auto;
   padding-top: var(--space-2);
   display: flex;
   flex-direction: column;
