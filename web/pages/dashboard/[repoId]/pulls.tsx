@@ -7,6 +7,7 @@ import { ErrorBanner } from '../../../components/ui/ErrorBanner';
 import { IndexHint } from '../../../components/ui/IndexHint';
 import { OutcomeIcon } from '../../../components/ui/OutcomeIcon';
 import { StatusBadge, reviewStatusVariant } from '../../../components/ui/StatusBadge';
+import { rowLinkProps } from '../../../lib/a11y';
 import { DashboardLayout, shouldShowIndexHint, usePendingIndexJobRepoId, useRepoData, useRepoIndexStatus } from '../../../lib/dashboard';
 
 export default function PullsPage() {
@@ -62,8 +63,7 @@ export default function PullsPage() {
                   {pulls.map((pull) => (
                     <tr
                       key={pull.pullNumber}
-                      className="ui-data-table__row-link"
-                      onClick={() => void router.push(`${base}/pulls/${pull.pullNumber}`)}
+                      {...rowLinkProps(() => void router.push(`${base}/pulls/${pull.pullNumber}`))}
                     >
                       <td className="mono">
                         <Link href={`${base}/pulls/${pull.pullNumber}`}>#{pull.pullNumber}</Link>

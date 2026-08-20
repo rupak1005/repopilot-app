@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { MAIN_CONTENT_ID } from '../../lib/a11y';
 import { DEFAULT_DESCRIPTION } from '../../lib/seo';
 import { DOCS_NAV, docHref, type DocSlug } from '../../lib/docsNav';
 import { PublicSiteHeader } from './PublicSiteHeader';
 import { SeoHead } from './SeoHead';
+import { SkipLink } from './SkipLink';
 
 type DocsLayoutProps = {
   slug: DocSlug;
@@ -20,6 +22,7 @@ export function DocsLayout({ slug, title, lede, children }: DocsLayoutProps) {
         description={lede ?? DEFAULT_DESCRIPTION}
         path={docHref(slug)}
       />
+      <SkipLink />
       <PublicSiteHeader active="docs" />
       <div className="docs-page__frame">
         <aside className="docs-sidebar" aria-label="Documentation">
@@ -38,7 +41,7 @@ export function DocsLayout({ slug, title, lede, children }: DocsLayoutProps) {
           </nav>
         </aside>
 
-        <article className="docs-main">
+        <article id={MAIN_CONTENT_ID} className="docs-main" tabIndex={-1}>
           <header className="docs-main__header">
             <h1>{title}</h1>
             {lede ? <p className="docs-main__lede">{lede}</p> : null}

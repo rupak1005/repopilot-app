@@ -44,10 +44,12 @@ Missing surfaces: History time machine, Planning, Wiki, Command Palette, Univers
 
 ## Accessibility gaps
 
-- Force-graph largely pointer-driven
-- Some table rows are click-only
+- Force-graph largely pointer-driven → **mitigated** with Jump-to module select (Phase 15)
+- Some table rows are click-only → **fixed** for PR tables (Enter / Space)
 - Touch targets generally OK (≥40px on buttons)
 - Focus rings present via `focus-audit.css`
+- Skip link + main landmark added (Phase 15)
+- Mobile drawer focuses on open and restores toggle on close
 
 ## Empty / error / loading
 

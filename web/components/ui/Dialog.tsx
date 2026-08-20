@@ -36,7 +36,13 @@ export function Dialog({ open, onClose, title, description, children, footer }: 
   }
 
   return (
-    <dialog ref={ref} className="ui-dialog" onClose={onClose} onClick={handleBackdropClick}>
+    <dialog
+      ref={ref}
+      className="ui-dialog"
+      aria-labelledby="ui-dialog-title"
+      onClose={onClose}
+      onClick={handleBackdropClick}
+    >
       <div className="ui-dialog__panel" onClick={(event) => event.stopPropagation()}>
         <h2 className="ui-dialog__title" id="ui-dialog-title">
           {title}

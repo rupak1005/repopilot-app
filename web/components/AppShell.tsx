@@ -7,7 +7,8 @@ import {
   X
 } from '@phosphor-icons/react';
 import { useRouter } from 'next/router';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { MAIN_CONTENT_ID, firstFocusable } from '../lib/a11y';
 import { indexStatusLabel, isRepoIndexInProgress, useAnimatedIndexProgress, useIndexStatus } from '../lib/indexStatus';
 import { useIndexProgressUi } from '../lib/indexProgressUi';
 import { GITHUB_SIGN_IN_URL, signOut } from '../lib/auth';
@@ -17,6 +18,7 @@ import { CommandPalette } from './ui/CommandPalette';
 import { IconButton } from './ui/IconButton';
 import { NavItem } from './ui/NavItem';
 import { RepoPicker } from './ui/RepoPicker';
+import { SkipLink } from './ui/SkipLink';
 import { ThemeToggle } from './ui/ThemeToggle';
 import { TopbarActivity } from './ui/TopbarActivity';
 import { TopbarHelp } from './ui/TopbarHelp';
@@ -67,6 +69,8 @@ export function AppShell({
   const router = useRouter();
   const base = `/dashboard/${repoId}`;
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const mobileNavToggleRef = useRef<HTMLButtonElement>(null);
+  const mobileDrawerRef = useRef<HTMLElement>(null);
   const indexStatus = useIndexStatus(repoId, !demoMode, 1500);
   const indexDisplayPercent = useAnimatedIndexProgress(indexStatus);
   const { startIndexProgress, job } = useIndexProgressUi();
@@ -111,9 +115,12 @@ export function AppShell({
     }
     document.addEventListener('keydown', onKeyDown);
     document.body.style.overflow = 'hidden';
+    const focusTarget = firstFocusable(mobileDrawerRef.current) ?? mobileDrawerRef.current;
+    window.setTimeout(() => focusTarget?.focus(), 0);
     return () => {
       document.removeEventListener('keydown', onKeyDown);
       document.body.style.overflow = '';
+      mobileNavToggleRef.current?.focus();
     };
   }, [mobileNavOpen]);
 
@@ -127,6 +134,7 @@ export function AppShell({
 
   return (
     <div className="app-shell">
+      <SkipLink />
       <aside className="sidebar">
         <Link href="/" className="sidebar-brand">
           <div className="brand-mark">
@@ -146,6 +154,7 @@ export function AppShell({
       <div className="shell-main">
         <header className="topbar">
           <IconButton
+            ref={mobileNavToggleRef}
             className="mobile-nav-toggle"
             label={mobileNavOpen ? 'Close navigation menu' : 'Open navigation menu'}
             aria-expanded={mobileNavOpen}
@@ -167,8 +176,13 @@ export function AppShell({
               <span className="topbar-command__label">Commands</span>
               <kbd className="topbar-command__kbd">⌘K</kbd>
             </button>
-            <div className={indexPillClass} title={indexStatus?.job?.lastError ?? undefined}>
-              <span className={`pulse-dot${pulseIdle ? ' pulse-dot--idle' : ''}`} />
+            <div
+              className={indexPillClass}
+              title={indexStatus?.job?.lastError ?? undefined}
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              <span className={`pulse-dot${pulseIdle ? ' pulse-dot--idle' : ''}`} aria-hidden />
               <span className="label-caps">{indexLabel}</span>
             </div>
             <ThemeToggle />
@@ -212,7 +226,13 @@ export function AppShell({
           <span className="repo-context-bar__status">{indexLabel}</span>
         </div>
 
-        <div className={`canvas${canvasClass ? ` ${canvasClass}` : ''}`}>{children}</div>
+        <main
+          id={MAIN_CONTENT_ID}
+          className={`canvas${canvasClass ? ` ${canvasClass}` : ''}`}
+          tabIndex={-1}
+        >
+          {children}
+        </main>
       </div>
 
       {mobileNavOpen ? (
@@ -225,9 +245,11 @@ export function AppShell({
       ) : null}
 
       <aside
+        ref={mobileDrawerRef}
         id="mobile-nav-drawer"
         className={`mobile-nav-drawer${mobileNavOpen ? ' mobile-nav-drawer--open' : ''}`}
         aria-hidden={!mobileNavOpen}
+        inert={!mobileNavOpen ? true : undefined}
       >
         <div className="mobile-nav-drawer__header">
           <Link href="/" className="sidebar-brand mobile-nav-drawer__brand">

@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { motion, type HTMLMotionProps } from 'motion/react';
 import { useTapMotion } from '../../lib/motion';
 
@@ -13,15 +13,10 @@ export type IconButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 /** Phase 2 primitive — icon-only control with Motion spring press. */
-export function IconButton({
-  label,
-  variant = 'ghost',
-  size = 'md',
-  className,
-  children,
-  type = 'button',
-  ...rest
-}: IconButtonProps) {
+export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
+  { label, variant = 'ghost', size = 'md', className, children, type = 'button', ...rest },
+  ref
+) {
   const tap = useTapMotion();
   const classes = [
     'ui-icon-button',
@@ -34,6 +29,7 @@ export function IconButton({
 
   return (
     <motion.button
+      ref={ref}
       type={type}
       className={classes}
       aria-label={label}
@@ -43,4 +39,4 @@ export function IconButton({
       {children}
     </motion.button>
   );
-}
+});

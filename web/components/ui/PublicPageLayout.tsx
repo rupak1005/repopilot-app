@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react';
+import { MAIN_CONTENT_ID } from '../../lib/a11y';
 import { LandingDecor } from './LandingDecor';
 import { PublicSiteHeader } from './PublicSiteHeader';
 import { SeoHead, type SeoHeadProps } from './SeoHead';
+import { SkipLink } from './SkipLink';
 
 type PublicPageLayoutProps = {
   active?: 'home' | 'browse' | 'docs' | 'login' | 'repos';
@@ -27,8 +29,9 @@ export function PublicPageLayout({
   return (
     <div className={pageClassName}>
       <SeoHead {...seo} />
+      <SkipLink />
       <PublicSiteHeader active={active} />
-      <main className={mainClassName}>
+      <main id={MAIN_CONTENT_ID} className={mainClassName} tabIndex={-1}>
         <div className={shellClass}>
           <LandingDecor variant={decorVariant} />
           {children}

@@ -19,11 +19,12 @@
 | 12 | Overview polish | **Done foundation** — pulse + quick actions |
 | 13 | Docs / onboarding | **Done foundation** — checklist + tour refresh |
 | 14 | Landing / marketing | **Done foundation** — brand hero + how-it-works |
-| 15–35 | Remaining | Not started / partial |
+| 15 | Accessibility / motion | **Done foundation** — skip link, landmarks, keyboard rows |
+| 16–35 | Remaining | Not started / partial |
 
 ## Phase 5
 
-- [x] File impact risk factors + confidence + blast map
+- [x] File impact risk factors + confidence + blast overlay
 - [x] PR impact aggregation
 - [x] Symbol impact (`symbolName` / `symbolId`) with callers + cycle signal
 - [x] Canvas ArchitectureGraph blast overlay (`?file=&blast=1`)
@@ -95,6 +96,14 @@
 - [x] Differentiators moved below the fold; docs/MCP footer links
 - [x] Shared landing copy module + tests
 
+## Phase 15
+
+- [x] Skip-to-main link on dashboard, public pages, and docs
+- [x] `#main-content` landmark + focus restore for mobile nav drawer
+- [x] Keyboard-activatable PR table rows (Enter / Space)
+- [x] Graph “Jump to” module select + reduced-motion camera pans
+- [x] Index status `aria-live` + dialog `aria-labelledby`
+
 ## Next action
 
-Phase 15 (Accessibility / motion polish) or revision-scoped graph viewing.
+Phase 16 (revision-scoped graph viewing) or Phase 17 (universal search merge).

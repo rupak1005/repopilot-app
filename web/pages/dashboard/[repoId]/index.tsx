@@ -27,6 +27,7 @@ import {
   useRepoData,
   useRepoIndexStatus
 } from '../../../lib/dashboard';
+import { rowLinkProps } from '../../../lib/a11y';
 import { OVERVIEW_ACTIONS, overviewPulse } from '../../../lib/overview';
 
 const ACTION_ICONS: Record<string, Icon> = {
@@ -153,8 +154,7 @@ export default function OverviewPage() {
                     {pulls.slice(0, 6).map((pull) => (
                       <tr
                         key={pull.pullNumber}
-                        className="ui-data-table__row-link"
-                        onClick={() => void router.push(`${base}/pulls/${pull.pullNumber}`)}
+                        {...rowLinkProps(() => void router.push(`${base}/pulls/${pull.pullNumber}`))}
                       >
                         <td className="mono">
                           <Link href={`${base}/pulls/${pull.pullNumber}`}>#{pull.pullNumber}</Link>

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { motion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 import {
   ArrowSquareOut,
   ArrowsClockwise,
@@ -295,8 +295,16 @@ export function ArchitectureGraphView({
   const [pathHint, setPathHint] = useState<string | null>(null);
   const [expandingNeighborhood, setExpandingNeighborhood] = useState(false);
   const [activeCycleIndex, setActiveCycleIndex] = useState<number | null>(null);
+  const reduceMotion = useReducedMotion();
 
   const filtered = useMemo(() => filterForceGraphData(data, layer), [data, layer]);
+  const jumpNodes = useMemo(
+    () =>
+      [...filtered.nodes].sort((a, b) =>
+        (a.label ?? a.id).localeCompare(b.label ?? b.id, undefined, { sensitivity: 'base' })
+      ),
+    [filtered.nodes]
+  );
   const layoutData = useMemo(() => layoutWithDagre(filtered), [filtered]);
   const mermaidChart = useMemo(() => toMermaidFlowchart(filtered), [filtered]);
   const stats = useMemo(() => diagramStats(filtered), [filtered]);
@@ -520,11 +528,12 @@ export function ArchitectureGraphView({
       const node = layoutData.nodes.find((n) => n.id === id) as GraphNode | undefined;
       if (node?.x != null && node?.y != null) {
         const fg = fgRef.current;
-        if (fg && typeof fg.centerAt === 'function') fg.centerAt(node.x, node.y, 500);
-        if (fg && typeof fg.zoom === 'function') fg.zoom(2.2, 500);
+        const ms = reduceMotion ? 0 : 500;
+        if (fg && typeof fg.centerAt === 'function') fg.centerAt(node.x, node.y, ms);
+        if (fg && typeof fg.zoom === 'function') fg.zoom(2.2, ms);
       }
     },
-    [renderer, layoutData.nodes]
+    [renderer, layoutData.nodes, reduceMotion]
   );
 
   useEffect(() => {
@@ -963,6 +972,26 @@ export function ArchitectureGraphView({
         </div>
 
         <div className="ui-diagram__controls-right">
+          <label className="ui-diagram__jump">
+            <span className="label-caps">Jump to</span>
+            <select
+              className="ui-diagram__jump-select"
+              value={selectedId ?? ''}
+              onChange={(event) => {
+                const next = event.target.value;
+                selectModule(next || null);
+              }}
+              aria-label="Jump to module on the graph"
+            >
+              <option value="">Select module…</option>
+              {jumpNodes.map((node) => (
+                <option key={node.id} value={node.id}>
+                  {node.label ?? node.id}
+                </option>
+              ))}
+            </select>
+          </label>
+
           <div className="ui-diagram__layout" role="tablist" aria-label="Diagram renderer">
             {RENDERER_OPTIONS.map(({ id, label, icon: RendererIcon }) => (
               <button

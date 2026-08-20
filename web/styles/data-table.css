@@ -36,6 +36,15 @@
   cursor: default;
 }
 
+.ui-data-table tbody tr.ui-data-table__row-link {
+  cursor: pointer;
+}
+
+.ui-data-table tbody tr.ui-data-table__row-link:focus-visible {
+  outline: none;
+  box-shadow: inset var(--focus-ring);
+}
+
 .ui-data-table tbody tr:last-child td {
   border-bottom: none;
 }
