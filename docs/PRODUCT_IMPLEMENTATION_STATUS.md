@@ -33,7 +33,9 @@
 | 26 | Planning candidates | **Done foundation** — hotspot → Impact/Graph |
 | 27 | Wiki inline reader | **Done foundation** — `?path=` + markdown render |
 | 28 | Findings board polish | **Done foundation** — category + search filters |
-| 29–35 | Remaining | Not started / partial |
+| 29 | Impact calibration | **Done foundation** — golden risk/confidence cases |
+| 30 | Impact handoff | **Done foundation** — Planning / MCP / Graph exits |
+| 31–35 | Remaining | Not started / partial |
 
 ## Phase 5
 
@@ -203,6 +205,16 @@
 - [x] Evidence citations carry PR `headRevision` into Graph / Impact links
 - [x] Shared board filter helpers + tests
 
+## Phase 29
+
+- [x] Golden `impactCalibration` scenarios for risk / confidence / factor ids
+- [x] `assertImpactCalibration` self-check + unit tests
+- [x] IMPACT_AUDIT migration item closed
+
+## Phase 30
+
+- [x] Impact file view handoff: Plan this change / MCP / Graph blast
+
 ## Next action
 
-Phase 29+ (deferred 3D topography, impact calibration fixtures).
+Phase 31+ (deferred 3D topography, visual regression CI, remaining polish).
