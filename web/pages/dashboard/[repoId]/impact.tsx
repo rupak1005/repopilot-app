@@ -653,6 +653,36 @@ function FileImpactView({
           </div>
         </BentoPanel>
       ) : null}
+      {repoId ? (
+        <BentoPanel title="Handoff">
+          <div className="ui-impact-handoff">
+            <p className="ui-finding-card__desc">
+              Carry this blast radius into a change plan or agent tooling before you open a PR.
+            </p>
+            <div className="ui-impact-handoff__actions">
+              <Link
+                className="ui-diagram__action"
+                href={`/dashboard/${repoId}/planning?file=${encodeURIComponent(result.target.filePath)}`}
+              >
+                Plan this change
+              </Link>
+              <Link className="ui-diagram__action" href={`/dashboard/${repoId}/mcp`}>
+                MCP / agents
+              </Link>
+              <Link
+                className="ui-diagram__action"
+                href={architectureHref(repoId, {
+                  file: result.target.filePath,
+                  blast: true,
+                  revisionSha
+                })}
+              >
+                Graph blast
+              </Link>
+            </div>
+          </div>
+        </BentoPanel>
+      ) : null}
     </>
   );
 }
