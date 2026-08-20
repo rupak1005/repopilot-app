@@ -73,14 +73,15 @@ export default function SearchPage() {
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    if (!repoId || !query.trim()) return;
+    if (!repoId || !query.trim() || loading) return;
+    const nextQuery = query.trim();
+    autoSearchedKey.current = `${repoId}:${nextQuery}`;
+    await runSearch(nextQuery);
     void router.replace(
-      { pathname: `/dashboard/${repoId}/search`, query: { q: query.trim() } },
+      { pathname: `/dashboard/${repoId}/search`, query: { q: nextQuery } },
       undefined,
       { shallow: true }
     );
-    autoSearchedKey.current = `${repoId}:${query.trim()}`;
-    await runSearch(query.trim());
   }
 
   return (
@@ -95,8 +96,9 @@ export default function SearchPage() {
 
         <section className="ui-search-panel">
           <form
-            onSubmit={handleSubmit}
+            onSubmit={(event) => void handleSubmit(event)}
             className={`ui-search-form${loading ? ' ui-search-form--loading' : ''}`}
+            aria-busy={loading}
           >
             <input
               className="ui-search-input ui-input"
@@ -104,12 +106,11 @@ export default function SearchPage() {
               onChange={(e) => setQuery(e.target.value)}
               placeholder="repository sync, auth middleware…"
               aria-label="Search query"
-              disabled={loading}
             />
             <Button
               type="submit"
               variant="primary"
-              disabled={loading || !query.trim()}
+              disabled={!query.trim()}
               icon={
                 loading ? (
                   <CircleNotch size={16} weight="bold" className="ui-inline-spinner__icon" aria-hidden />
