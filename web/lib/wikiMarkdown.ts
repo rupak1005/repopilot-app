@@ -50,12 +50,12 @@ export function parseWikiMarkdown(source: string): WikiMdBlock[] {
       continue;
     }
 
-    if (/^[-*+]\s+/.test(trimmed)) {
+    if (/^[-*+]\s+/.test(trimmed) || /^\d+\.\s+/.test(trimmed)) {
       const items: string[] = [];
       while (i < lines.length) {
         const itemLine = (lines[i] ?? '').trim();
-        if (!/^[-*+]\s+/.test(itemLine)) break;
-        items.push(itemLine.replace(/^[-*+]\s+/, ''));
+        if (!/^[-*+]\s+/.test(itemLine) && !/^\d+\.\s+/.test(itemLine)) break;
+        items.push(itemLine.replace(/^([-*+]|\d+\.)\s+/, ''));
         i += 1;
       }
       blocks.push({ type: 'ul', items });
@@ -71,6 +71,7 @@ export function parseWikiMarkdown(source: string): WikiMdBlock[] {
         t.startsWith('#') ||
         t.startsWith('```') ||
         /^[-*+]\s+/.test(t) ||
+        /^\d+\.\s+/.test(t) ||
         /^---+$/.test(t) ||
         /^\*\*\*+$/.test(t)
       ) {

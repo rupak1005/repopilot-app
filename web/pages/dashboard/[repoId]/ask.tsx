@@ -8,6 +8,7 @@ import { Dialog } from '../../../components/ui/Dialog';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { IndexHint } from '../../../components/ui/IndexHint';
 import { ThinkingBubble } from '../../../components/ui/ThinkingBubble';
+import { WikiMarkdown } from '../../../components/ui/WikiMarkdown';
 import { useToast } from '../../../components/ui/ToastProvider';
 import {
   clearAskThread,
@@ -16,6 +17,7 @@ import {
   saveAskThread,
   type AskMessage
 } from '../../../lib/askThread';
+import { sanitizeAskAnswer } from '../../../lib/askAnswer';
 import { demoAskResponse, demoDelay } from '../../../lib/demoData';
 import { isDemoMode } from '../../../lib/demoMode';
 import { repoApiPath } from '../../../lib/serverApi';
@@ -39,7 +41,7 @@ function AssistantContent({
 }) {
   return (
     <>
-      <p style={{ margin: 0 }}>{response.answer}</p>
+      <WikiMarkdown className="ui-chat-bubble__md" source={sanitizeAskAnswer(response.answer)} />
       {response.citations.length > 0 ? (
         <div className="ui-chat-bubble__citations">
           <span className="ui-chat-bubble__citations-label label-caps">Citations & Evidence</span>
