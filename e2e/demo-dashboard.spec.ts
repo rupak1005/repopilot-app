@@ -35,7 +35,7 @@ test.describe('demo dashboard — 100% nav coverage', () => {
 
   test('renders pull request detail in demo mode', async ({ page }) => {
     await page.goto(`/dashboard/${DEMO_REPO_ID}/pulls`);
-    await page.getByRole('link', { name: '#42', exact: true }).click();
+    await page.locator('main').getByRole('link', { name: '#42', exact: true }).click();
     await expect(page.getByText(/GitHub OAuth|review|finding/i).first()).toBeVisible();
   });
 
