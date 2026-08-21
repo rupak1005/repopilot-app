@@ -138,6 +138,7 @@ export async function insertFileParsedData(args: {
     }
 
     for (const fileExport of args.parsed.exports) {
+      if (fileExport.name === '*') continue;
       await tx.$executeRawUnsafe(
         `
           INSERT INTO "FileExport" ("fileId", "name")

@@ -5,6 +5,10 @@ import {
 } from '@repopilot/common';
 import { getPrisma, prismaInteractiveTxOptions } from '../db/prisma';
 import { resolveModuleSpecifier } from '../repo/moduleResolve';
+import {
+  resolveImportedSymbolId,
+  type ImportBinding
+} from '../repo/symbolResolve';
 import { collectPathAliasesFromFiles } from '../repo/tsconfigPaths';
 import {
   createTreeSitterParser,
@@ -37,12 +41,6 @@ type FileWithRecords = {
     endLine: number;
   }>;
   exports: Array<{ name: string }>;
-};
-
-type ImportBinding = {
-  module: string;
-  kind: 'named' | 'default' | 'namespace';
-  importedName: string;
 };
 
 type SymbolEdge = {
@@ -250,41 +248,6 @@ function walk(node: TreeSitterSyntaxNode, visit: (node: TreeSitterSyntaxNode) =>
   }
 }
 
-function tryResolveImportedSymbol(args: {
-  targetFile: FileWithRecords;
-  binding: ImportBinding;
-  propertyName?: string;
-}): string | null {
-  const { targetFile, binding, propertyName } = args;
-
-  if (binding.kind === 'namespace') {
-    if (!propertyName) return null;
-    const namespaceTarget = targetFile.symbols.find((symbol) => symbol.name === propertyName);
-    return namespaceTarget?.id ?? null;
-  }
-
-  if (binding.kind === 'default') {
-    const defaultExport = targetFile.exports.find((entry) => entry.name === 'default');
-    if (!defaultExport) return null;
-
-    if (targetFile.symbols.length === 1) {
-      return targetFile.symbols[0]?.id ?? null;
-    }
-
-    return null;
-  }
-
-  const matchedSymbol = targetFile.symbols.find(
-    (symbol) => symbol.name === binding.importedName
-  );
-  if (matchedSymbol) return matchedSymbol.id;
-
-  const exportExists = targetFile.exports.some((entry) => entry.name === binding.importedName);
-  if (!exportExists) return null;
-
-  return targetFile.symbols.find((symbol) => symbol.name === binding.importedName)?.id ?? null;
-}
-
 function extractEdgesForSymbol(args: {
   declarationNode: TreeSitterSyntaxNode;
   fromSymbolId: string;
@@ -331,7 +294,13 @@ function extractEdgesForSymbol(args: {
     const targetFile = args.filesByPath.get(resolvedPath);
     if (!targetFile) return;
 
-    const toSymbolId = tryResolveImportedSymbol({ targetFile, binding });
+    const toSymbolId = resolveImportedSymbolId({
+      targetFile,
+      binding,
+      filesByPath: args.filesByPath,
+      knownFiles: args.knownFiles,
+      pathAliases: args.pathAliases
+    });
     if (toSymbolId) addEdge(toSymbolId, sourceLine);
   };
 
@@ -365,7 +334,14 @@ function extractEdgesForSymbol(args: {
     const targetFile = args.filesByPath.get(resolvedPath);
     if (!targetFile) return;
 
-    const toSymbolId = tryResolveImportedSymbol({ targetFile, binding, propertyName });
+    const toSymbolId = resolveImportedSymbolId({
+      targetFile,
+      binding,
+      propertyName,
+      filesByPath: args.filesByPath,
+      knownFiles: args.knownFiles,
+      pathAliases: args.pathAliases
+    });
     if (toSymbolId) addEdge(toSymbolId, sourceLine);
   };
 

@@ -36,6 +36,10 @@ export type ParsedImport = {
 
 export type ParsedExport = {
   name: string;
+  /** Present for `export { … } from` / `export * from`. */
+  fromModule?: string;
+  /** Local name before `as` (defaults to `name`). */
+  localName?: string;
 };
 
 export type ParsedFile = {
@@ -162,14 +166,30 @@ function extractExportsFromExportStatement(
   const typeMatch = text.match(/export\s+type\s+([A-Za-z_$][\w$]*)/);
   if (typeMatch?.[1]) exports.push({ name: typeMatch[1] });
 
-  // export { A, B as C }
+  const fromMatch = text.match(/\bfrom\s+['"]([^'"]+)['"]/);
+  const fromModule = fromMatch?.[1];
+
+  // export * from '…'
+  if (fromModule && /export\s*\*\s*(?:as\s+[A-Za-z_$][\w$]*\s*)?from\b/.test(text)) {
+    exports.push({ name: '*', fromModule, localName: '*' });
+    return exports;
+  }
+
+  // export { A, B as C } [from '…']
   const namedClause = text.match(/export\s*\{([^}]+)\}/);
   if (namedClause?.[1]) {
     for (const part of namedClause[1].split(',')) {
       const cleaned = part.trim();
       if (!cleaned) continue;
-      const [left] = cleaned.split(/\s+as\s+/i);
-      exports.push({ name: left.trim() });
+      const [left, right] = cleaned.split(/\s+as\s+/i);
+      const localName = (left ?? '').trim();
+      const exportedName = (right ?? left ?? '').trim();
+      if (!localName || !exportedName) continue;
+      exports.push({
+        name: exportedName,
+        localName,
+        ...(fromModule ? { fromModule } : {})
+      });
     }
   }
 
