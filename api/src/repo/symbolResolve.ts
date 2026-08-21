@@ -1,4 +1,5 @@
 import { resolveModuleSpecifier } from './moduleResolve';
+import type { PackageExportEntry } from './packageExports';
 import type { PathAliasRule } from './tsconfigPaths';
 
 export type ImportBindingKind = 'named' | 'default' | 'namespace';
@@ -72,6 +73,7 @@ export function resolveImportedSymbolId(args: {
   filesByPath: Map<string, ResolveSymbolFile>;
   knownFiles: Set<string>;
   pathAliases?: PathAliasRule[];
+  packageExports?: PackageExportEntry[];
   depth?: number;
 }): string | null {
   const depth = args.depth ?? 0;
@@ -129,6 +131,7 @@ function followReExport(args: {
   filesByPath: Map<string, ResolveSymbolFile>;
   knownFiles: Set<string>;
   pathAliases?: PathAliasRule[];
+  packageExports?: PackageExportEntry[];
   exportedName: string;
   depth: number;
 }): string | null {
@@ -142,7 +145,8 @@ function followReExport(args: {
       args.targetFile.path,
       entry.fromModule,
       args.knownFiles,
-      args.pathAliases ?? []
+      args.pathAliases ?? [],
+      args.packageExports ?? []
     );
     if (!resolvedPath) continue;
     const nextFile = args.filesByPath.get(resolvedPath);
@@ -163,6 +167,7 @@ function followReExport(args: {
       filesByPath: args.filesByPath,
       knownFiles: args.knownFiles,
       pathAliases: args.pathAliases,
+      packageExports: args.packageExports,
       depth: args.depth
     });
     if (hit) return hit;

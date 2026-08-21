@@ -5,6 +5,7 @@ import JS = require('tree-sitter-javascript');
 import Python = require('tree-sitter-python');
 import Go = require('tree-sitter-go');
 import path from 'node:path';
+import { extractStaticDynamicImportSpecifiers } from './dynamicImports';
 
 type TreeSitterSyntaxNode = {
   type: string;
@@ -314,8 +315,15 @@ export function parseCodeToRecords(
   code: string
 ): ParsedFile {
   const ext = path.extname(filePath).toLowerCase();
-  // Markdown is stored for Wiki; tree-sitter has nothing useful to extract.
-  if (ext === '.md' || ext === '.mdx') {
+  const base = path.posix.basename(filePath);
+  // Markdown is stored for Wiki; JSON configs for resolve — tree-sitter has nothing useful.
+  if (
+    ext === '.md' ||
+    ext === '.mdx' ||
+    base === 'package.json' ||
+    /^tsconfig(\..+)?\.json$/.test(base) ||
+    /^jsconfig(\..+)?\.json$/.test(base)
+  ) {
     return { symbols: [], imports: [], exports: [] };
   }
 
@@ -380,6 +388,12 @@ export function parseCodeToRecords(
 
   for (const child of root.namedChildren) {
     visitTopLevel(child);
+  }
+
+  if (ext !== '.py' && ext !== '.go') {
+    for (const module of extractStaticDynamicImportSpecifiers(code)) {
+      imports.push({ module, specifiers: [] });
+    }
   }
 
   // De-dupe exports/symbols by (name,type/just name)

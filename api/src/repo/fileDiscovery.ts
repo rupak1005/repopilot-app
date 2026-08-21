@@ -18,7 +18,13 @@ export const SOURCE_FILE_PATTERNS = [
   '**/*.py',
   '**/*.go',
   '**/*.md',
-  '**/*.mdx'
+  '**/*.mdx',
+  // Config needed for alias + package exports resolution (not executed as source).
+  '**/package.json',
+  '**/tsconfig.json',
+  '**/tsconfig.*.json',
+  '**/jsconfig.json',
+  '**/jsconfig.*.json'
 ];
 
 const IGNORE = [

@@ -1,5 +1,10 @@
 import path from 'node:path';
 import { aliasCandidateBases, type PathAliasRule } from './tsconfigPaths';
+import {
+  collectPackageExportsFromFiles,
+  resolvePackageExportSpecifier,
+  type PackageExportEntry
+} from './packageExports';
 
 export function normalizeRepoPath(filePath: string): string {
   return path.posix.normalize(filePath);
@@ -109,7 +114,8 @@ export function resolveJsModule(
   fromFilePath: string,
   moduleSpecifier: string,
   knownFiles: Set<string>,
-  pathAliases: PathAliasRule[] = []
+  pathAliases: PathAliasRule[] = [],
+  packageExports: PackageExportEntry[] = []
 ): string | null {
   if (moduleSpecifier.startsWith('.')) {
     const baseDir = path.posix.dirname(fromFilePath);
@@ -132,6 +138,9 @@ export function resolveJsModule(
     }
   }
 
+  const viaPackage = resolvePackageExportSpecifier(moduleSpecifier, knownFiles, packageExports);
+  if (viaPackage) return viaPackage;
+
   return null;
 }
 
@@ -139,10 +148,13 @@ export function resolveModuleSpecifier(
   fromFilePath: string,
   moduleSpecifier: string,
   knownFiles: Set<string>,
-  pathAliases: PathAliasRule[] = []
+  pathAliases: PathAliasRule[] = [],
+  packageExports: PackageExportEntry[] = []
 ): string | null {
   const ext = path.extname(fromFilePath).toLowerCase();
   if (ext === '.py') return resolvePythonModule(fromFilePath, moduleSpecifier, knownFiles);
   if (ext === '.go') return resolveGoModule(fromFilePath, moduleSpecifier, knownFiles);
-  return resolveJsModule(fromFilePath, moduleSpecifier, knownFiles, pathAliases);
+  return resolveJsModule(fromFilePath, moduleSpecifier, knownFiles, pathAliases, packageExports);
 }
+
+export { collectPackageExportsFromFiles };

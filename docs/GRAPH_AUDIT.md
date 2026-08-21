@@ -15,7 +15,10 @@
 | Deep links | `?file=&blast=&rev=&layout=` + Copy share link | `revisionScope.ts` |
 | Alias resolve | `@/` heuristic + indexed tsconfig/jsconfig `paths` | `moduleResolve.ts`, `tsconfigPaths.ts` |
 | Barrel / re-export follow | One-hop+ (bounded) through `export {…} from` / `export * from` | `symbolResolve.ts` |
-| Resolution fixtures | Alias, barrel, star re-export, cycles, unresolved | `graphResolution.fixtures.test.ts` |
+| Package `exports` / `main` | In-repo workspace packages via indexed `package.json` | `packageExports.ts` |
+| Static `import()` | Literal dynamic imports → module edges + FileImport | `dynamicImports.ts` |
+| Config discovery | `package.json` + tsconfig/jsconfig indexed (not parsed as code) | `fileDiscovery.ts` |
+| Resolution fixtures | Alias, barrel, star re-export, package exports, dynamic import, cycles | `graphResolution.fixtures.test.ts`, `packageExports.test.ts` |
 | MCP | `trace_dependencies`, `get_context_pack` | `api/src/mcp/` |
 
 ## Mocked
@@ -29,7 +32,7 @@
 2. Neighborhood expand draws star edges to seed (not true multi-hop paths)
 3. Symbol “calls” are heuristic, not type-aware (`detector: heuristic`, lower confidence)
 4. Large repos may need a server-only overview (client clustering helps but is not infinite)
-5. `package.json` `exports` + static dynamic-`import()` not resolved yet
+5. ~~`package.json` `exports` + static dynamic-`import()`~~ (done 2026-08-21)
 6. Edge `targetLine` not persisted
 
 ## Explicitly deferred (Gate B+)
