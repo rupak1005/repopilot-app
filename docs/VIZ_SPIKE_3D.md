@@ -68,6 +68,17 @@ Production `ArchitectureGraph.tsx` is **not** replaced.
 
 ## Performance notes (methodology)
 
+Budgets live in `web/lib/vizPerfBudgets.ts` and surface on the spike overlay as **Budget: ok | warn | fail**.
+
+| Signal | OK | Warn | Fail |
+|--------|----|------|------|
+| FPS | ≥ 45 | 30–44 | < 30 |
+| Frame ms | ≤ 22 | 23–40 | > 40 |
+| Nodes | ≤ 300 | 301–2000 | > 2000 |
+| Draw calls | ≤ band soft cap | ≤ 1.5× cap | > 1.5× cap |
+
+Far LOD soft cap: 120 draws · near/medium: 450.
+
 Automated browser FPS is environment-dependent. Record on the spike overlay:
 
 | Preset | Target nodes | What to record |

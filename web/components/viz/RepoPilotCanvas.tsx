@@ -13,6 +13,7 @@ import * as THREE from 'three';
 import type { VisualizationEdge, VisualizationGraph, VisualizationNode } from '../../lib/visualizationModel';
 import { mapMetricToSize } from '../../lib/visualizationModel';
 import { lodBandForDistance, type LodBand } from '../../lib/visualizationLod';
+import { evaluateVizPerf } from '../../lib/vizPerfBudgets';
 
 export type { LodBand };
 export { lodBandForDistance };
@@ -467,21 +468,36 @@ export function VizStatsPanel({
   stats: VizPerfStats;
   band: LodBand;
 }) {
+  const report = evaluateVizPerf(
+    {
+      fps: stats.fps,
+      frameMs: stats.frameMs,
+      nodes: stats.nodes,
+      drawCalls: stats.drawCalls
+    },
+    band
+  );
+
   return (
     <aside className="ui-viz-spike__stats" aria-live="polite">
       <p className="label-caps">Spike perf</p>
+      <p className={`ui-viz-spike__budget ui-viz-spike__budget--${report.overall}`}>
+        Budget: {report.overall}
+      </p>
       <dl>
         <div>
           <dt>FPS</dt>
-          <dd>{stats.fps || '—'}</dd>
+          <dd className={`ui-viz-spike__metric--${report.fps}`}>{stats.fps || '—'}</dd>
         </div>
         <div>
           <dt>Frame</dt>
-          <dd>{stats.frameMs ? `${stats.frameMs}ms` : '—'}</dd>
+          <dd className={`ui-viz-spike__metric--${report.frame}`}>
+            {stats.frameMs ? `${stats.frameMs}ms` : '—'}
+          </dd>
         </div>
         <div>
           <dt>Nodes</dt>
-          <dd>{stats.nodes}</dd>
+          <dd className={`ui-viz-spike__metric--${report.scale}`}>{stats.nodes}</dd>
         </div>
         <div>
           <dt>Edges</dt>
@@ -493,7 +509,7 @@ export function VizStatsPanel({
         </div>
         <div>
           <dt>Draws</dt>
-          <dd>{stats.drawCalls}</dd>
+          <dd className={`ui-viz-spike__metric--${report.draws}`}>{stats.drawCalls}</dd>
         </div>
         <div>
           <dt>Tris</dt>
@@ -508,6 +524,13 @@ export function VizStatsPanel({
           <dd>{stats.cameraDistance}</dd>
         </div>
       </dl>
+      {report.notes.length > 0 ? (
+        <ul className="ui-viz-spike__budget-notes">
+          {report.notes.map((note) => (
+            <li key={note}>{note}</li>
+          ))}
+        </ul>
+      ) : null}
     </aside>
   );
 }

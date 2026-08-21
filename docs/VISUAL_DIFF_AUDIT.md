@@ -25,7 +25,7 @@
 
 ## Deferred (optional polish)
 
-1. Perf budgets / fixtures documented on spike overlay
+1. ~~Perf budgets / fixtures documented on spike overlay~~ — `vizPerfBudgets.ts` + Budget ok/warn/fail on overlay
 2. Reduced-motion path animation for impact edges
 3. InstancedMesh batching for dense topography
 
