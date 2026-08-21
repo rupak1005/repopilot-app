@@ -163,7 +163,10 @@ export default function ArchitecturePage() {
     if (!neighborhoodOverlay) return architectureView;
     return mergeForceGraphData(architectureView, neighborhoodOverlay);
   }, [architectureView, neighborhoodOverlay]);
-  const layerChips = useMemo(() => (graph ? diagramLayerChips(graph) : ['all']), [graph]);
+  const layerChips = useMemo(
+    () => (graph ? diagramLayerChips(graph) : (['all'] as DiagramLayer[])),
+    [graph]
+  );
   const indexStatus = useRepoIndexStatus(repoId);
   const pendingIndexJobRepoId = usePendingIndexJobRepoId();
   const indexInProgress = isRepoIndexInProgress(repoId, indexStatus, pendingIndexJobRepoId);
