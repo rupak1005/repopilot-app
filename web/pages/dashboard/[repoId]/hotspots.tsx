@@ -1,4 +1,5 @@
 import { Flame } from '@phosphor-icons/react';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { BentoPanel } from '../../../components/ui/BentoPanel';
@@ -10,6 +11,8 @@ import { shouldShowIndexHint, usePendingIndexJobRepoId, useRepoData, useRepoInde
 import { isDemoMode } from '../../../lib/demoMode';
 import { DEMO_HOTSPOTS } from '../../../lib/demoData';
 import { repoApiPath } from '../../../lib/serverApi';
+import { viz3dHref } from '../../../lib/revisionScope';
+import { isViz3dSpikeEnabled } from '../../../lib/visualizationModel';
 import {
   TOPO_WINDOWS,
   parseTopoWindowDays,
@@ -100,6 +103,14 @@ export default function HotspotsPage() {
             <p>
               Directory landscape sized by hotspot score — churn × dependents × findings. Click a
               cluster, then open a file for blast radius.
+              {repoId && isViz3dSpikeEnabled() ? (
+                <>
+                  {' '}
+                  <Link className="ui-diagram__action" href={viz3dHref(repoId)}>
+                    Explore 3D architecture →
+                  </Link>
+                </>
+              ) : null}
             </p>
           </div>
           <div className="ui-topo__windows" role="group" aria-label="Churn lookback window">

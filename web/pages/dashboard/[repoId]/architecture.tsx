@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import { GitBranch } from '@phosphor-icons/react';
@@ -29,8 +30,10 @@ import {
   parseArchitectureLayoutQuery,
   parseRevisionQuery,
   revisionSelectLabel,
+  viz3dHref,
   withRevisionSha
 } from '../../../lib/revisionScope';
+import { isViz3dSpikeEnabled } from '../../../lib/visualizationModel';
 import { repoApiPath } from '../../../lib/serverApi';
 import type { GraphLayoutAlgo } from '../../../lib/elkLayout';
 
@@ -332,6 +335,22 @@ export default function ArchitecturePage() {
               Interactive module map from real dependency edges — not AI-generated Mermaid. Click
               through to GitHub, search, or impact analysis.
             </p>
+            {repoId && isViz3dSpikeEnabled() ? (
+              <p className="ui-diagram-hero__3d">
+                <Link
+                  className="ui-diagram__action"
+                  href={viz3dHref(repoId, {
+                    file: deepFile ?? undefined,
+                    blast: wantBlast,
+                    layout: layoutQuery,
+                    revisionSha
+                  })}
+                >
+                  Explore 3D →
+                </Link>
+                <span className="ui-diagram-hero__3d-note"> Opt-in spatial view · 2D stays default</span>
+              </p>
+            ) : null}
           </div>
           <div className="ui-diagram-repo-bar" aria-label="Current repository">
             <GitBranch size={16} weight="bold" aria-hidden />

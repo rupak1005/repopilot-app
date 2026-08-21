@@ -84,6 +84,24 @@ export function impactHref(repoId: string, opts: ImpactHrefOpts = {}): string {
   return q ? `/dashboard/${repoId}/impact?${q}` : `/dashboard/${repoId}/impact`;
 }
 
+export type Viz3dHrefOpts = {
+  file?: string;
+  revisionSha?: string | null;
+  layout?: 'flow' | 'system' | null;
+  blast?: boolean;
+};
+
+/** Opt-in Gate D 3D explore route — keeps 2D Architecture as the product default. */
+export function viz3dHref(repoId: string, opts: Viz3dHrefOpts = {}): string {
+  const params = new URLSearchParams();
+  if (opts.file) params.set('file', opts.file);
+  if (opts.blast) params.set('blast', '1');
+  if (opts.layout === 'system') params.set(LAYOUT_QUERY_KEY, 'system');
+  if (opts.revisionSha) params.set(REVISION_QUERY_KEY, opts.revisionSha);
+  const q = params.toString();
+  return q ? `/dashboard/${repoId}/viz-spike?${q}` : `/dashboard/${repoId}/viz-spike`;
+}
+
 /** Next.js shallow-route query bag for Impact, preserving `rev` when set. */
 export function impactRouteQuery(
   mode: 'file' | 'pull' | 'symbol',

@@ -63,6 +63,10 @@ export default function VizSpikePage() {
   const router = useRouter();
   const repoId = typeof router.query.repoId === 'string' ? router.query.repoId : null;
   const revisionSha = parseRevisionQuery(router.query[REVISION_QUERY_KEY]);
+  const deepFile =
+    typeof router.query.file === 'string' && router.query.file.trim()
+      ? router.query.file.trim()
+      : null;
   const reduceMotion = useReducedMotion() === true;
   const spikeEnabled = isViz3dSpikeEnabled();
 
@@ -78,6 +82,7 @@ export default function VizSpikePage() {
   const [webglLost, setWebglLost] = useState(false);
   const [statsTick, setStatsTick] = useState(0);
   const statsRef = useRef<VizPerfStats>({ ...EMPTY_STATS });
+  const deepFileApplied = useRef<string | null>(null);
 
   const indexStatus = useRepoIndexStatus(repoId);
   const pendingIndexJobRepoId = usePendingIndexJobRepoId();
@@ -173,6 +178,16 @@ export default function VizSpikePage() {
     return visualizationFromLaidOutForceGraph(laidOut, { revisionSha, scale: 40 });
   }, [laidOut, revisionSha]);
 
+  useEffect(() => {
+    if (!deepFile || !vizGraph) return;
+    if (deepFileApplied.current === deepFile) return;
+    const hit = vizGraph.nodes.find((n) => n.path === deepFile || n.id === deepFile || n.id === `file:${deepFile}`);
+    if (!hit) return;
+    deepFileApplied.current = deepFile;
+    setSelectedId(hit.id);
+    setFocusId(hit.id);
+  }, [deepFile, vizGraph]);
+
   const band = lodBandForDistance(statsRef.current.cameraDistance || 40);
   void statsTick;
 
@@ -235,6 +250,12 @@ export default function VizSpikePage() {
         Isolated R3F prototype. Same architecture API + dagre layout positions →{' '}
         <code>visualizationFromLaidOutForceGraph</code>. Does not replace the 2D product graph.
         Orbit to change LOD (far / medium / near). Click a node to focus.
+        {repoId ? (
+          <>
+            {' '}
+            <a href={`/dashboard/${repoId}/architecture`}>Back to Architecture 2D</a>
+          </>
+        ) : null}
       </p>
 
       {error ? <ErrorBanner>{error}</ErrorBanner> : null}

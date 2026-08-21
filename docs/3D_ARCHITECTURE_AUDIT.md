@@ -28,7 +28,7 @@ Earlier design mockups looked presentation-like. **Production pages already bind
 | **Impact** | CSS blast map + KPIs + optional Architecture `?blast=1` overlay | `GET …/impact` (file / symbol / PR) |
 | **Topography (Hotspots)** | CSS weighted grid (`TopographyMap`) | `GET …/hotspots` |
 
-There is **no Three.js / R3F / WebGL** in `web/package.json`.
+There is **no Three.js in the product Architecture default**. R3F + drei power the isolated `/viz-spike` route only.
 
 ### 2.2 Design system already matches much of the brief
 

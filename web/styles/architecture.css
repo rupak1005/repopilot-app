@@ -42,6 +42,19 @@
   color: var(--text-secondary);
 }
 
+.ui-diagram-hero__3d {
+  margin: 12px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.ui-diagram-hero__3d-note {
+  font-size: var(--text-micro);
+  color: var(--text-secondary);
+}
+
 .ui-diagram-repo-bar {
   display: inline-flex;
   flex-wrap: wrap;

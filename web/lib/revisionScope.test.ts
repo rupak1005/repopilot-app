@@ -8,6 +8,7 @@ import {
   parseArchitectureLayoutQuery,
   parseRevisionQuery,
   revisionSelectLabel,
+  viz3dHref,
   withRevisionSha
 } from './revisionScope';
 
@@ -71,6 +72,13 @@ describe('revisionScope', () => {
       rev: 'abc1234'
     });
     expect(impactRouteQuery('pull', { pull: '9' })).toEqual({ pull: '9' });
+  });
+
+  it('builds opt-in 3D explore deep links', () => {
+    expect(viz3dHref('r1')).toBe('/dashboard/r1/viz-spike');
+    expect(viz3dHref('r1', { file: 'a.ts', blast: true, revisionSha: 'abc1234', layout: 'system' })).toBe(
+      '/dashboard/r1/viz-spike?file=a.ts&blast=1&layout=system&rev=abc1234'
+    );
   });
 
   it('matches select values for partial SHAs', () => {
