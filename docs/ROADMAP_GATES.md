@@ -16,12 +16,14 @@ Shipped in this gate so far:
 
 - Barrel / re-export follow-through (`api/src/repo/symbolResolve.ts`)
 - Correct public names for `export { a as b }` / `export … from`
-- Fixture suite: `api/src/repo/graphResolution.fixtures.test.ts`
+- In-repo `package.json` `exports` / `main` resolution (`packageExports.ts`)
+- Static `import('…')` → imports + module edges (`dynamicImports.ts`)
+- Index `package.json` + tsconfig/jsconfig for resolve (no Tree-sitter parse)
+- Fixture suites for alias / barrel / package exports / dynamic import
 - Call edges remain explicitly `detector: heuristic` (Phase 1.2 still open)
 
 Still open for Gate A:
 
-- Package `exports` field, dynamic `import()` where static
 - Type-aware call relationships (replace heuristics gradually)
 - `targetLine` on edges; precision/recall scoreboard beyond fixtures
 - Neighborhood multi-hop (not star-to-seed)
