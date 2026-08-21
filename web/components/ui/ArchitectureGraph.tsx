@@ -775,7 +775,7 @@ export function ArchitectureGraphView({
       onNeighborhoodLoaded?.(extra);
       setPathHint(
         payload.nodes.length
-          ? `Merged neighborhood around ${seed} (${payload.nodes.length} modules).`
+          ? `Merged neighborhood around ${seed} (${payload.nodes.length} modules; real multi-hop edges).`
           : `No neighborhood for ${seed}.`
       );
     } catch {

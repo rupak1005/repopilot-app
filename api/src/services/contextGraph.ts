@@ -540,12 +540,38 @@ export function resolveModulePathArg(raw: string): string {
 const DEFAULT_NEIGHBORHOOD_LIMIT = 15;
 const DEFAULT_NEIGHBORHOOD_DEPTH = 2;
 
-type RankedNeighbor = {
+export type NeighborhoodRankRow = {
   path: string;
   depth: number;
   degree: number;
   score: number;
 };
+
+/**
+ * Keep top-ranked neighbors and every BFS ancestor back to the seed.
+ * Without path closure, dropping an intermediate hop leaves depth-2 nodes
+ * disconnected (or looking like a star of only direct edges).
+ */
+export function keepNeighborhoodWithPathClosure(args: {
+  seed: string;
+  ranked: NeighborhoodRankRow[];
+  parentOf: Map<string, string>;
+  limit: number;
+}): { kept: Set<string>; truncated: boolean } {
+  const kept = new Set<string>([args.seed]);
+  const truncated = args.ranked.length > args.limit;
+  for (const row of args.ranked.slice(0, args.limit)) {
+    let cur: string | undefined = row.path;
+    const guard = new Set<string>();
+    while (cur && !guard.has(cur)) {
+      guard.add(cur);
+      kept.add(cur);
+      if (cur === args.seed) break;
+      cur = args.parentOf.get(cur);
+    }
+  }
+  return { kept, truncated };
+}
 
 /**
  * Progressive disclosure neighborhood: seed + top-ranked nearby modules with
@@ -640,6 +666,7 @@ export async function getModuleNeighborhood(args: {
   }
 
   const depthOf = new Map<string, number>([[seed, 0]]);
+  const parentOf = new Map<string, string>();
   const queue = [seed];
   while (queue.length > 0) {
     const current = queue.shift()!;
@@ -648,11 +675,12 @@ export async function getModuleNeighborhood(args: {
     for (const next of [...(outbound.get(current) ?? []), ...(inbound.get(current) ?? [])]) {
       if (depthOf.has(next)) continue;
       depthOf.set(next, d + 1);
+      parentOf.set(next, current);
       queue.push(next);
     }
   }
 
-  const ranked: RankedNeighbor[] = Array.from(depthOf.entries())
+  const ranked: NeighborhoodRankRow[] = Array.from(depthOf.entries())
     .filter(([path]) => path !== seed)
     .map(([path, depth]) => ({
       path,
@@ -662,9 +690,12 @@ export async function getModuleNeighborhood(args: {
     }))
     .sort((a, b) => b.score + b.degree * 2 - (a.score + a.degree * 2) || a.depth - b.depth);
 
-  const kept = new Set<string>([seed]);
-  for (const row of ranked.slice(0, limit)) kept.add(row.path);
-  const truncated = ranked.length > limit;
+  const { kept, truncated } = keepNeighborhoodWithPathClosure({
+    seed,
+    ranked,
+    parentOf,
+    limit
+  });
 
   const fileRows = (await prisma.$queryRawUnsafe(
     `

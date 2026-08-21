@@ -29,7 +29,7 @@
 ## Remaining debt (Gate A)
 
 1. Unresolved aliases still appear when no `paths` match and `@/` heuristic misses
-2. Neighborhood expand draws star edges to seed (not true multi-hop paths)
+2. ~~Neighborhood expand draws star edges to seed~~ — path closure keeps intermediate hops (2026-08-21)
 3. Symbol “calls” are heuristic, not type-aware (`detector: heuristic`, lower confidence)
 4. Large repos may need a server-only overview (client clustering helps but is not infinite)
 5. ~~`package.json` `exports` + static dynamic-`import()`~~ (done 2026-08-21)
