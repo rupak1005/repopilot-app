@@ -31,13 +31,20 @@ import {
   impactHref
 } from '../../../lib/revisionScope';
 import { repoApiPath } from '../../../lib/serverApi';
-import { DEMO_ARCHITECTURE, demoFileImpact } from '../../../lib/demoData';
-import type { FileImpactAnalysis } from '../../../lib/types';
+import { DEMO_ARCHITECTURE, DEMO_HOTSPOTS, demoFileImpact } from '../../../lib/demoData';
+import type { FileImpactAnalysis, HotspotRow } from '../../../lib/types';
 import { forceGraphFromFileImpact } from '../../../lib/impactBlastGraph';
+import {
+  parseTopoWindowDays,
+  scaleHotspotsForWindow,
+  type TopoWindowDays
+} from '../../../lib/topography';
 import {
   isViz3dSpikeEnabled,
   layoutImpactTheater,
+  layoutTopographyTerrain,
   visualizationFromFileImpact,
+  visualizationFromHotspots,
   visualizationFromLaidOutForceGraph
 } from '../../../lib/visualizationModel';
 
@@ -73,13 +80,19 @@ export default function VizSpikePage() {
       ? router.query.file.trim()
       : null;
   const wantBlast = router.query.blast === '1' || router.query.blast === 'true';
-  const theaterMode = Boolean(wantBlast && deepFile);
+  const wantTopo = router.query.topo === '1' || router.query.topo === 'true';
+  const windowDays: TopoWindowDays = parseTopoWindowDays(
+    typeof router.query.window === 'string' ? router.query.window : null
+  );
+  const theaterMode = Boolean(wantBlast && deepFile && !wantTopo);
+  const topoMode = Boolean(wantTopo);
   const reduceMotion = useReducedMotion() === true;
   const spikeEnabled = isViz3dSpikeEnabled();
 
   const [repoFullName, setRepoFullName] = useState('');
   const [graph, setGraph] = useState<ArchitectureGraph | null>(null);
   const [impact, setImpact] = useState<FileImpactAnalysis | null>(null);
+  const [hotspots, setHotspots] = useState<HotspotRow[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<RenderMode>('3d');
@@ -106,6 +119,46 @@ export default function VizSpikePage() {
     }
     void loadUser();
   }, [repoId]);
+
+  useEffect(() => {
+    if (!repoId || !topoMode) {
+      setHotspots([]);
+      return;
+    }
+    let cancelled = false;
+    async function loadTopo() {
+      setLoading(true);
+      try {
+        if (isDemoMode()) {
+          if (!cancelled) {
+            setHotspots(scaleHotspotsForWindow(DEMO_HOTSPOTS, windowDays));
+            setError(null);
+          }
+          return;
+        }
+        const response = await fetch(
+          repoApiPath(repoId!, `hotspots?topK=40&windowDays=${windowDays}`)
+        );
+        if (!response.ok) throw new Error('Could not load hotspots for 3D topography.');
+        const data = (await response.json()) as HotspotRow[];
+        if (!cancelled) {
+          setHotspots(Array.isArray(data) ? data : []);
+          setError(null);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setHotspots([]);
+          setError(err instanceof Error ? err.message : 'Failed to load topography');
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    void loadTopo();
+    return () => {
+      cancelled = true;
+    };
+  }, [repoId, topoMode, windowDays]);
 
   useEffect(() => {
     if (!repoId || !theaterMode || !deepFile) {
@@ -153,7 +206,7 @@ export default function VizSpikePage() {
   }, [repoId, theaterMode, deepFile, revisionSha]);
 
   useEffect(() => {
-    if (!repoId || theaterMode) return;
+    if (!repoId || theaterMode || topoMode) return;
     if (isDemoMode()) {
       setGraph(DEMO_ARCHITECTURE);
       setError(null);
@@ -186,7 +239,7 @@ export default function VizSpikePage() {
     return () => {
       cancelled = true;
     };
-  }, [repoId, revisionSha, theaterMode]);
+  }, [repoId, revisionSha, theaterMode, topoMode]);
 
   useEffect(() => {
     const id = window.setInterval(() => setStatsTick((n) => n + 1), 500);
@@ -212,6 +265,19 @@ export default function VizSpikePage() {
 
   /** Pre-layout force graph shared by 2D fallback and 3D layout adapter. */
   const forceData: ForceGraphData | null = useMemo(() => {
+    if (topoMode && hotspots.length > 0) {
+      return {
+        nodes: hotspots.slice(0, 40).map((row) => ({
+          id: row.filePath,
+          label: row.filePath.split('/').slice(-2).join('/'),
+          val: Math.max(1, row.score / 20),
+          isHotspot: row.score >= 40,
+          score: row.score,
+          kind: 'file' as const
+        })),
+        links: []
+      };
+    }
     if (theaterMode && impact) {
       return forceGraphFromFileImpact(impact).data;
     }
@@ -222,7 +288,7 @@ export default function VizSpikePage() {
       return ensureSpikeNodeCount(base, SPIKE_SIZE_LIMITS.large);
     }
     return sliceForceGraphForSpike(base, SPIKE_SIZE_LIMITS[sizePreset]);
-  }, [architectureView, sizePreset, theaterMode, impact]);
+  }, [architectureView, sizePreset, theaterMode, impact, topoMode, hotspots]);
 
   const laidOut: ForceGraphData | null = useMemo(() => {
     if (!forceData) return null;
@@ -230,12 +296,15 @@ export default function VizSpikePage() {
   }, [forceData]);
 
   const vizGraph = useMemo(() => {
+    if (topoMode && hotspots.length > 0) {
+      return layoutTopographyTerrain(visualizationFromHotspots(hotspots, { metric: 'score' }));
+    }
     if (theaterMode && impact) {
       return layoutImpactTheater(visualizationFromFileImpact(impact));
     }
     if (!laidOut) return null;
     return visualizationFromLaidOutForceGraph(laidOut, { revisionSha, scale: 40 });
-  }, [laidOut, revisionSha, theaterMode, impact]);
+  }, [laidOut, revisionSha, theaterMode, impact, topoMode, hotspots]);
 
   useEffect(() => {
     if (!deepFile || !vizGraph) return;
@@ -272,7 +341,13 @@ export default function VizSpikePage() {
   return (
     <div className="ui-viz-spike">
       <div className="ui-viz-spike__toolbar">
-        <p className="label-caps">{theaterMode ? '3D impact theater' : '3D architecture spike'}</p>
+        <p className="label-caps">
+          {topoMode
+            ? '3D topography terrain'
+            : theaterMode
+              ? '3D impact theater'
+              : '3D architecture spike'}
+        </p>
         <div className="ui-viz-spike__seg" role="group" aria-label="Renderer">
           <button type="button" aria-pressed={mode === '3d'} onClick={() => setMode('3d')}>
             3D
@@ -288,7 +363,7 @@ export default function VizSpikePage() {
             2D fallback
           </button>
         </div>
-        {!theaterMode ? (
+        {!theaterMode && !topoMode ? (
           <div className="ui-viz-spike__seg" role="group" aria-label="Fixture size">
             {(['live', 'small', 'medium', 'large'] as const).map((key) => (
               <button
@@ -305,28 +380,32 @@ export default function VizSpikePage() {
         <a
           className="ui-diagram__action"
           href={
-            theaterMode && deepFile && repoId
-              ? impactHref(repoId, { file: deepFile, revisionSha })
-              : repoId
-                ? `/dashboard/${repoId}/architecture`
-                : '#'
+            topoMode && repoId
+              ? `/dashboard/${repoId}/hotspots${windowDays === 30 ? '' : `?window=${windowDays}`}`
+              : theaterMode && deepFile && repoId
+                ? impactHref(repoId, { file: deepFile, revisionSha })
+                : repoId
+                  ? `/dashboard/${repoId}/architecture`
+                  : '#'
           }
         >
-          {theaterMode ? 'Back to Impact' : 'Production Architecture'}
+          {topoMode ? 'Back to Topography' : theaterMode ? 'Back to Impact' : 'Production Architecture'}
         </a>
       </div>
 
       <p className="ui-viz-spike__hint">
-        {theaterMode
-          ? 'Impact theater: seed / direct / transitive / tests on Z layers (radial XY). Opt-in only — product Impact stays 2D.'
-          : 'Isolated R3F prototype. Same architecture API + dagre layout positions → '}
-        {!theaterMode ? (
+        {topoMode
+          ? 'Topography terrain: directory districts with height from hotspot score. CSS map remains the product default.'
+          : theaterMode
+            ? 'Impact theater: seed / direct / transitive / tests on Z layers (radial XY). Opt-in only — product Impact stays 2D.'
+            : 'Isolated R3F prototype. Same architecture API + dagre layout positions → '}
+        {!theaterMode && !topoMode ? (
           <>
             <code>visualizationFromLaidOutForceGraph</code>. Does not replace the 2D product graph.
             Orbit to change LOD (far / medium / near). Click a node to focus.
           </>
         ) : null}
-        {repoId && !theaterMode ? (
+        {repoId && !theaterMode && !topoMode ? (
           <>
             {' '}
             <a href={`/dashboard/${repoId}/architecture`}>Back to Architecture 2D</a>

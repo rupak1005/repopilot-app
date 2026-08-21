@@ -79,6 +79,9 @@ describe('revisionScope', () => {
     expect(viz3dHref('r1', { file: 'a.ts', blast: true, revisionSha: 'abc1234', layout: 'system' })).toBe(
       '/dashboard/r1/viz-spike?file=a.ts&blast=1&layout=system&rev=abc1234'
     );
+    expect(viz3dHref('r1', { topo: true, windowDays: 90 })).toBe(
+      '/dashboard/r1/viz-spike?topo=1&window=90'
+    );
   });
 
   it('matches select values for partial SHAs', () => {

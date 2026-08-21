@@ -264,6 +264,60 @@ export function visualizationFromHotspots(
 }
 
 /**
+ * Place hotspot files in district clusters for 3D topography.
+ * Preserves metric Z height; assigns radial XY around each directory landmark.
+ */
+export function layoutTopographyTerrain(graph: VisualizationGraph): VisualizationGraph {
+  const files = graph.nodes
+    .filter((n) => n.entityType !== 'cluster')
+    .map((n) => ({
+      ...n,
+      position: { x: 0, y: 0, z: n.position?.z ?? 0 },
+      state: { ...n.state }
+    }));
+  const clusters = graph.nodes
+    .filter((n) => n.entityType === 'cluster')
+    .map((n) => ({
+      ...n,
+      position: { x: 0, y: 0, z: 0.15 },
+      state: { ...n.state }
+    }));
+
+  const groups = new Map<string, typeof files>();
+  for (const file of files) {
+    const key = directoryClusterKey(file.path ?? file.label);
+    const list = groups.get(key) ?? [];
+    list.push(file);
+    groups.set(key, list);
+  }
+
+  const keys = [...groups.keys()].sort((a, b) => a.localeCompare(b));
+  const cols = Math.max(1, Math.ceil(Math.sqrt(keys.length)));
+
+  keys.forEach((key, index) => {
+    const cx = (index % cols) * 7 - ((cols - 1) * 3.5);
+    const cy = Math.floor(index / cols) * 7;
+    const cluster = clusters.find((c) => c.id === `cluster:${key}`);
+    if (cluster) {
+      cluster.position = { x: cx, y: cy, z: 0.2 };
+    }
+    const members = groups.get(key) ?? [];
+    members.forEach((member, i) => {
+      const count = members.length;
+      const angle = count <= 1 ? 0 : (i / count) * Math.PI * 2 - Math.PI / 2;
+      const radius = count <= 1 ? 0 : 1.1 + Math.min(i, 8) * 0.12;
+      member.position = {
+        x: cx + Math.cos(angle) * radius,
+        y: cy + Math.sin(angle) * radius,
+        z: Math.max(member.position?.z ?? 0.5, 0.35)
+      };
+    });
+  });
+
+  return { ...graph, nodes: [...files, ...clusters] };
+}
+
+/**
  * File impact → blast-layer graph.
  * Z encodes impact distance: seed=0, direct=1, transitive=2, tests=3.
  */

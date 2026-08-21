@@ -8,7 +8,7 @@
 | **A — Graph Trust** | Deterministic relationships, provenance, stronger symbol resolution, fixtures | **Complete** (2026-08-21) |
 | **B — Impact Trust** | Embedded impact graph, explainable risk, similarity, test impact | **Complete** (2026-08-21) |
 | **C — Engineering Loop** | Plan → agent → PR → impact → review → verify | **Complete** (2026-08-21) |
-| **D — Visual Differentiation** | 3D topography, impact theater, architecture replay | **In progress** (Explore 3D entry from Architecture/Topography) |
+| **D — Visual Differentiation** | 3D topography, impact theater, architecture replay | **Complete** (2026-08-21, opt-in hybrid) |
 
 ## Gate A — shipped
 
@@ -58,14 +58,13 @@ Plan → agent → PR → impact → review → verify loop.
 
 See `docs/ENGINEERING_LOOP_AUDIT.md`.
 
-## Gate D — next
+## Gate D — shipped
 
-Visual differentiation beyond the 3D spike (`/viz-spike`). Prefer hybrid 2D/3D — do not replace product Architecture 2D by default.
-
-Shipped so far:
+Visual differentiation beyond the 3D spike (`/viz-spike`). Hybrid 2D/3D — product surfaces stay 2D by default.
 
 - Opt-in **Explore 3D** from Architecture + Topography (`viz3dHref`)
 - Spike deep-link focus for `?file=` / `?rev=`
 - **Impact theater** (`layoutImpactTheater` + Impact **Explore 3D theater**)
+- **Topography terrain** (`layoutTopographyTerrain` + Topography **Explore 3D topography**)
 
 See `docs/VISUAL_DIFF_AUDIT.md`.

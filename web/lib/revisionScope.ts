@@ -89,6 +89,9 @@ export type Viz3dHrefOpts = {
   revisionSha?: string | null;
   layout?: 'flow' | 'system' | null;
   blast?: boolean;
+  /** Opt-in topography terrain (hotspot heights). */
+  topo?: boolean;
+  windowDays?: number;
 };
 
 /** Opt-in Gate D 3D explore route — keeps 2D Architecture as the product default. */
@@ -96,6 +99,8 @@ export function viz3dHref(repoId: string, opts: Viz3dHrefOpts = {}): string {
   const params = new URLSearchParams();
   if (opts.file) params.set('file', opts.file);
   if (opts.blast) params.set('blast', '1');
+  if (opts.topo) params.set('topo', '1');
+  if (opts.windowDays && opts.windowDays !== 30) params.set('window', String(opts.windowDays));
   if (opts.layout === 'system') params.set(LAYOUT_QUERY_KEY, 'system');
   if (opts.revisionSha) params.set(REVISION_QUERY_KEY, opts.revisionSha);
   const q = params.toString();

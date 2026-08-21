@@ -106,8 +106,11 @@ export default function HotspotsPage() {
               {repoId && isViz3dSpikeEnabled() ? (
                 <>
                   {' '}
-                  <Link className="ui-diagram__action" href={viz3dHref(repoId)}>
-                    Explore 3D architecture →
+                  <Link
+                    className="ui-diagram__action"
+                    href={viz3dHref(repoId, { topo: true, windowDays })}
+                  >
+                    Explore 3D topography →
                   </Link>
                 </>
               ) : null}

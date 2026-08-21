@@ -10,7 +10,8 @@ import {
   visualizationFromHotspots,
   visualizationFromLaidOutForceGraph,
   visualizationToForceGraphIds,
-  layoutImpactTheater
+  layoutImpactTheater,
+  layoutTopographyTerrain
 } from './visualizationModel';
 import { layoutWithDagre } from './dagreLayout';
 import { buildArchitectureView } from './architecture';
@@ -74,6 +75,13 @@ describe('visualizationFromHotspots', () => {
     const webFile = viz.nodes.find((n) => n.path === 'web/pages/index.tsx');
     expect(apiFile?.position?.z ?? 0).toBeGreaterThan(webFile?.position?.z ?? 0);
     expect(viz.edges).toHaveLength(0);
+
+    const terrain = layoutTopographyTerrain(viz);
+    const apiCluster = terrain.nodes.find((n) => n.id === 'cluster:api');
+    const webCluster = terrain.nodes.find((n) => n.id === 'cluster:web');
+    expect(apiCluster?.position).toBeTruthy();
+    expect(webCluster?.position).toBeTruthy();
+    expect(apiCluster?.position?.x).not.toBeCloseTo(webCluster?.position?.x ?? 0, 5);
   });
 });
 
