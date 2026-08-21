@@ -1,5 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { assertRepoSession, proxyApiRequest } from '../../../../lib/serverApi';
+import {
+  assertRepoSession,
+  proxyApiRequest,
+  repositoryProxySubpath
+} from '../../../../lib/serverApi';
 import { getSession } from '../../../../lib/session';
 
 const ALLOWED_PREFIXES = [
@@ -40,14 +44,14 @@ export default async function handler(
     return;
   }
 
-  const pathParts = req.query.path;
-  const segments = Array.isArray(pathParts) ? pathParts : pathParts ? [pathParts] : [];
-  if (segments.length === 0 || !ALLOWED_PREFIXES.some((p) => segments[0] === p)) {
+  // Never use req.query.path — it collides with ?path= for wiki/ownership.
+  const subPath = repositoryProxySubpath(req.url, repoId);
+  const head = subPath.split('/')[0] ?? '';
+  if (!head || !ALLOWED_PREFIXES.includes(head)) {
     res.status(404).json({ error: 'Not found' });
     return;
   }
 
-  const subPath = segments.join('/');
   const queryIndex = req.url?.indexOf('?') ?? -1;
   const queryString = queryIndex >= 0 ? req.url!.slice(queryIndex) : '';
   const apiPath = `/api/v1/repositories/${repoId}/${subPath}${queryString}`;

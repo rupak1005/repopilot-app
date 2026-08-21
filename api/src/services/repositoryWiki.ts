@@ -110,7 +110,7 @@ export async function getRepositoryWikiPage(args: {
   path: string;
   revisionSha?: string;
 }): Promise<{ revisionSha: string | null; page: WikiPageDetail | null }> {
-  const filePath = args.path.trim().replace(/\\/g, '/');
+  const filePath = decodeURIComponent(args.path.trim().replace(/\\/g, '/')).replace(/^\.\//, '');
   if (!filePath || !classifyWikiPath(filePath)) {
     return { revisionSha: null, page: null };
   }
@@ -127,7 +127,11 @@ export async function getRepositoryWikiPage(args: {
       SELECT "path", "content"
       FROM "File"
       WHERE "revisionId" = $1
-        AND "path" = $2
+        AND (
+          "path" = $2
+          OR lower("path") = lower($2)
+        )
+      ORDER BY CASE WHEN "path" = $2 THEN 0 ELSE 1 END
       LIMIT 1
     `,
     revision.id,
