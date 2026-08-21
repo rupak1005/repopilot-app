@@ -134,7 +134,7 @@ type InspectorProps = {
   expandingNeighborhood?: boolean;
 };
 
-function DiagramInspector({
+export function DiagramInspector({
   selectedNode,
   inbound,
   outbound,

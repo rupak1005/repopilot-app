@@ -43,6 +43,9 @@ type SceneProps = {
   onHover: (id: string | null) => void;
   reduceMotion: boolean;
   statsRef: MutableRefObject<VizPerfStats>;
+  onOrbitSample?: (sample: { targetX: number; targetZ: number; distance: number }) => void;
+  navigateWorld?: { x: number; z: number } | null;
+  onNavigateDone?: () => void;
 };
 
 function nodeColor(node: VisualizationNode, selected: boolean, dimmed: boolean): string {
@@ -593,6 +596,46 @@ function SceneKick({ deps }: { deps: unknown }) {
   return null;
 }
 
+function OrbitBridge({
+  onOrbitSample,
+  navigateWorld,
+  onNavigateDone
+}: {
+  onOrbitSample?: (sample: { targetX: number; targetZ: number; distance: number }) => void;
+  navigateWorld?: { x: number; z: number } | null;
+  onNavigateDone?: () => void;
+}) {
+  const { camera, invalidate } = useThree();
+  const controls = useThree((s) => s.controls) as { target: THREE.Vector3; update: () => void } | null;
+  const lastSample = useRef(0);
+
+  useFrame(() => {
+    if (!onOrbitSample || !controls) return;
+    const now = performance.now();
+    if (now - lastSample.current < 140) return;
+    lastSample.current = now;
+    const t = controls.target;
+    onOrbitSample({
+      targetX: t.x,
+      targetZ: t.z,
+      distance: camera.position.distanceTo(t)
+    });
+  });
+
+  useEffect(() => {
+    if (!navigateWorld || !controls) return;
+    const target = new THREE.Vector3(navigateWorld.x, 0.7, navigateWorld.z);
+    const nextCam = target.clone().add(new THREE.Vector3(6.5, 5.2, 8.2));
+    camera.position.copy(nextCam);
+    controls.target.copy(target);
+    controls.update();
+    invalidate();
+    onNavigateDone?.();
+  }, [navigateWorld, camera, controls, invalidate, onNavigateDone]);
+
+  return null;
+}
+
 function SceneInner({
   graph,
   selectedId,
@@ -600,7 +643,10 @@ function SceneInner({
   onSelect,
   onHover,
   reduceMotion,
-  statsRef
+  statsRef,
+  onOrbitSample,
+  navigateWorld,
+  onNavigateDone
 }: SceneProps) {
   const { camera, invalidate } = useThree();
   const [band, setBand] = useState<LodBand>('medium');
@@ -690,6 +736,11 @@ function SceneInner({
 
       <FocusCamera focusId={focusId} nodesById={nodesById} reduceMotion={reduceMotion} />
       <FitGraphCamera graph={graph} />
+      <OrbitBridge
+        onOrbitSample={onOrbitSample}
+        navigateWorld={navigateWorld}
+        onNavigateDone={onNavigateDone}
+      />
       <SceneKick deps={`${graph.nodes.length}:${selectedId}:${band}`} />
       <PerfSampler
         statsRef={statsRef}
@@ -726,6 +777,9 @@ type RepoPilotCanvasProps = {
   reduceMotion?: boolean;
   statsRef: MutableRefObject<VizPerfStats>;
   onContextLost?: () => void;
+  onOrbitSample?: (sample: { targetX: number; targetZ: number; distance: number }) => void;
+  navigateWorld?: { x: number; z: number } | null;
+  onNavigateDone?: () => void;
 };
 
 export function RepoPilotCanvas({
@@ -736,7 +790,10 @@ export function RepoPilotCanvas({
   onHover,
   reduceMotion = false,
   statsRef,
-  onContextLost
+  onContextLost,
+  onOrbitSample,
+  navigateWorld = null,
+  onNavigateDone
 }: RepoPilotCanvasProps) {
   return (
     <div className="ui-viz-spike__canvas">
@@ -764,6 +821,9 @@ export function RepoPilotCanvas({
           onHover={onHover}
           reduceMotion={reduceMotion}
           statsRef={statsRef}
+          onOrbitSample={onOrbitSample}
+          navigateWorld={navigateWorld}
+          onNavigateDone={onNavigateDone}
         />
       </Canvas>
     </div>

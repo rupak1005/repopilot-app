@@ -1,8 +1,9 @@
 import dynamic from 'next/dynamic';
 import { useReducedMotion } from 'motion/react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
-import { ArchitectureGraphView } from '../../../components/ui/ArchitectureGraph';
+import { ArchitectureGraphView, DiagramInspector } from '../../../components/ui/ArchitectureGraph';
+import { GraphMinimap } from '../../../components/ui/GraphMinimap';
 import { ErrorBanner } from '../../../components/ui/ErrorBanner';
 import { IndexHint } from '../../../components/ui/IndexHint';
 import type { VizPerfStats } from '../../../components/viz/RepoPilotCanvas';
@@ -18,12 +19,20 @@ import {
   clusterIdForPrefix,
   directoryClusterKey,
   type ArchitectureGraph,
-  type ForceGraphData
+  type ForceGraphData,
+  type ForceGraphNode
 } from '../../../lib/architecture';
 import { layoutWithDagre } from '../../../lib/dagreLayout';
 import { isDemoMode } from '../../../lib/demoMode';
 import { usePendingIndexJobRepoId, useRepoIndexStatus } from '../../../lib/dashboard';
 import { isRepoIndexInProgress } from '../../../lib/indexStatus';
+import type { MinimapCamera } from '../../../lib/graphMinimap';
+import {
+  forceToWorld,
+  minimapCameraFromOrbit,
+  nearestForceNodeId,
+  VIZ_LAYOUT_SCALE
+} from '../../../lib/vizSpikeCamera';
 import {
   REVISION_QUERY_KEY,
   parseRevisionQuery,
@@ -107,6 +116,10 @@ export default function VizSpikePage() {
   const [statsTick, setStatsTick] = useState(0);
   const statsRef = useRef<VizPerfStats>({ ...EMPTY_STATS });
   const deepFileApplied = useRef<string | null>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [stageSize, setStageSize] = useState({ width: 800, height: 480 });
+  const [miniCam, setMiniCam] = useState<MinimapCamera | null>(null);
+  const [navigateWorld, setNavigateWorld] = useState<{ x: number; z: number } | null>(null);
 
   const indexStatus = useRepoIndexStatus(repoId);
   const pendingIndexJobRepoId = usePendingIndexJobRepoId();
@@ -311,8 +324,27 @@ export default function VizSpikePage() {
       return layoutImpactTheater(visualizationFromFileImpact(impact));
     }
     if (!laidOut) return null;
-    return visualizationFromLaidOutForceGraph(laidOut, { revisionSha, scale: 40 });
+    return visualizationFromLaidOutForceGraph(laidOut, { revisionSha, scale: VIZ_LAYOUT_SCALE });
   }, [laidOut, revisionSha, theaterMode, impact, topoMode, hotspots]);
+
+  useEffect(() => {
+    const el = stageRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      const rect = entries[0]?.contentRect;
+      if (!rect) return;
+      setStageSize({
+        width: Math.max(1, Math.floor(rect.width)),
+        height: Math.max(1, Math.floor(rect.height))
+      });
+    });
+    ro.observe(el);
+    setStageSize({
+      width: Math.max(1, Math.floor(el.clientWidth)),
+      height: Math.max(1, Math.floor(el.clientHeight))
+    });
+    return () => ro.disconnect();
+  }, [mode, webglLost, vizGraph?.nodes.length]);
 
   useEffect(() => {
     if (!deepFile || !vizGraph) return;
@@ -329,7 +361,90 @@ export default function VizSpikePage() {
   const band = lodBandForDistance(statsRef.current.cameraDistance || 40);
   void statsTick;
 
-  const selectedNode = vizGraph?.nodes.find((n) => n.id === selectedId) ?? null;
+  const selectedViz = vizGraph?.nodes.find((n) => n.id === selectedId) ?? null;
+
+  const selectedForceNode = useMemo((): ForceGraphNode | null => {
+    if (!selectedViz) return null;
+    const forceId = selectedViz.path ?? selectedViz.id.replace(/^file:/, '');
+    const fromLayout = laidOut?.nodes.find((n) => n.id === forceId || n.id === selectedViz.id);
+    if (fromLayout) return fromLayout;
+    return {
+      id: forceId,
+      label: selectedViz.label,
+      val: 2,
+      isHotspot: (selectedViz.metrics.hotspotScore ?? 0) >= 40,
+      score: selectedViz.metrics.hotspotScore ?? 0,
+      kind: selectedViz.entityType === 'cluster' ? 'cluster' : 'file'
+    };
+  }, [selectedViz, laidOut]);
+
+  const selectedForceId = selectedForceNode?.id ?? null;
+
+  const edgeLists = useMemo(() => {
+    if (!vizGraph || !selectedId) {
+      return { inbound: [] as string[], outbound: [] as string[] };
+    }
+    const inbound: string[] = [];
+    const outbound: string[] = [];
+    for (const edge of vizGraph.edges) {
+      if (edge.target === selectedId) {
+        const n = vizGraph.nodes.find((node) => node.id === edge.source);
+        inbound.push(n?.path ?? edge.source.replace(/^file:/, ''));
+      }
+      if (edge.source === selectedId) {
+        const n = vizGraph.nodes.find((node) => node.id === edge.target);
+        outbound.push(n?.path ?? edge.target.replace(/^file:/, ''));
+      }
+    }
+    return { inbound, outbound };
+  }, [vizGraph, selectedId]);
+
+  const onOrbitSample = useCallback(
+    (sample: { targetX: number; targetZ: number; distance: number }) => {
+      const next = minimapCameraFromOrbit({
+        sample,
+        viewWidth: stageSize.width,
+        viewHeight: stageSize.height
+      });
+      setMiniCam((prev) => {
+        if (
+          prev &&
+          Math.abs(prev.x - next.x) < 4 &&
+          Math.abs(prev.y - next.y) < 4 &&
+          Math.abs(prev.k - next.k) < 0.01
+        ) {
+          return prev;
+        }
+        return next;
+      });
+    },
+    [stageSize.height, stageSize.width]
+  );
+
+  function selectNode(id: string | null) {
+    setSelectedId(id);
+    if (id) setFocusId(id);
+  }
+
+  function selectModule(moduleId: string | null) {
+    if (!moduleId || !vizGraph) {
+      selectNode(null);
+      return;
+    }
+    const hit = vizGraph.nodes.find(
+      (n) => n.path === moduleId || n.id === moduleId || n.id === `file:${moduleId}`
+    );
+    selectNode(hit?.id ?? null);
+  }
+
+  function navigateMinimap(point: { x: number; y: number }) {
+    const nearest = laidOut ? nearestForceNodeId(point, laidOut.nodes) : null;
+    if (nearest) {
+      selectModule(nearest);
+    }
+    const world = forceToWorld(point.x, point.y);
+    setNavigateWorld(world);
+  }
 
   const title = topoMode
     ? '3D topography'
@@ -342,11 +457,6 @@ export default function VizSpikePage() {
     : theaterMode
       ? 'Blast rings on Z layers. Product Impact stays 2D.'
       : 'Same architecture graph + dagre layout — orbit to change LOD.';
-
-  function selectNode(id: string | null) {
-    setSelectedId(id);
-    if (id) setFocusId(id);
-  }
 
   if (!spikeEnabled) {
     return (
@@ -426,94 +536,119 @@ export default function VizSpikePage() {
         </div>
       ) : null}
 
-      <div className="ui-viz-spike__stage">
-        {mode === '2d' || webglLost ? (
-          <div className="ui-viz-spike__2d">
-            {webglLost ? (
-              <p className="ui-viz-spike__empty" role="alert">
-                WebGL context lost — showing 2D fallback.
-              </p>
-            ) : null}
-            {forceData && forceData.nodes.length > 0 ? (
-              <ArchitectureGraphView
-                data={forceData}
-                viewMeta={architectureView?.meta}
-                repoFullName={repoFullName || undefined}
+      <div className="ui-viz-spike__workspace">
+        <div className="ui-viz-spike__stage" ref={stageRef}>
+          {mode === '2d' || webglLost ? (
+            <div className="ui-viz-spike__2d">
+              {webglLost ? (
+                <p className="ui-viz-spike__empty" role="alert">
+                  WebGL context lost — showing 2D fallback.
+                </p>
+              ) : null}
+              {forceData && forceData.nodes.length > 0 ? (
+                <ArchitectureGraphView
+                  data={forceData}
+                  viewMeta={architectureView?.meta}
+                  repoFullName={repoFullName || undefined}
+                  repoId={repoId ?? undefined}
+                  revisionSha={revisionSha}
+                  loading={loading}
+                />
+              ) : (
+                <p className="ui-viz-spike__empty">
+                  {loading ? 'Loading graph…' : 'No graph to show.'}
+                </p>
+              )}
+            </div>
+          ) : vizGraph && vizGraph.nodes.length > 0 ? (
+            <>
+              <RepoPilotCanvas
+                graph={vizGraph}
+                selectedId={selectedId}
+                focusId={focusId}
+                onSelect={selectNode}
+                onHover={setHoverId}
+                reduceMotion={reduceMotion}
+                statsRef={statsRef}
+                onOrbitSample={onOrbitSample}
+                navigateWorld={navigateWorld}
+                onNavigateDone={() => setNavigateWorld(null)}
+                onContextLost={() => {
+                  setWebglLost(true);
+                  setMode('2d');
+                }}
+              />
+              <VizStatsPanel stats={statsRef.current} band={band} />
+              {laidOut && laidOut.nodes.length > 0 ? (
+                <GraphMinimap
+                  nodes={laidOut.nodes}
+                  links={laidOut.links}
+                  selectedId={selectedForceId}
+                  camera={miniCam}
+                  viewWidth={stageSize.width}
+                  viewHeight={stageSize.height}
+                  onNavigate={navigateMinimap}
+                />
+              ) : null}
+            </>
+          ) : (
+            <p className="ui-viz-spike__empty">
+              {loading
+                ? 'Loading architecture…'
+                : graph && graph.nodes.length === 0
+                  ? 'No modules to render — this revision has an empty architecture graph.'
+                  : 'No graph yet — index the repo or load demo fixtures.'}
+            </p>
+          )}
+        </div>
+
+        {mode === '3d' && !webglLost ? (
+          <aside className="ui-viz-spike__inspector-slot">
+            {selectedForceNode ? (
+              <DiagramInspector
+                embedded
+                selectedNode={selectedForceNode}
+                inbound={edgeLists.inbound.length}
+                outbound={edgeLists.outbound.length}
+                neighborsLoading={false}
+                directDependents={edgeLists.inbound}
+                transitiveDependents={[]}
+                outboundImports={edgeLists.outbound}
+                pathHint={
+                  hoverId ? `Hover: ${hoverId}` : `${vizGraph?.nodes.length ?? 0} nodes in spike view`
+                }
                 repoId={repoId ?? undefined}
+                repoFullName={repoFullName || undefined}
                 revisionSha={revisionSha}
-                loading={loading}
+                onClose={() => selectNode(null)}
+                onSelectModule={selectModule}
               />
             ) : (
-              <p className="ui-viz-spike__empty">
-                {loading ? 'Loading graph…' : 'No graph to show.'}
-              </p>
+              <div className="ui-diagram__panel-empty">
+                <p className="ui-diagram__panel-empty-title">Select a module</p>
+                <p className="ui-diagram__panel-empty-body">
+                  Click a pillar or pick a point on the minimap. Impact and Search links appear when a
+                  file is selected.
+                </p>
+                <ul className="ui-viz-spike__counts">
+                  <li>
+                    <strong>{graph?.nodes.length ?? 0}</strong>
+                    <span>Source</span>
+                  </li>
+                  <li>
+                    <strong>{vizGraph?.nodes.length ?? 0}</strong>
+                    <span>Visible</span>
+                  </li>
+                  <li>
+                    <strong>{vizGraph?.edges.length ?? 0}</strong>
+                    <span>Edges</span>
+                  </li>
+                </ul>
+              </div>
             )}
-          </div>
-        ) : vizGraph && vizGraph.nodes.length > 0 ? (
-          <>
-            <RepoPilotCanvas
-              graph={vizGraph}
-              selectedId={selectedId}
-              focusId={focusId}
-              onSelect={selectNode}
-              onHover={setHoverId}
-              reduceMotion={reduceMotion}
-              statsRef={statsRef}
-              onContextLost={() => {
-                setWebglLost(true);
-                setMode('2d');
-              }}
-            />
-            <VizStatsPanel stats={statsRef.current} band={band} />
-          </>
-        ) : (
-          <p className="ui-viz-spike__empty">
-            {loading
-              ? 'Loading architecture…'
-              : graph && graph.nodes.length === 0
-                ? 'No modules to render — this revision has an empty architecture graph.'
-                : 'No graph yet — index the repo or load demo fixtures.'}
-          </p>
-        )}
+          </aside>
+        ) : null}
       </div>
-
-      {mode === '3d' && !webglLost ? (
-        <div className="ui-viz-spike__dock">
-          <div className="ui-viz-spike__panel">
-            <h2>Selection</h2>
-            <p>
-              {selectedNode
-                ? `${selectedNode.label}${selectedNode.path ? ` · ${selectedNode.path}` : ''}`
-                : 'Click a node to inspect'}
-            </p>
-            {hoverId ? <p className="ui-viz-spike__hover">Hover: {hoverId}</p> : null}
-          </div>
-          <div className="ui-viz-spike__panel">
-            <h2>Pipeline</h2>
-            <p>
-              Architecture API → <code>buildArchitectureView</code> → dagre → shared{' '}
-              <code>VisualizationGraph</code> → 2D / 3D.
-            </p>
-          </div>
-          <div className="ui-viz-spike__panel">
-            <h2>Counts</h2>
-            <ul className="ui-viz-spike__counts">
-              <li>
-                <strong>{graph?.nodes.length ?? 0}</strong>
-                <span>Source</span>
-              </li>
-              <li>
-                <strong>{vizGraph?.nodes.length ?? forceData?.nodes.length ?? 0}</strong>
-                <span>Visible</span>
-              </li>
-              <li>
-                <strong>{vizGraph?.edges.length ?? forceData?.links.length ?? 0}</strong>
-                <span>Edges</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }
