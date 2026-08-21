@@ -3,6 +3,7 @@ import { Billboard, Html, Line, OrbitControls, Text } from '@react-three/drei';
 import {
   Suspense,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -15,6 +16,11 @@ import { mapMetricToSize } from '../../lib/visualizationModel';
 import { lodBandForDistance, type LodBand } from '../../lib/visualizationLod';
 import { evaluateVizPerf } from '../../lib/vizPerfBudgets';
 import { impactEdgeDashOffset, shouldAnimateImpactEdges } from '../../lib/vizImpactEdgeMotion';
+import {
+  partitionTopoRenderNodes,
+  shouldUseTopoInstancing,
+  topoInstanceTransform
+} from '../../lib/vizTopoInstances';
 
 export type { LodBand };
 export { lodBandForDistance };
@@ -198,6 +204,87 @@ function ImpactPathLine({
         materialRef.current = (Array.isArray(mat) ? mat[0] : mat) as { dashOffset: number } | null;
       }}
     />
+  );
+}
+
+function TopoInstancedTerrain({
+  nodes,
+  selectedId,
+  highlighted,
+  onSelect,
+  onHover
+}: {
+  nodes: VisualizationNode[];
+  selectedId: string | null;
+  highlighted: Set<string> | null;
+  onSelect: (id: string) => void;
+  onHover: (id: string | null) => void;
+}) {
+  const meshRef = useRef<THREE.InstancedMesh>(null);
+  const { invalidate } = useThree();
+  const idsRef = useRef<string[]>([]);
+
+  const poses = useMemo(() => {
+    return nodes.map((node) => {
+      const dimmed = Boolean(highlighted && !highlighted.has(node.id));
+      const { position, scale } = topoInstanceTransform(node);
+      return {
+        id: node.id,
+        position,
+        scale,
+        color: nodeColor(node, node.id === selectedId, dimmed)
+      };
+    });
+  }, [nodes, selectedId, highlighted]);
+
+  useLayoutEffect(() => {
+    const mesh = meshRef.current;
+    if (!mesh) return;
+    const dummy = new THREE.Object3D();
+    const color = new THREE.Color();
+    idsRef.current = poses.map((p) => p.id);
+    poses.forEach((pose, i) => {
+      dummy.position.set(pose.position[0], pose.position[1], pose.position[2]);
+      dummy.scale.set(pose.scale[0], pose.scale[1], pose.scale[2]);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(i, dummy.matrix);
+      color.set(pose.color);
+      mesh.setColorAt(i, color);
+    });
+    mesh.count = poses.length;
+    mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    invalidate();
+  }, [poses, invalidate]);
+
+  if (poses.length === 0) return null;
+
+  return (
+    <instancedMesh
+      ref={meshRef}
+      args={[undefined, undefined, poses.length]}
+      castShadow
+      onClick={(e) => {
+        e.stopPropagation();
+        const id = idsRef.current[e.instanceId ?? -1];
+        if (id) onSelect(id);
+      }}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        const id = idsRef.current[e.instanceId ?? -1];
+        if (id) {
+          onHover(id);
+          document.body.style.cursor = 'pointer';
+        }
+      }}
+      onPointerOut={() => {
+        onHover(null);
+        document.body.style.cursor = 'auto';
+      }}
+    >
+      <boxGeometry args={[1, 1, 1]} />
+      <meshStandardMaterial toneMapped={false} />
+    </instancedMesh>
   );
 }
 
@@ -444,6 +531,14 @@ function SceneInner({
     return n;
   }, [graph.nodes, selectedId, band]);
 
+  const useTopoBatch = shouldUseTopoInstancing(graph.nodes.length, graph.edges.length);
+  const { interactive: interactiveNodes, batched: batchedNodes } = useMemo(() => {
+    if (!useTopoBatch) {
+      return { interactive: graph.nodes, batched: [] as VisualizationNode[] };
+    }
+    return partitionTopoRenderNodes(graph.nodes, { selectedId, band });
+  }, [useTopoBatch, graph.nodes, selectedId, band]);
+
   return (
     <>
       <color attach="background" args={['#f3e8ff']} />
@@ -460,7 +555,17 @@ function SceneInner({
         reduceMotion={reduceMotion}
       />
 
-      {graph.nodes.map((node) => (
+      {useTopoBatch ? (
+        <TopoInstancedTerrain
+          nodes={batchedNodes}
+          selectedId={selectedId}
+          highlighted={highlighted}
+          onSelect={onSelect}
+          onHover={onHover}
+        />
+      ) : null}
+
+      {interactiveNodes.map((node) => (
         <GraphNodeMesh
           key={node.id}
           node={node}

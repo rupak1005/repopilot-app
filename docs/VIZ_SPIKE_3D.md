@@ -42,6 +42,7 @@ Rules:
 | Hover / select | Pointer on meshes; selection dims non-neighbors |
 | Focus | Smooth camera tween to node (skipped when reduced motion) |
 | Impact edges | Flowing dashed paths source→target; static dashes when `prefers-reduced-motion` |
+| Topography batching | Edge-free graphs ≥24 nodes: InstancedMesh for plain file pillars (far/medium); clusters/selection/labels stay interactive |
 | Labels | drei/Troika `Text` only near / selected / hotspot / cluster — not every far node |
 | LOD | `far` (>55): point clouds, few edges · `medium`: boxes + sparse labels · `near`: full basename labels + selection metadata HTML |
 | Perf overlay | FPS, frame ms, nodes, edges, visible labels, WebGL draw calls, triangles, camera distance |
@@ -101,7 +102,7 @@ Automated browser FPS is environment-dependent. Record on the spike overlay:
 
 - Edges are individual `Line` meshes (draw-call heavy at large N); no GPU edge bundling yet.
 - No ELK in the spike path (dagre only); ELK can be wired the same as Architecture.
-- No instanced meshes / shared materials yet.
+- Topography file pillars batch via InstancedMesh; architecture/impact nodes are still per-mesh.
 - Accessibility: 3D is exploratory; keyboard parity incomplete vs 2D toolbar.
 - Typography: basename Troika only — full path uses lightweight HTML on selection.
 - Synthetic padding on `large` is for stress only, not real analysis.
@@ -110,8 +111,8 @@ Automated browser FPS is environment-dependent. Record on the spike overlay:
 
 **Hybrid 2D/3D** — keep 2D Architecture as the default instrument; optionally offer 3D as an opt-in exploration mode after:
 
-1. Instanced nodes + batched edges  
-2. Shared selection/URL state with Architecture  
-3. Documented FPS budgets on mid-tier laptops  
+1. Batched edges (nodes already instanced on topography)
+2. Shared selection/URL state with Architecture
+3. Documented FPS budgets on mid-tier laptops (overlay budgets shipped)
 
 **Do not** replace the product 2D graph with this spike yet. **Do not** revert the shared `VisualizationGraph` adapter — it is useful even if 3D stays a prototype.

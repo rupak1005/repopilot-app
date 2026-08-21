@@ -27,6 +27,6 @@
 
 1. ~~Perf budgets / fixtures documented on spike overlay~~ — `vizPerfBudgets.ts` + Budget ok/warn/fail on overlay
 2. ~~Reduced-motion path animation for impact edges~~ — flowing dashes when motion OK; static dashes under `prefers-reduced-motion`
-3. InstancedMesh batching for dense topography
+3. ~~InstancedMesh batching for dense topography~~ — `vizTopoInstances.ts` batches file pillars at far/medium LOD
 
 See `docs/VIZ_SPIKE_3D.md`, `docs/3D_ARCHITECTURE_AUDIT.md`.
