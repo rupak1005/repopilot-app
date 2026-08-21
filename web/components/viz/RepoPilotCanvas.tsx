@@ -170,24 +170,20 @@ function ImpactPathLine({
   opacity: number;
   animate: boolean;
 }) {
-  const lineRef = useRef<THREE.Object3D & { material?: THREE.Material | THREE.Material[] }>(null);
+  const materialRef = useRef<{ dashOffset: number } | null>(null);
   const { invalidate } = useThree();
 
   useFrame((state) => {
     if (!animate) return;
-    const mat = lineRef.current?.material;
-    const material = Array.isArray(mat) ? mat[0] : mat;
-    if (material && 'dashOffset' in material) {
-      (material as THREE.Material & { dashOffset: number }).dashOffset = impactEdgeDashOffset(
-        state.clock.elapsedTime
-      );
+    const material = materialRef.current;
+    if (material) {
+      material.dashOffset = impactEdgeDashOffset(state.clock.elapsedTime);
     }
     invalidate();
   });
 
   return (
     <Line
-      ref={lineRef}
       points={points}
       color={color}
       lineWidth={lineWidth}
@@ -197,6 +193,10 @@ function ImpactPathLine({
       dashSize={0.22}
       gapSize={0.14}
       dashOffset={0}
+      ref={(obj) => {
+        const mat = obj?.material;
+        materialRef.current = (Array.isArray(mat) ? mat[0] : mat) as { dashOffset: number } | null;
+      }}
     />
   );
 }
