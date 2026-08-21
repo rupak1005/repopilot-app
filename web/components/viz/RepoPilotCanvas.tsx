@@ -701,6 +701,11 @@ function SceneInner({
         nodeIds: graph.nodes.map((n) => n.id),
         hotspotScore: (id) => nodesById.get(id)?.metrics.hotspotScore ?? 0,
         isCluster: (id) => nodesById.get(id)?.entityType === 'cluster',
+        position: (id) => {
+          const p = nodesById.get(id)?.position;
+          if (!p) return null;
+          return { x: p.x, y: p.y };
+        },
         selectedId,
         hoveredId,
         neighborIds: highlighted,

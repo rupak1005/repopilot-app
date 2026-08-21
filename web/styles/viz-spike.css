@@ -269,7 +269,7 @@
   font-weight: 650;
   letter-spacing: 0.01em;
   white-space: nowrap;
-  max-width: 11rem;
+  max-width: 9.5rem;
   overflow: hidden;
   text-overflow: ellipsis;
   box-shadow: 2px 2px 0 color-mix(in srgb, var(--shadow-color) 35%, transparent);

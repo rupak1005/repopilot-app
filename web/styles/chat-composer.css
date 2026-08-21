@@ -1,13 +1,14 @@
 .ui-chat-composer {
   position: fixed;
   bottom: 0;
-  left: var(--sidebar-width, 240px);
+  left: var(--sidebar-width, 280px);
   right: 0;
-  z-index: 30;
-  padding: var(--space-4) var(--space-6) var(--space-6);
-  background: color-mix(in srgb, var(--color-background) 92%, transparent);
-  backdrop-filter: blur(12px);
+  z-index: 40;
+  padding: var(--space-4) var(--space-6) var(--space-5);
+  background: color-mix(in srgb, var(--color-surface) 88%, transparent);
+  backdrop-filter: blur(14px);
   border-top: var(--border-heavy);
+  box-shadow: 0 -6px 0 color-mix(in srgb, var(--shadow-color) 12%, transparent);
 }
 
 .ui-chat-composer__inner {
@@ -65,8 +66,8 @@
   display: flex;
   align-items: flex-end;
   gap: var(--space-3);
-  padding: var(--space-3);
-  background: var(--color-surface-muted);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
   border: var(--border-heavy);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-hard-md);
@@ -74,6 +75,7 @@
 
 .ui-chat-composer__box:focus-within {
   box-shadow: var(--shadow-hard-md), var(--focus-ring);
+  border-color: var(--color-border-strong);
 }
 
 .ui-chat-composer__box--loading {
@@ -89,29 +91,36 @@
   resize: none;
   background: transparent;
   color: var(--color-text);
+  caret-color: var(--color-primary-strong);
   font-family: var(--font-mono);
   font-size: var(--text-ui);
   line-height: 1.5;
 }
 
 .ui-chat-composer__box textarea::placeholder {
-  color: var(--color-text-subtle);
+  color: var(--color-text-muted);
+  opacity: 1;
+}
+
+.ui-chat-composer__box textarea:disabled {
+  color: var(--color-text-muted);
 }
 
 .ui-chat-composer__send.ui-icon-button--subtle {
-  background: var(--color-primary);
+  background: var(--color-primary-strong);
   border: var(--border-heavy);
-  color: var(--color-text);
+  color: var(--color-on-danger);
   box-shadow: var(--shadow-hard-sm);
+  flex-shrink: 0;
 }
 
 .ui-chat-composer__send.ui-icon-button--subtle:hover:not(:disabled) {
-  background: var(--color-primary-hover);
-  color: var(--color-text);
+  background: var(--color-link-hover);
+  color: var(--color-on-danger);
 }
 
 .ui-chat-composer__send.ui-icon-button--subtle:disabled {
-  opacity: 0.55;
+  opacity: 0.45;
 }
 
 @media (max-width: 768px) {

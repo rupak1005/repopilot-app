@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildArchitectureView,
   clusterIdForPrefix,
+  diagramLayerChips,
   directoryClusterKey,
   filterArchitectureGraph,
   filterForceGraphData,
@@ -109,6 +110,36 @@ describe('filterForceGraphData', () => {
     const filtered = filterForceGraphData(data, 'api');
     expect(filtered.nodes).toHaveLength(1);
     expect(filtered.links).toHaveLength(0);
+  });
+
+  it('keeps nested cluster ids in their layer', () => {
+    const data = {
+      nodes: [
+        { id: 'cluster:api/src', label: 'src', val: 4, isHotspot: false, score: 0, kind: 'cluster' as const },
+        { id: 'cluster:web', label: 'web', val: 4, isHotspot: false, score: 0, kind: 'cluster' as const }
+      ],
+      links: [] as Array<{ source: string; target: string }>
+    };
+    const filtered = filterForceGraphData(data, 'api');
+    expect(filtered.nodes.map((n) => n.id)).toEqual(['cluster:api/src']);
+  });
+});
+
+describe('diagramLayerChips', () => {
+  it('omits monorepo chips when the repo has no api/web/common folders', () => {
+    expect(
+      diagramLayerChips({
+        nodes: [{ filePath: 'src/main.py' }, { filePath: 'tests/test_main.py' }]
+      })
+    ).toEqual(['all']);
+  });
+
+  it('includes only layers that exist', () => {
+    expect(
+      diagramLayerChips({
+        nodes: [{ filePath: 'api/server.ts' }, { filePath: 'web/App.tsx' }]
+      })
+    ).toEqual(['all', 'api', 'web']);
   });
 });
 

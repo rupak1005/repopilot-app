@@ -11,6 +11,7 @@ import { isRepoIndexInProgress } from '../../../lib/indexStatus';
 import {
   buildArchitectureView,
   clusterIdForPrefix,
+  diagramLayerChips,
   directoryClusterKey,
   filterArchitectureGraph,
   mergeForceGraphData,
@@ -162,6 +163,7 @@ export default function ArchitecturePage() {
     if (!neighborhoodOverlay) return architectureView;
     return mergeForceGraphData(architectureView, neighborhoodOverlay);
   }, [architectureView, neighborhoodOverlay]);
+  const layerChips = useMemo(() => (graph ? diagramLayerChips(graph) : ['all']), [graph]);
   const indexStatus = useRepoIndexStatus(repoId);
   const pendingIndexJobRepoId = usePendingIndexJobRepoId();
   const indexInProgress = isRepoIndexInProgress(repoId, indexStatus, pendingIndexJobRepoId);
@@ -175,6 +177,12 @@ export default function ArchitecturePage() {
     setModuleCycles([]);
     setLayer('all');
   }, [graph]);
+
+  useEffect(() => {
+    if (layer !== 'all' && !layerChips.includes(layer)) {
+      setLayer('all');
+    }
+  }, [layer, layerChips]);
 
   useEffect(() => {
     setExpandedClusters([]);
@@ -401,9 +409,9 @@ export default function ArchitecturePage() {
           </div>
         ) : null}
 
-        {forceData && forceData.nodes.length > 0 ? (
+        {graph && graph.nodes.length > 0 ? (
           <ArchitectureGraphView
-            data={forceData}
+            data={forceData ?? { nodes: [], links: [] }}
             viewMeta={architectureView?.meta}
             repoFullName={repoFullName || undefined}
             repoId={repoId ?? undefined}
@@ -416,6 +424,7 @@ export default function ArchitecturePage() {
             moduleCycles={moduleCycles}
             layer={layer}
             onLayerChange={setLayer}
+            layerChips={layerChips}
             shareUrl={shareUrl}
             onSelectedIdChange={(id) => {
               // Clusters are not file deep links.

@@ -68,9 +68,11 @@ export function nodeCollideRadius(node: ForceGraphNode): number {
 export type DiagramLayer = 'all' | 'api' | 'web' | 'common' | 'other';
 
 export function layerOf(filePath: string): Exclude<DiagramLayer, 'all'> {
-  if (filePath.startsWith('api/') || filePath === 'cluster:api') return 'api';
-  if (filePath.startsWith('web/') || filePath === 'cluster:web') return 'web';
-  if (filePath.startsWith('common/') || filePath === 'cluster:common') return 'common';
+  // cluster:api, cluster:api/src → treat as api (not "other")
+  const path = filePath.startsWith('cluster:') ? filePath.slice('cluster:'.length) : filePath;
+  if (path === 'api' || path.startsWith('api/')) return 'api';
+  if (path === 'web' || path.startsWith('web/')) return 'web';
+  if (path === 'common' || path.startsWith('common/')) return 'common';
   return 'other';
 }
 
@@ -80,6 +82,22 @@ export const LAYER_META: Record<Exclude<DiagramLayer, 'all'>, { label: string; c
   common: { label: 'Common', color: '#c084fc' },
   other: { label: 'Other', color: '#a1a1aa' }
 };
+
+/** Layer chips that have at least one module (plus always-available "all"). */
+export function diagramLayerChips(graph: {
+  nodes: Array<{ filePath?: string; id?: string }>;
+}): DiagramLayer[] {
+  const present = new Set<Exclude<DiagramLayer, 'all'>>();
+  for (const n of graph.nodes) {
+    const key = n.filePath ?? n.id;
+    if (key) present.add(layerOf(key));
+  }
+  const chips: DiagramLayer[] = ['all'];
+  for (const layer of ['api', 'web', 'common'] as const) {
+    if (present.has(layer)) chips.push(layer);
+  }
+  return chips;
+}
 
 /** Keep modules (and edges) for one layer before clustering — filter after cluster collapses to a single node. */
 export function filterArchitectureGraph(

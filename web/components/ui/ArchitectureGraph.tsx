@@ -65,7 +65,7 @@ type GraphLink = LinkObject<GraphNode> & { uncertain?: boolean };
 type LayoutMode = 'diagram' | 'split' | 'focus';
 type DiagramRenderer = 'interactive' | 'mermaid';
 
-const LAYER_CHIPS: DiagramLayer[] = ['all', 'api', 'web', 'common'];
+const DEFAULT_LAYER_CHIPS: DiagramLayer[] = ['all', 'api', 'web', 'common'];
 
 const RENDERER_OPTIONS: Array<{ id: DiagramRenderer; label: string; icon: typeof ShareNetwork }> = [
   { id: 'interactive', label: 'Interactive', icon: ShareNetwork },
@@ -110,6 +110,8 @@ type ArchitectureGraphProps = {
   /** Layer chips — controlled so the page can filter before clustering. */
   layer?: DiagramLayer;
   onLayerChange?: (layer: DiagramLayer) => void;
+  /** Which layer chips to show (omit empty layers for non-monorepo repos). */
+  layerChips?: DiagramLayer[];
   /** Absolute or path URL for the Copy link control. */
   shareUrl?: string | null;
 };
@@ -318,6 +320,7 @@ export function ArchitectureGraphView({
   onLayoutAlgoChange,
   layer: layerProp,
   onLayerChange,
+  layerChips = DEFAULT_LAYER_CHIPS,
   shareUrl = null
 }: ArchitectureGraphProps) {
   const fgRef = useRef<ForceGraphMethods | undefined>(undefined);
@@ -348,7 +351,11 @@ export function ArchitectureGraphView({
   const [shareHint, setShareHint] = useState<string | null>(null);
   const reduceMotion = useReducedMotion();
 
-  const filtered = useMemo(() => filterForceGraphData(data, layer), [data, layer]);
+  // When layer is controlled by the page, data is already scoped before clustering — don't filter twice.
+  const filtered = useMemo(
+    () => (onLayerChange ? data : filterForceGraphData(data, layer)),
+    [data, layer, onLayerChange]
+  );
   const jumpNodes = useMemo(
     () =>
       [...filtered.nodes].sort((a, b) =>
@@ -918,7 +925,12 @@ export function ArchitectureGraphView({
           <p>{layoutBusy ? 'Computing System View layout…' : 'Building diagram…'}</p>
         </div>
       ) : filtered.nodes.length === 0 ? (
-        <p className="ui-diagram__empty">No modules in this layer.</p>
+        <p className="ui-diagram__empty">
+          No modules in this layer.{' '}
+          <button type="button" className="ui-diagram__empty-reset" onClick={() => setLayer('all')}>
+            Show all layers
+          </button>
+        </p>
       ) : renderer === 'mermaid' ? (
         <MermaidDiagram
           ref={mermaidRef}
@@ -1160,7 +1172,7 @@ export function ArchitectureGraphView({
     <div className="ui-diagram">
       <div className="ui-diagram__controls">
         <div className="ui-diagram__chips" role="tablist" aria-label="Diagram layers">
-          {LAYER_CHIPS.map((key) => (
+          {layerChips.map((key) => (
             <button
               key={key}
               type="button"

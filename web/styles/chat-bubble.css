@@ -68,14 +68,18 @@
   font-weight: 700;
 }
 
-.ui-chat-bubble__md .ui-wiki-md__pre {
-  background: color-mix(in srgb, var(--color-text) 92%, var(--color-surface));
-  color: var(--color-surface);
+.ui-chat-bubble__md .ui-wiki-md__pre,
+.ui-chat-bubble__md .ui-code-snippet {
+  /* Keep light neo surface — dark “terminal” shell made syntax tokens unreadable. */
+  background: var(--color-surface);
+  color: var(--color-text);
   border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-hard-sm);
 }
 
-.ui-chat-bubble__md .ui-wiki-md__pre[data-lang]::before {
-  color: color-mix(in srgb, var(--color-surface) 70%, transparent);
+.ui-chat-bubble__md .ui-wiki-md__pre[data-lang]::before,
+.ui-chat-bubble__md .ui-code-snippet[data-lang]::before {
+  color: var(--color-text-muted);
 }
 
 .ui-chat-bubble__citations {
