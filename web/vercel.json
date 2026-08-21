@@ -2,5 +2,13 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "installCommand": "cd .. && yarn install --frozen-lockfile",
-  "buildCommand": "cd .. && yarn --cwd common build && yarn --cwd web build"
+  "buildCommand": "cd .. && yarn --cwd common build && yarn --cwd web build",
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.repopilot.software" }],
+      "destination": "https://repopilot.software/:path*",
+      "permanent": true
+    }
+  ]
 }

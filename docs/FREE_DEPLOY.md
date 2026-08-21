@@ -2,6 +2,8 @@
 
 Deploy RepoPilot using free tiers. **Marketing stays separate** at [repopilot-pi.vercel.app](https://repopilot-pi.vercel.app/) — this guide deploys the **app** and **API** only.
 
+**Production app URL:** [https://repopilot.software](https://repopilot.software) — see [PRODUCTION_DOMAIN.md](./PRODUCTION_DOMAIN.md) for DNS and cutover.
+
 **Total cost:** $0 while free credits/limits last (Railway ~$5/mo credit, then you pay or migrate).
 
 ---
@@ -110,7 +112,7 @@ EMBEDDING_PROVIDER=local
 GITHUB_TOKEN=github_pat_...
 GITHUB_WEBHOOK_SECRET=your-secret
 
-CORS_ORIGINS=https://YOUR-APP.vercel.app,http://localhost:3000
+CORS_ORIGINS=https://repopilot.software,https://www.repopilot.software,http://localhost:3000
 ```
 
 5. **Volume** (optional but recommended for git clones):
@@ -152,7 +154,7 @@ yarn --cwd api prisma generate && yarn --cwd api build && yarn --cwd api worker
 
 ```env
 NEXT_PUBLIC_API_URL=https://YOUR-API.up.railway.app
-NEXT_PUBLIC_APP_URL=https://YOUR-APP.vercel.app
+NEXT_PUBLIC_APP_URL=https://repopilot.software
 NEXT_PUBLIC_MARKETING_URL=https://repopilot-pi.vercel.app
 NEXT_PUBLIC_DEMO_MODE=false
 SESSION_SECRET=<openssl rand -hex 32>
@@ -161,9 +163,9 @@ GITHUB_CLIENT_ID=
 GITHUB_CLIENT_SECRET=
 ```
 
-5. Deploy → note URL e.g. `repopilot-web.vercel.app`
+5. Deploy → production alias is `https://repopilot.software` (custom domain; see [PRODUCTION_DOMAIN.md](./PRODUCTION_DOMAIN.md)). Legacy: `https://repopilot-app.vercel.app`.
 
-6. Update Railway `CORS_ORIGINS` to include your Vercel app URL → redeploy API.
+6. Update Railway `CORS_ORIGINS` to include `https://repopilot.software` (and `https://www.repopilot.software` if needed) → redeploy API.
 
 ---
 
@@ -239,7 +241,7 @@ Alternative: [cron-job.org](https://cron-job.org) every 8 min → same URL.
 In your **separate** marketing project (`repopilot-pi.vercel.app`), set “Get started” to:
 
 ```text
-https://YOUR-APP.vercel.app
+https://repopilot.software
 ```
 
 Do not point marketing at the API URL.
