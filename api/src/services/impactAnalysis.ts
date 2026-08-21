@@ -1,4 +1,5 @@
 import { getPrisma } from '../db/prisma';
+import { buildImpactTestPlan, type ImpactTestPlan } from '@repopilot/common';
 import {
   getModuleDependencyTraversal,
   getSymbolDependencyTraversal
@@ -45,6 +46,8 @@ export type ImpactAnalysisResult = {
     overlapCount: number;
     similarity?: number;
   }>;
+  /** Classified local run commands for recommended tests (not executed by RepoPilot). */
+  testPlan: ImpactTestPlan;
   hotspot: { score: number; changeCount: number; reasons: string[] } | null;
   checklist: string[];
   summary: string;
@@ -451,6 +454,7 @@ async function finalizeImpact(args: {
     relevantTests,
     coChanges,
     similarChanges,
+    testPlan: buildImpactTestPlan(relevantTests.map((t) => t.filePath)),
     hotspot: hotspotRow
       ? {
           score: hotspotRow.score,
@@ -478,6 +482,7 @@ export type PullImpactAnalysisResult = {
   transitiveDependents: string[];
   relevantTests: ImpactTestRecommendation[];
   fileRisks: Array<{ filePath: string; risk: ImpactRisk; confidence: ImpactConfidence }>;
+  testPlan: ImpactTestPlan;
   checklist: string[];
   summary: string;
 };
@@ -618,6 +623,7 @@ export async function analyzePullImpact(args: {
       risk: r.risk,
       confidence: r.confidence
     })),
+    testPlan: buildImpactTestPlan(relevantTests.map((t) => t.filePath)),
     checklist,
     summary
   };
@@ -645,6 +651,7 @@ export type SymbolImpactAnalysisResult = {
   cycleDetected: boolean;
   relevantTests: ImpactTestRecommendation[];
   coChanges: Array<{ file: string; pairedWith: string; count: number }>;
+  testPlan: ImpactTestPlan;
   hotspot: { score: number; changeCount: number; reasons: string[] } | null;
   checklist: string[];
   summary: string;
@@ -839,6 +846,7 @@ export async function analyzeSymbolImpact(args: {
     cycleDetected: traversal.cycleDetected,
     relevantTests,
     coChanges,
+    testPlan: buildImpactTestPlan(relevantTests.map((t) => t.filePath)),
     hotspot: hotspotRow
       ? {
           score: hotspotRow.score,

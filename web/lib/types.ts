@@ -1,3 +1,5 @@
+import type { ImpactTestPlan } from '@repopilot/common';
+
 export const MARKETING_URL =
   process.env.NEXT_PUBLIC_MARKETING_URL ?? 'https://repopilot-pi.vercel.app';
 
@@ -96,6 +98,8 @@ export type FileImpactAnalysis = {
   relevantTests: ImpactTestRecommendation[];
   coChanges: Array<{ file: string; pairedWith: string; count: number }>;
   similarChanges?: SimilarChange[];
+  /** Classified local run commands (not executed by RepoPilot). */
+  testPlan?: ImpactTestPlan;
   hotspot: { score: number; changeCount: number; reasons: string[] } | null;
   checklist: string[];
   summary: string;
@@ -120,6 +124,7 @@ export type PullImpactAnalysis = {
     risk: 'LOW' | 'MEDIUM' | 'HIGH';
     confidence: 'LOW' | 'MEDIUM' | 'HIGH';
   }>;
+  testPlan?: ImpactTestPlan;
   checklist: string[];
   summary: string;
 };
@@ -141,6 +146,7 @@ export type SymbolImpactAnalysis = {
   cycleDetected: boolean;
   relevantTests: ImpactTestRecommendation[];
   coChanges: Array<{ file: string; pairedWith: string; count: number }>;
+  testPlan?: ImpactTestPlan;
   hotspot: { score: number; changeCount: number; reasons: string[] } | null;
   checklist: string[];
   summary: string;

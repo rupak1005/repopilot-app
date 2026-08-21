@@ -6,8 +6,8 @@
 | Gate | Focus | Status |
 |------|--------|--------|
 | **A — Graph Trust** | Deterministic relationships, provenance, stronger symbol resolution, fixtures | **Complete** (2026-08-21) |
-| **B — Impact Trust** | Embedded impact graph, explainable risk, similarity, test impact | **In progress** (similar changes + embedded blast graph) |
-| **C — Engineering Loop** | Plan → agent → PR → impact → review → verify | Not started |
+| **B — Impact Trust** | Embedded impact graph, explainable risk, similarity, test impact | **Complete** (2026-08-21) |
+| **C — Engineering Loop** | Plan → agent → PR → impact → review → verify | **Next** |
 | **D — Visual Differentiation** | 3D topography, impact theater, architecture replay | Spike only (`/viz-spike`) |
 
 ## Gate A — shipped
@@ -35,11 +35,18 @@
 
 See `docs/GRAPH_AUDIT.md`.
 
-## Gate B — next
+## Gate B — shipped
 
-Start from `docs/IMPACT_AUDIT.md`:
+1. ~~Embed impact graph~~ — `ImpactBlastGraph` on file Impact
+2. ~~Surface similar changes strongly~~ — file impact + `?file=` on `/similar-changes`
+3. Explainable risk / confidence (calibrated factors + UI chips)
+4. ~~Test impact entry~~ — `buildImpactTestPlan` + copyable local commands (`testPlan` on impact API)
 
-1. ~~Embed impact graph~~ — `ImpactBlastGraph` on file Impact (capped force graph from impact payload)
-2. ~~Surface similar changes strongly~~ — file impact + `?file=` on `/similar-changes` (2026-08-21)
-3. Explainable risk / confidence (already partly shipped — keep)
-4. Test impact automation entry point (run later; classify first)
+### Deferred past Gate B
+
+- Remote / CI test execution
+- Diff / security-specific impact modes
+
+## Gate C — next
+
+Plan → agent → PR → impact → review → verify loop. Start from planning + MCP handoff already on Impact.

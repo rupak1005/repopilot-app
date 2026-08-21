@@ -8,6 +8,7 @@ import { EmptyState } from '../../../components/ui/EmptyState';
 import { ErrorBanner } from '../../../components/ui/ErrorBanner';
 import { ImpactBlastGraph } from '../../../components/ui/ImpactBlastGraph';
 import { ImpactBlastMap } from '../../../components/ui/ImpactBlastMap';
+import { ImpactTestPlanPanel } from '../../../components/ui/ImpactTestPlanPanel';
 import { IndexHint } from '../../../components/ui/IndexHint';
 import { KpiTile } from '../../../components/ui/KpiTile';
 import { PageLoading } from '../../../components/ui/Skeleton';
@@ -751,23 +752,7 @@ function FileImpactView({
             </ul>
           </BentoPanel>
           <BentoPanel title={`Tests to run (${result.relevantTests.length})`}>
-            {result.relevantTests.length > 0 ? (
-              <ul className="ui-impact-tests">
-                {result.relevantTests.map((test) => (
-                  <li key={test.filePath} className="ui-impact-test">
-                    <p className="mono ui-impact-test__path">{test.filePath}</p>
-                    <p className="ui-impact-test__reason">{test.reason}</p>
-                    <span className="label-caps">{test.confidence} confidence</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <EmptyState
-                compact
-                title="No related tests found"
-                description="No test files import these modules in the dependency graph."
-              />
-            )}
+            <ImpactTestPlanPanel tests={result.relevantTests} testPlan={result.testPlan} />
           </BentoPanel>
         </div>
       </div>
@@ -916,6 +901,7 @@ function SymbolImpactView({
         transitiveDependents={result.transitiveCallers.map((c) => c.name)}
         checklist={result.checklist}
         tests={result.relevantTests}
+        testPlan={result.testPlan}
       />
       {result.cycleDetected ? (
         <BentoPanel title="Call cycle">
@@ -1002,6 +988,7 @@ function PullImpactView({
         transitiveDependents={result.transitiveDependents}
         checklist={result.checklist}
         tests={result.relevantTests}
+        testPlan={result.testPlan}
       />
     </>
   );
@@ -1063,6 +1050,7 @@ function ImpactLists(props: {
   outboundImports?: string[];
   checklist: string[];
   tests: FileImpactAnalysis['relevantTests'];
+  testPlan?: FileImpactAnalysis['testPlan'];
 }) {
   function fileLink(mod: string) {
     if (props.repoId) return impactHref(props.repoId, { file: mod, revisionSha: props.revisionSha });
@@ -1125,23 +1113,7 @@ function ImpactLists(props: {
         </BentoPanel>
       </div>
       <BentoPanel title={`Recommended tests (${props.tests.length})`}>
-        {props.tests.length > 0 ? (
-          <ul className="ui-impact-tests">
-            {props.tests.map((test) => (
-              <li key={test.filePath} className="ui-impact-test">
-                <p className="mono ui-impact-test__path">{test.filePath}</p>
-                <p className="ui-impact-test__reason">{test.reason}</p>
-                <span className="label-caps">{test.confidence} confidence</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <EmptyState
-            compact
-            title="No related tests found"
-            description="No test files import these modules in the dependency graph."
-          />
-        )}
+        <ImpactTestPlanPanel tests={props.tests} testPlan={props.testPlan} />
       </BentoPanel>
     </>
   );

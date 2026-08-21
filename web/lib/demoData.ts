@@ -1,3 +1,4 @@
+import { buildImpactTestPlan } from '@repopilot/common';
 import type {
   AskResponse,
   FileImpactAnalysis,
@@ -715,5 +716,10 @@ const DEMO_FILE_IMPACT: Record<string, FileImpactAnalysis> = {
 };
 
 export function demoFileImpact(filePath: string): FileImpactAnalysis | null {
-  return DEMO_FILE_IMPACT[filePath] ?? null;
+  const base = DEMO_FILE_IMPACT[filePath];
+  if (!base) return null;
+  return {
+    ...base,
+    testPlan: buildImpactTestPlan(base.relevantTests.map((t) => t.filePath))
+  };
 }

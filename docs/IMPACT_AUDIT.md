@@ -13,6 +13,7 @@
 | Blast map | Lists + **embedded force graph** + Architecture deep link | `ImpactBlastGraph`, `ImpactBlastMap`, `?blast=1` |
 | Co-change | Real | `getCoChanges` |
 | Similar changes | Real for PR + **file impact** (seed = file ∪ co-change partners) | `findSimilarChanges`, `findSimilarChangesForFile`, Impact file panel |
+| Test plan | Classified workspace commands + copy handoff | `common/impactTestPlan`, `testPlan` on impact, `ImpactTestPlanPanel` |
 | Ownership | CODEOWNERS from indexed revision | `GET …/ownership`, Impact panel |
 | Handoff | Planning / MCP / Copy context pack / Graph blast | Impact file view |
 | Citations | Graph / Impact / GitHub from Ask, Search, PRs | `citationLinks.ts` |
@@ -27,7 +28,7 @@
 
 1. ~~Impact canvas still mostly tabular~~ — embedded `ImpactBlastGraph` on file Impact (2026-08-21); full Architecture still via deep link
 2. ~~Similar-changes API exists; Impact file mode does not surface it strongly~~ — file impact returns + shows similar PRs (2026-08-21)
-3. No “run impacted tests” automation (recommendations are listed only)
+3. ~~No “run impacted tests” automation~~ — classify + copyable local commands shipped; remote execution deferred
 4. Diff / security-specific impact modes not built
 
 ## Calibration
