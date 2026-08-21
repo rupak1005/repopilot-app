@@ -5,30 +5,41 @@
 
 | Gate | Focus | Status |
 |------|--------|--------|
-| **A — Graph Trust** | Deterministic relationships, provenance, stronger symbol resolution, fixtures | **In progress** (Phase 1.1 / 1.4 started) |
-| **B — Impact Trust** | Embedded impact graph, explainable risk, similarity, test impact | Not started |
+| **A — Graph Trust** | Deterministic relationships, provenance, stronger symbol resolution, fixtures | **Complete** (2026-08-21) |
+| **B — Impact Trust** | Embedded impact graph, explainable risk, similarity, test impact | **Next** |
 | **C — Engineering Loop** | Plan → agent → PR → impact → review → verify | Not started |
 | **D — Visual Differentiation** | 3D topography, impact theater, architecture replay | Spike only (`/viz-spike`) |
 
-## Gate A — current chunk
+## Gate A — shipped
 
-Shipped in this gate so far:
+- Barrel / re-export follow-through (`symbolResolve.ts`)
+- In-repo `package.json` `exports` / `main` + static `import()`
+- Config discovery (`package.json`, tsconfig/jsconfig)
+- Neighborhood path closure (multi-hop induced edges)
+- Edge `sourceLine` + `targetLine` provenance
+- Call edges only from AST call sites, with tiered confidence (`callEdgePolicy.ts`)
+- Labeled precision/recall scoreboard (`graphScoreboard.ts` + fixtures)
 
-- Barrel / re-export follow-through (`api/src/repo/symbolResolve.ts`)
-- Correct public names for `export { a as b }` / `export … from`
-- In-repo `package.json` `exports` / `main` resolution (`packageExports.ts`)
-- Static `import('…')` → imports + module edges (`dynamicImports.ts`)
-- Index `package.json` + tsconfig/jsconfig for resolve (no Tree-sitter parse)
-- Fixture suites for alias / barrel / package exports / dynamic import
-- Neighborhood path closure (BFS ancestors kept so depth-2 edges stay real, not star-to-seed)
-- Edge `targetLine` (+ import `sourceLine`) persisted and returned in graph provenance
-- Stronger call edges: only AST `call_expression`; tiered confidence; no bare property-access “calls”
-- Still not a type checker — unresolved/ambiguous callees stay omitted or low-confidence
+**Acceptance floors** (enforced in `graphScoreboard.test.ts`):
 
-Still open for Gate A:
+| Metric | Floor |
+|--------|-------|
+| Module resolve precision / recall / unresolved accuracy | 0.95 / 0.90 / 0.95 |
+| Symbol resolve precision / recall / unresolved accuracy | 0.95 / 0.90 / 0.95 |
 
-- True type-aware call resolution (tsc/language service) when worth the cost
-- Precision/recall scoreboard beyond fixtures
-- Remaining unresolved aliases when no `paths` / `@/` match
+### Deferred past Gate A (do not block Gate B)
+
+- Full type-aware calls via tsc / language service
+- Exhaustive alias coverage for exotic monorepo layouts
+- Server-only overview for 10k+ node repos
 
 See `docs/GRAPH_AUDIT.md`.
+
+## Gate B — next
+
+Start from `docs/IMPACT_AUDIT.md`:
+
+1. Embed impact graph (not only tabular + Architecture deep link)
+2. Surface similar changes strongly
+3. Explainable risk / confidence (already partly shipped — keep)
+4. Test impact automation entry point (run later; classify first)
