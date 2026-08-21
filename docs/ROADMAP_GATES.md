@@ -67,5 +67,6 @@ Visual differentiation beyond the 3D spike (`/viz-spike`). Hybrid 2D/3D — prod
 - **Impact theater** (`layoutImpactTheater` + Impact **Explore 3D theater**)
 - **Topography terrain** (`layoutTopographyTerrain` + Topography **Explore 3D topography**)
 - Spike **perf budgets** on overlay (`vizPerfBudgets.ts`)
+- Impact edge **path dash animation** (static under reduced motion)
 
 See `docs/VISUAL_DIFF_AUDIT.md`.

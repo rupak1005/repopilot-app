@@ -14,6 +14,7 @@ import type { VisualizationEdge, VisualizationGraph, VisualizationNode } from '.
 import { mapMetricToSize } from '../../lib/visualizationModel';
 import { lodBandForDistance, type LodBand } from '../../lib/visualizationLod';
 import { evaluateVizPerf } from '../../lib/vizPerfBudgets';
+import { impactEdgeDashOffset, shouldAnimateImpactEdges } from '../../lib/vizImpactEdgeMotion';
 
 export type { LodBand };
 export { lodBandForDistance };
@@ -156,16 +157,62 @@ function GraphNodeMesh({
   );
 }
 
+function ImpactPathLine({
+  points,
+  color,
+  lineWidth,
+  opacity,
+  animate
+}: {
+  points: [THREE.Vector3, THREE.Vector3];
+  color: string;
+  lineWidth: number;
+  opacity: number;
+  animate: boolean;
+}) {
+  const lineRef = useRef<THREE.Object3D & { material?: THREE.Material | THREE.Material[] }>(null);
+  const { invalidate } = useThree();
+
+  useFrame((state) => {
+    if (!animate) return;
+    const mat = lineRef.current?.material;
+    const material = Array.isArray(mat) ? mat[0] : mat;
+    if (material && 'dashOffset' in material) {
+      (material as THREE.Material & { dashOffset: number }).dashOffset = impactEdgeDashOffset(
+        state.clock.elapsedTime
+      );
+    }
+    invalidate();
+  });
+
+  return (
+    <Line
+      ref={lineRef}
+      points={points}
+      color={color}
+      lineWidth={lineWidth}
+      transparent
+      opacity={opacity}
+      dashed
+      dashSize={0.22}
+      gapSize={0.14}
+      dashOffset={0}
+    />
+  );
+}
+
 function GraphEdges({
   edges,
   nodesById,
   selectedId,
-  band
+  band,
+  reduceMotion
 }: {
   edges: VisualizationEdge[];
   nodesById: Map<string, VisualizationNode>;
   selectedId: string | null;
   band: LodBand;
+  reduceMotion: boolean;
 }) {
   const lines = useMemo(() => {
     // Far LOD: skip most edges for draw-call budget.
@@ -193,21 +240,62 @@ function GraphEdges({
     }>;
   }, [edges, nodesById, selectedId, band]);
 
+  const impactCount = lines.filter((l) => l.edge.type === 'impact').length;
+  const animateImpact = shouldAnimateImpactEdges(reduceMotion, impactCount);
+
   return (
     <>
-      {lines.map(({ edge, points, related }) => (
-        <Line
-          key={edge.id}
-          points={points}
-          color={related ? '#7c3aed' : edge.confidence < 0.9 ? '#a1a1aa' : '#9ca3af'}
-          lineWidth={related ? 2 : 1}
-          transparent
-          opacity={related ? 0.95 : band === 'far' ? 0.15 : edge.confidence < 0.9 ? 0.35 : 0.45}
-          dashed={edge.confidence < 0.9}
-          dashSize={0.15}
-          gapSize={0.1}
-        />
-      ))}
+      {lines.map(({ edge, points, related }) => {
+        const isImpact = edge.type === 'impact';
+        const color = related
+          ? '#7c3aed'
+          : isImpact
+            ? edge.highlighted
+              ? '#ea580c'
+              : '#a78bfa'
+            : edge.confidence < 0.9
+              ? '#a1a1aa'
+              : '#9ca3af';
+        const lineWidth = related || (isImpact && edge.highlighted) ? 2 : 1;
+        const opacity = related
+          ? 0.95
+          : band === 'far'
+            ? 0.15
+            : isImpact
+              ? edge.highlighted
+                ? 0.85
+                : 0.55
+              : edge.confidence < 0.9
+                ? 0.35
+                : 0.45;
+
+        if (isImpact) {
+          return (
+            <ImpactPathLine
+              key={edge.id}
+              points={points}
+              color={color}
+              lineWidth={lineWidth}
+              opacity={opacity}
+              animate={animateImpact}
+            />
+          );
+        }
+
+        return (
+          <Line
+            key={edge.id}
+            points={points}
+            color={color}
+            lineWidth={lineWidth}
+            transparent
+            opacity={opacity}
+            dashed={edge.confidence < 0.9}
+            dashSize={0.15}
+            gapSize={0.1}
+          />
+        );
+      })}
     </>
   );
 }
@@ -364,7 +452,13 @@ function SceneInner({
       <directionalLight position={[8, 12, 6]} intensity={0.65} castShadow />
       <gridHelper args={[80, 40, '#d8b4fe', '#e9d5ff']} position={[0, -0.05, 0]} />
 
-      <GraphEdges edges={graph.edges} nodesById={nodesById} selectedId={selectedId} band={band} />
+      <GraphEdges
+        edges={graph.edges}
+        nodesById={nodesById}
+        selectedId={selectedId}
+        band={band}
+        reduceMotion={reduceMotion}
+      />
 
       {graph.nodes.map((node) => (
         <GraphNodeMesh

@@ -397,7 +397,7 @@ export default function VizSpikePage() {
         {topoMode
           ? 'Topography terrain: directory districts with height from hotspot score. CSS map remains the product default.'
           : theaterMode
-            ? 'Impact theater: seed / direct / transitive / tests on Z layers (radial XY). Opt-in only — product Impact stays 2D.'
+            ? 'Impact theater: seed / direct / transitive / tests on Z layers (radial XY). Blast edges use flowing dashes (static under prefers-reduced-motion). Opt-in only — product Impact stays 2D.'
             : 'Isolated R3F prototype. Same architecture API + dagre layout positions → '}
         {!theaterMode && !topoMode ? (
           <>

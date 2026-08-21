@@ -41,6 +41,7 @@ Rules:
 | Camera | OrbitControls, damping (respects `prefers-reduced-motion`) |
 | Hover / select | Pointer on meshes; selection dims non-neighbors |
 | Focus | Smooth camera tween to node (skipped when reduced motion) |
+| Impact edges | Flowing dashed paths source→target; static dashes when `prefers-reduced-motion` |
 | Labels | drei/Troika `Text` only near / selected / hotspot / cluster — not every far node |
 | LOD | `far` (>55): point clouds, few edges · `medium`: boxes + sparse labels · `near`: full basename labels + selection metadata HTML |
 | Perf overlay | FPS, frame ms, nodes, edges, visible labels, WebGL draw calls, triangles, camera distance |
