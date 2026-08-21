@@ -7,7 +7,9 @@
 | [LLD.md](./LLD.md) | Modules, APIs, data model, pipelines |
 | [SETUP.md](./SETUP.md) | Local development, tests, CI |
 | [FREE_DEPLOY.md](./FREE_DEPLOY.md) | Free-tier production deploy |
+| [PRODUCTION_DOMAIN.md](./PRODUCTION_DOMAIN.md) | Custom domain (repopilot.software) |
 | [AI_PROVIDERS.md](./AI_PROVIDERS.md) | Chat + embedding providers |
+| [showcase/](./showcase/) | Product screenshots for the root README |
 | [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md) | Tokens, type, layers |
 | [PRODUCT_IMPLEMENTATION_STATUS.md](./PRODUCT_IMPLEMENTATION_STATUS.md) | Shipped vs deferred (foundation complete) |
 | [GRAPH_AUDIT.md](./GRAPH_AUDIT.md) | Graph capabilities + debt |
