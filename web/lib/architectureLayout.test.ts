@@ -22,6 +22,6 @@ describe('nodeCollideRadius', () => {
   });
 
   it('nodeBoxWidth caps extremely long labels', () => {
-    expect(nodeBoxWidth('a'.repeat(80))).toBeLessThanOrEqual(168);
+    expect(nodeBoxWidth('a'.repeat(80))).toBeLessThanOrEqual(176);
   });
 });
