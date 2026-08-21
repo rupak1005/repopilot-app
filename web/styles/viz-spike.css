@@ -136,9 +136,22 @@
   inset: 0;
   width: 100%;
   height: 100%;
+  overflow: hidden;
+  isolation: isolate;
+  z-index: 0;
+}
+
+.ui-viz-spike__label-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
 }
 
 .ui-viz-spike__canvas canvas {
+  position: relative;
+  z-index: 1;
   display: block;
   width: 100% !important;
   height: 100% !important;
@@ -342,30 +355,67 @@
 @media (max-width: 900px) {
   .ui-viz-spike__workspace {
     grid-template-columns: 1fr;
+    gap: var(--space-2);
   }
 
   .ui-viz-spike__inspector-slot {
-    max-height: none;
+    max-height: min(42vh, 18rem);
   }
 
   .ui-viz-spike__stage {
-    height: clamp(22rem, 52vh, 34rem);
+    height: clamp(18rem, 48vh, 28rem);
+    min-height: 16rem;
   }
 
   .ui-viz-spike--2d .ui-viz-spike__stage {
-    height: clamp(26rem, 68vh, 46rem);
+    height: clamp(22rem, 58vh, 36rem);
+    min-height: 20rem;
+  }
+
+  .ui-viz-spike__lede {
+    display: none;
+  }
+
+  .ui-viz-spike__label {
+    max-width: 7.5rem;
+    font-size: 0.65rem;
+  }
+
+  .ui-viz-spike__tag {
+    max-width: 8.5rem;
   }
 }
 
 @media (max-width: 720px) {
-  .ui-viz-spike__stats {
-    position: static;
-    margin: 0.5rem;
-    pointer-events: auto;
+  .ui-viz-spike__toolbar {
+    gap: var(--space-2);
   }
 
   .ui-viz-spike__toolbar-title {
     margin-right: 0;
     width: 100%;
+  }
+
+  .ui-viz-spike__seg button {
+    padding: 0.36rem 0.55rem;
+  }
+
+  .ui-viz-spike__stats {
+    top: 0.4rem;
+    right: 0.4rem;
+    left: auto;
+    margin: 0;
+    max-width: 7.5rem;
+    padding: 0.4rem 0.5rem;
+    pointer-events: none;
+  }
+
+  .ui-viz-spike__stats dl > div:nth-child(n + 4),
+  .ui-viz-spike__budget-notes {
+    display: none;
+  }
+
+  .ui-viz-spike__inspector-slot {
+    max-height: min(36vh, 14rem);
   }
 }

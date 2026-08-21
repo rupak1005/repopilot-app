@@ -211,7 +211,7 @@ export function DiagramInspector({
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.04, duration: 0.2 }}
             >
-              <button type="button" onClick={() => onSelectModule(mod)}>
+              <button type="button" title={mod} onClick={() => onSelectModule(mod)}>
                 {mod}
               </button>
             </motion.li>
@@ -237,7 +237,9 @@ export function DiagramInspector({
         transition={{ duration: 0.22 }}
       >
         <p className="ui-diagram__inspector-label">{layerLabel}</p>
-        <p className="ui-diagram__inspector-path mono">{selectedNode.id}</p>
+        <p className="ui-diagram__inspector-path mono" title={selectedNode.id}>
+          {selectedNode.id}
+        </p>
         <div className="ui-diagram__inspector-metrics">
           <span>{inbound} inbound</span>
           <span>{outbound} outbound</span>

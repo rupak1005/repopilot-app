@@ -1,13 +1,16 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Html, Line, OrbitControls } from '@react-three/drei';
 import {
+  createContext,
+  useContext,
   useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
   useState,
   type MutableRefObject,
-  type ReactNode
+  type ReactNode,
+  type RefObject
 } from 'react';
 import * as THREE from 'three';
 import type { VisualizationEdge, VisualizationGraph, VisualizationNode } from '../../lib/visualizationModel';
@@ -20,6 +23,21 @@ import {
   shouldUseTopoInstancing,
   topoInstanceTransform
 } from '../../lib/vizTopoInstances';
+import { buildVizLabelBudget, vizLabelBasename } from '../../lib/vizLabelBudget';
+
+const LabelPortalContext = createContext<RefObject<HTMLElement | null> | null>(null);
+
+function useCompactVizLabels(nodeCount: number): boolean {
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 900px)');
+    const sync = () => setNarrow(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+  return narrow || nodeCount > 48;
+}
 
 export type { LodBand };
 export { lodBandForDistance };
@@ -38,6 +56,7 @@ export type VizPerfStats = {
 type SceneProps = {
   graph: VisualizationGraph;
   selectedId: string | null;
+  hoveredId: string | null;
   focusId: string | null;
   onSelect: (id: string | null) => void;
   onHover: (id: string | null) => void;
@@ -89,6 +108,7 @@ function GraphNodeMesh({
   selected,
   dimmed,
   band,
+  showLabel,
   onSelect,
   onHover
 }: {
@@ -96,22 +116,17 @@ function GraphNodeMesh({
   selected: boolean;
   dimmed: boolean;
   band: LodBand;
+  showLabel: boolean;
   onSelect: (id: string) => void;
   onHover: (id: string | null) => void;
 }) {
+  const labelPortal = useContext(LabelPortalContext);
   const pos = node.position ?? { x: 0, y: 0, z: 0 };
   const height = pillarHeight(node);
   const radius = pillarRadius(node);
   const color = nodeColor(node, selected, dimmed);
   const accent = nodeAccent(node);
   const opacity = dimmed ? 0.38 : 1;
-
-  const showLabel =
-    selected ||
-    band === 'near' ||
-    node.blastRole === 'seed' ||
-    node.blastRole === 'direct' ||
-    (band === 'medium' && (node.entityType === 'cluster' || (node.metrics.hotspotScore ?? 0) >= 40));
 
   const farPoint = band === 'far' && !selected;
 
@@ -194,12 +209,18 @@ function GraphNodeMesh({
           position={[0, height + 0.55, 0]}
           center
           distanceFactor={selected ? 9 : 13}
+          zIndexRange={[40, 10]}
+          portal={labelPortal ? (labelPortal as RefObject<HTMLElement>) : undefined}
           style={{ pointerEvents: 'none' }}
         >
           <div className={`ui-viz-spike__label${selected ? ' ui-viz-spike__label--selected' : ''}`}>
-            {node.entityType === 'cluster' ? node.label : node.label.split('/').pop() ?? node.label}
+            {vizLabelBasename(node.label, node.entityType === 'cluster')}
           </div>
-          {selected && node.path ? <div className="ui-viz-spike__tag mono">{node.path}</div> : null}
+          {selected && node.path ? (
+            <div className="ui-viz-spike__tag mono" title={node.path}>
+              {node.path}
+            </div>
+          ) : null}
         </Html>
       ) : null}
     </group>
@@ -639,6 +660,7 @@ function OrbitBridge({
 function SceneInner({
   graph,
   selectedId,
+  hoveredId,
   focusId,
   onSelect,
   onHover,
@@ -650,6 +672,7 @@ function SceneInner({
 }: SceneProps) {
   const { camera, invalidate } = useThree();
   const [band, setBand] = useState<LodBand>('medium');
+  const compactLabels = useCompactVizLabels(graph.nodes.length);
 
   const nodesById = useMemo(() => {
     const map = new Map<string, VisualizationNode>();
@@ -672,20 +695,22 @@ function SceneInner({
     return set;
   }, [graph.edges, selectedId]);
 
-  const labelCount = useMemo(() => {
-    let n = 0;
-    for (const node of graph.nodes) {
-      const selected = node.id === selectedId;
-      if (
-        selected ||
-        band === 'near' ||
-        (band === 'medium' && (node.entityType === 'cluster' || (node.metrics.hotspotScore ?? 0) >= 40))
-      ) {
-        n += 1;
-      }
-    }
-    return n;
-  }, [graph.nodes, selectedId, band]);
+  const labelBudget = useMemo(
+    () =>
+      buildVizLabelBudget({
+        nodeIds: graph.nodes.map((n) => n.id),
+        hotspotScore: (id) => nodesById.get(id)?.metrics.hotspotScore ?? 0,
+        isCluster: (id) => nodesById.get(id)?.entityType === 'cluster',
+        selectedId,
+        hoveredId,
+        neighborIds: highlighted,
+        band,
+        compact: compactLabels
+      }),
+    [graph.nodes, nodesById, selectedId, hoveredId, highlighted, band, compactLabels]
+  );
+
+  const labelCount = labelBudget.size
 
   const useTopoBatch = shouldUseTopoInstancing(graph.nodes.length, graph.edges.length);
   const { interactive: interactiveNodes, batched: batchedNodes } = useMemo(() => {
@@ -729,6 +754,7 @@ function SceneInner({
           selected={node.id === selectedId}
           dimmed={Boolean(highlighted && !highlighted.has(node.id))}
           band={band}
+          showLabel={labelBudget.has(node.id)}
           onSelect={onSelect}
           onHover={onHover}
         />
@@ -741,7 +767,7 @@ function SceneInner({
         navigateWorld={navigateWorld}
         onNavigateDone={onNavigateDone}
       />
-      <SceneKick deps={`${graph.nodes.length}:${selectedId}:${band}`} />
+      <SceneKick deps={`${graph.nodes.length}:${selectedId}:${band}:${labelCount}`} />
       <PerfSampler
         statsRef={statsRef}
         nodeCount={graph.nodes.length}
@@ -771,6 +797,7 @@ function SceneInner({
 type RepoPilotCanvasProps = {
   graph: VisualizationGraph;
   selectedId: string | null;
+  hoveredId?: string | null;
   focusId: string | null;
   onSelect: (id: string | null) => void;
   onHover: (id: string | null) => void;
@@ -785,6 +812,7 @@ type RepoPilotCanvasProps = {
 export function RepoPilotCanvas({
   graph,
   selectedId,
+  hoveredId = null,
   focusId,
   onSelect,
   onHover,
@@ -795,37 +823,43 @@ export function RepoPilotCanvas({
   navigateWorld = null,
   onNavigateDone
 }: RepoPilotCanvasProps) {
+  const labelPortalRef = useRef<HTMLDivElement>(null);
+
   return (
     <div className="ui-viz-spike__canvas">
-      <Canvas
-        dpr={[1, 1.75]}
-        frameloop="demand"
-        camera={{ position: [18, 14, 22], fov: 45, near: 0.1, far: 400 }}
-        gl={{ antialias: true, powerPreference: 'high-performance' }}
-        onCreated={({ gl, invalidate }) => {
-          const canvas = gl.domElement;
-          const onLost = (event: Event) => {
-            event.preventDefault();
-            onContextLost?.();
-          };
-          canvas.addEventListener('webglcontextlost', onLost);
-          invalidate();
-        }}
-        onPointerMissed={() => onSelect(null)}
-      >
-        <SceneInner
-          graph={graph}
-          selectedId={selectedId}
-          focusId={focusId}
-          onSelect={onSelect}
-          onHover={onHover}
-          reduceMotion={reduceMotion}
-          statsRef={statsRef}
-          onOrbitSample={onOrbitSample}
-          navigateWorld={navigateWorld}
-          onNavigateDone={onNavigateDone}
-        />
-      </Canvas>
+      <div className="ui-viz-spike__label-layer" ref={labelPortalRef} aria-hidden />
+      <LabelPortalContext.Provider value={labelPortalRef}>
+        <Canvas
+          dpr={[1, 1.75]}
+          frameloop="demand"
+          camera={{ position: [18, 14, 22], fov: 45, near: 0.1, far: 400 }}
+          gl={{ antialias: true, powerPreference: 'high-performance' }}
+          onCreated={({ gl, invalidate }) => {
+            const canvas = gl.domElement;
+            const onLost = (event: Event) => {
+              event.preventDefault();
+              onContextLost?.();
+            };
+            canvas.addEventListener('webglcontextlost', onLost);
+            invalidate();
+          }}
+          onPointerMissed={() => onSelect(null)}
+        >
+          <SceneInner
+            graph={graph}
+            selectedId={selectedId}
+            hoveredId={hoveredId}
+            focusId={focusId}
+            onSelect={onSelect}
+            onHover={onHover}
+            reduceMotion={reduceMotion}
+            statsRef={statsRef}
+            onOrbitSample={onOrbitSample}
+            navigateWorld={navigateWorld}
+            onNavigateDone={onNavigateDone}
+          />
+        </Canvas>
+      </LabelPortalContext.Provider>
     </div>
   );
 }

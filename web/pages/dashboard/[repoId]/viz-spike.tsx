@@ -565,6 +565,7 @@ export default function VizSpikePage() {
               <RepoPilotCanvas
                 graph={vizGraph}
                 selectedId={selectedId}
+                hoveredId={hoverId}
                 focusId={focusId}
                 onSelect={selectNode}
                 onHover={setHoverId}
