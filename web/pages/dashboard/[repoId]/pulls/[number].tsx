@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ArrowLeft, GitPullRequest, Warning } from '@phosphor-icons/react';
 import { useEffect, useMemo, useState } from 'react';
+import { EngineeringLoopStrip } from '../../../../components/ui/EngineeringLoopStrip';
 import { BentoPanel } from '../../../../components/ui/BentoPanel';
 import { Button } from '../../../../components/ui/Button';
 import { EmptyState } from '../../../../components/ui/EmptyState';
@@ -203,6 +204,15 @@ export default function PullDetailPage() {
     () => filterFindingsBySeverity(review?.findings ?? [], severityFilter),
     [review?.findings, severityFilter]
   );
+  const loopSeedFile = useMemo(() => {
+    const fromImpact = impact?.changedModules.find((mod) => looksLikeRepoFilePath(mod));
+    if (fromImpact) return fromImpact;
+    const fromFinding = review?.findings
+      .flatMap((f) => f.evidence.map((e) => e.file))
+      .find((file) => looksLikeRepoFilePath(file));
+    return fromFinding ?? '';
+  }, [impact?.changedModules, review?.findings]);
+
   return (
     <div className="canvas-inner ui-pr-detail">
         <Link href={`${base}/pulls`} className="ui-pr-detail__back">
@@ -244,6 +254,18 @@ export default function PullDetailPage() {
                 ) : null}
               </div>
             </header>
+
+            {repoId && loopSeedFile ? (
+              <div className="ui-planning-loop">
+                <p className="label-caps">Engineering loop</p>
+                <EngineeringLoopStrip
+                  repoId={repoId}
+                  filePath={loopSeedFile}
+                  pullNumber={detail.pullNumber}
+                  active={review ? 'review' : 'pr'}
+                />
+              </div>
+            ) : null}
 
             {review ? (
               <>
@@ -292,7 +314,11 @@ export default function PullDetailPage() {
                               <li key={mod}>
                                 {base && looksLikeRepoFilePath(mod) ? (
                                   <span className="ui-pr-file-actions">
-                                    <Link href={`${base}/impact?file=${encodeURIComponent(mod)}`}>{mod}</Link>
+                                    <Link
+                                      href={`${base}/impact?file=${encodeURIComponent(mod)}&pull=${pullNumber}`}
+                                    >
+                                      {mod}
+                                    </Link>
                                     <Link
                                       className="ui-pr-file-actions__secondary"
                                       href={`${base}/architecture?file=${encodeURIComponent(mod)}&blast=1`}

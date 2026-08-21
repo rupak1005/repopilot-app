@@ -53,7 +53,8 @@ Plan → agent → PR → impact → review → verify loop.
 
 Shipped so far:
 
-- `EngineeringLoopStrip` on Planning + Impact (`engineeringLoop.ts`)
+- `EngineeringLoopStrip` on Planning + Impact + PR detail (`engineeringLoop.ts`)
 - Copyable agent brief (`get_context_pack` + `find_impact` + verify reminders)
+- PR-aware deep links when `?pull=` / pull impact / pull detail provide a number
 
 See `docs/ENGINEERING_LOOP_AUDIT.md`.

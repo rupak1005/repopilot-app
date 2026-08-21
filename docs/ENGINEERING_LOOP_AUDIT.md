@@ -13,7 +13,7 @@
 | Impact | File / symbol / PR blast + similar + testPlan | `/impact` |
 | Review | PR review findings + trigger | pull detail |
 | Verify | Classified local test commands (copy) | `testPlan` / Impact panel |
-| Loop UI | Ordered strip + copy brief | `EngineeringLoopStrip`, Planning + Impact |
+| Loop UI | Ordered strip + copy brief; **PR-aware** when `pull` / pullNumber set | `EngineeringLoopStrip`, Planning, Impact, PR detail |
 
 ## Mocked / deferred
 
@@ -24,5 +24,5 @@
 ## Next Gate C chunks
 
 1. Persist loop progress per file / PR (optional)
-2. Wire Review stage to a specific PR when `?pull=` is present
+2. ~~Wire Review stage to a specific PR when `?pull=` is present~~ — `pullNumber` on stages + PR detail strip (2026-08-21)
 3. Post-review verify checklist that ticks testPlan commands

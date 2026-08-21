@@ -26,25 +26,41 @@ export const ENGINEERING_LOOP_ORDER: EngineeringLoopStageId[] = [
   'verify'
 ];
 
+export function parseEngineeringLoopPull(value: string | string[] | undefined): number | null {
+  if (typeof value !== 'string') return null;
+  const n = Number(value.trim());
+  return Number.isFinite(n) && n >= 1 ? Math.floor(n) : null;
+}
+
 /**
  * Ordered stages for Plan → agent → PR → impact → review → verify.
- * Pure URL/copy handoff — no remote agent or CI execution.
+ * When `pullNumber` is set, PR/Review deep-link to that pull and Impact uses pull mode.
  */
 export function engineeringLoopStages(args: {
   repoId: string;
   filePath: string;
   revisionSha?: string | null;
+  pullNumber?: number | null;
 }): EngineeringLoopStage[] {
   const { repoId, filePath, revisionSha = null } = args;
+  const pull =
+    args.pullNumber != null && Number.isFinite(args.pullNumber) && args.pullNumber >= 1
+      ? Math.floor(args.pullNumber)
+      : null;
   const base = `/dashboard/${repoId}`;
-  const impact = impactHref(repoId, { file: filePath, revisionSha });
+  const planParams = new URLSearchParams({ file: filePath });
+  if (pull) planParams.set('pull', String(pull));
+  const impact = pull
+    ? impactHref(repoId, { pull, file: filePath || undefined, revisionSha })
+    : impactHref(repoId, { file: filePath, revisionSha });
+  const pullHref = pull ? `${base}/pulls/${pull}` : `${base}/pulls`;
 
   return [
     {
       id: 'plan',
       label: 'Plan',
       blurb: 'Rank the change and confirm blast radius.',
-      href: `${base}/planning?file=${encodeURIComponent(filePath)}`
+      href: `${base}/planning?${planParams.toString()}`
     },
     {
       id: 'agent',
@@ -55,8 +71,10 @@ export function engineeringLoopStages(args: {
     {
       id: 'pr',
       label: 'PR',
-      blurb: 'Open or pick the pull that carries the change.',
-      href: `${base}/pulls`
+      blurb: pull
+        ? `Open pull request #${pull}.`
+        : 'Open or pick the pull that carries the change.',
+      href: pullHref
     },
     {
       id: 'impact',
@@ -67,8 +85,10 @@ export function engineeringLoopStages(args: {
     {
       id: 'review',
       label: 'Review',
-      blurb: 'Run RepoPilot review on the PR detail page.',
-      href: `${base}/pulls`
+      blurb: pull
+        ? `Run RepoPilot review on PR #${pull}.`
+        : 'Run RepoPilot review on the PR detail page.',
+      href: pullHref
     },
     {
       id: 'verify',
@@ -84,7 +104,12 @@ export function engineeringAgentBrief(args: {
   repositoryId: string;
   filePath: string;
   question?: string;
+  pullNumber?: number | null;
 }): string {
+  const pull =
+    args.pullNumber != null && Number.isFinite(args.pullNumber) && args.pullNumber >= 1
+      ? Math.floor(args.pullNumber)
+      : null;
   const pack = mcpContextPackSnippet({
     repositoryId: args.repositoryId,
     filePath: args.filePath,
@@ -93,6 +118,7 @@ export function engineeringAgentBrief(args: {
   return [
     `# RepoPilot engineering loop brief`,
     `File: ${args.filePath}`,
+    pull ? `Pull: #${pull}` : null,
     ``,
     `## Agent context`,
     pack,
@@ -100,11 +126,15 @@ export function engineeringAgentBrief(args: {
     ``,
     `## After the change`,
     `1. Re-open Impact for this file and copy Local run commands (testPlan).`,
-    `2. Open a PR, then trigger RepoPilot review from the pull detail page.`,
+    pull
+      ? `2. Review PR #${pull} on the pull detail page (trigger RepoPilot review if needed).`
+      : `2. Open a PR, then trigger RepoPilot review from the pull detail page.`,
     `3. Confirm blast radius / similar past PRs before merge.`,
     ``,
     `Graph blast (optional): architecture?file=${encodeURIComponent(args.filePath)}&blast=1`
-  ].join('\n');
+  ]
+    .filter((line) => line != null)
+    .join('\n');
 }
 
 /** Keep architecture deep-link helper reachable for planning cards. */

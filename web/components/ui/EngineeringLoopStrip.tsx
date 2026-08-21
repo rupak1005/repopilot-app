@@ -10,6 +10,7 @@ type EngineeringLoopStripProps = {
   repoId: string;
   filePath: string;
   revisionSha?: string | null;
+  pullNumber?: number | null;
   /** Highlight the stage the user is currently on. */
   active?: EngineeringLoopStageId;
   compact?: boolean;
@@ -19,17 +20,18 @@ export function EngineeringLoopStrip({
   repoId,
   filePath,
   revisionSha = null,
+  pullNumber = null,
   active,
   compact = false
 }: EngineeringLoopStripProps) {
   const [hint, setHint] = useState<string | null>(null);
-  const stages = engineeringLoopStages({ repoId, filePath, revisionSha });
+  const stages = engineeringLoopStages({ repoId, filePath, revisionSha, pullNumber });
 
   async function copyBrief() {
     if (typeof navigator === 'undefined' || !navigator.clipboard) return;
     try {
       await navigator.clipboard.writeText(
-        engineeringAgentBrief({ repositoryId: repoId, filePath })
+        engineeringAgentBrief({ repositoryId: repoId, filePath, pullNumber })
       );
       setHint('Brief copied');
       window.setTimeout(() => setHint(null), 1600);

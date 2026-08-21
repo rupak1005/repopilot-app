@@ -15,6 +15,7 @@ import { KpiTile } from '../../../components/ui/KpiTile';
 import { PageLoading } from '../../../components/ui/Skeleton';
 import { DEMO_REVISIONS, demoDelay, demoFileImpact, demoOwnership, demoPullImpact } from '../../../lib/demoData';
 import { mcpContextPackSnippet } from '../../../lib/mcpConnect';
+import { parseEngineeringLoopPull } from '../../../lib/engineeringLoop';
 import { formatOwnershipLabel, githubOwnerHref, type OwnershipSummary } from '../../../lib/ownership';
 import { shouldShowIndexHint, useDashboardContext, usePendingIndexJobRepoId, useRepoData, useRepoIndexStatus } from '../../../lib/dashboard';
 import { isDemoMode } from '../../../lib/demoMode';
@@ -596,6 +597,7 @@ function FileImpactView({
   revisionSha: string | null;
 }) {
   const router = useRouter();
+  const loopPull = parseEngineeringLoopPull(router.query.pull);
   const [packHint, setPackHint] = useState<string | null>(null);
   const [ownership, setOwnership] = useState<OwnershipSummary | null>(null);
   const dash = useDashboardContext();
@@ -821,6 +823,7 @@ function FileImpactView({
               repoId={repoId}
               filePath={result.target.filePath}
               revisionSha={revisionSha}
+              pullNumber={loopPull}
               active="impact"
             />
             <div className="ui-impact-handoff__actions">
@@ -933,9 +936,24 @@ function PullImpactView({
   repoId: string | null;
   revisionSha: string | null;
 }) {
+  const seedFile =
+    result.analyzedFiles[0] ?? result.changedFiles[0] ?? result.fileRisks[0]?.filePath ?? '';
+
   return (
     <>
       <p className="ui-impact-page__summary">{result.summary}</p>
+      {repoId && seedFile ? (
+        <div className="ui-planning-loop">
+          <p className="label-caps">Engineering loop</p>
+          <EngineeringLoopStrip
+            repoId={repoId}
+            filePath={seedFile}
+            revisionSha={revisionSha}
+            pullNumber={result.pullNumber}
+            active="impact"
+          />
+        </div>
+      ) : null}
       <ImpactKpis
         direct={result.directDependents.length}
         transitive={result.transitiveDependents.length}

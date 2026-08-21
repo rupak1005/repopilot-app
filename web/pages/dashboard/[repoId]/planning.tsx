@@ -15,6 +15,7 @@ import {
   planningSeedFromQuery,
   type PlanningCandidate
 } from '../../../lib/planning';
+import { parseEngineeringLoopPull } from '../../../lib/engineeringLoop';
 import { architectureHref, impactHref } from '../../../lib/revisionScope';
 import { repoApiPath } from '../../../lib/serverApi';
 import type { HotspotRow } from '../../../lib/types';
@@ -24,6 +25,7 @@ export default function PlanningPage() {
   const dash = useDashboardContext();
   const repoId = typeof router.query.repoId === 'string' ? router.query.repoId : null;
   const seed = planningSeedFromQuery(router.query.file);
+  const loopPull = parseEngineeringLoopPull(router.query.pull);
   const needsIndex = useNeedsIndexHint(repoId);
   const [hotspots, setHotspots] = useState<HotspotRow[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -122,6 +124,7 @@ export default function PlanningPage() {
             <EngineeringLoopStrip
               repoId={repoId}
               filePath={seed ?? candidates[0].filePath}
+              pullNumber={loopPull}
               active="plan"
             />
           </div>
@@ -168,6 +171,7 @@ export default function PlanningPage() {
                       <EngineeringLoopStrip
                         repoId={repoId}
                         filePath={candidate.filePath}
+                        pullNumber={loopPull}
                         active="plan"
                         compact
                       />
