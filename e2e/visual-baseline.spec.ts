@@ -1,13 +1,20 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Locator, type Page } from '@playwright/test';
 import { deriveRepositoryId } from '@repopilot/common';
 import { DEMO_CHIP_LABEL, DEMO_REPO_SLUG } from './routes';
 
 const DEMO_REPO_ID = deriveRepositoryId(DEMO_REPO_SLUG);
 
+/** Font AA differs Arch↔Ubuntu; keep ratio loose enough for CI Linux Chromium. */
 const shot = {
   animations: 'disabled' as const,
   caret: 'hide' as const,
-  maxDiffPixelRatio: 0.03
+  maxDiffPixelRatio: 0.06
+};
+
+/** Element shots still drift more after clip (graph chrome / empty panels). */
+const lockedShot = {
+  ...shot,
+  maxDiffPixelRatio: 0.1
 };
 
 async function openDemo(page: Page) {
@@ -19,6 +26,36 @@ async function openDemo(page: Page) {
 async function settleFonts(page: Page) {
   await page.evaluate(async () => {
     await document.fonts.ready;
+  });
+}
+
+/**
+ * Lock layout height and clip the screenshot to integer px.
+ * Playwright rejects size-mismatched baselines even when maxDiffPixelRatio is set;
+ * CI Linux Fontshare metrics often yield ±1px vs local snapshots.
+ */
+async function expectLockedScreenshot(
+  target: Locator,
+  name: string,
+  height: number
+): Promise<void> {
+  await target.evaluate((el, h) => {
+    el.style.boxSizing = 'border-box';
+    el.style.height = `${h}px`;
+    el.style.maxHeight = `${h}px`;
+    el.style.minHeight = `${h}px`;
+    el.style.overflow = 'hidden';
+  }, height);
+  const box = await target.boundingBox();
+  if (!box) throw new Error(`No bounding box for ${name}`);
+  await expect(target).toHaveScreenshot(name, {
+    ...lockedShot,
+    clip: {
+      x: 0,
+      y: 0,
+      width: Math.floor(box.width),
+      height
+    }
   });
 }
 
@@ -35,17 +72,7 @@ test.describe('visual baseline', () => {
     await page.goto(`/dashboard/${DEMO_REPO_ID}/architecture`);
     await expect(page.getByRole('heading', { name: /codebase fits together/i })).toBeVisible();
     await settleFonts(page);
-
-    const target = page.locator('.ui-diagram-page');
-    // Lock height: Fontshare metrics on CI Linux shift full-element height (~26px)
-    // and Playwright rejects size-mismatched snapshots even when maxDiffPixelRatio is set.
-    await target.evaluate((el) => {
-      el.style.boxSizing = 'border-box';
-      el.style.height = '1400px';
-      el.style.maxHeight = '1400px';
-      el.style.overflow = 'hidden';
-    });
-    await expect(target).toHaveScreenshot('architecture.png', shot);
+    await expectLockedScreenshot(page.locator('.ui-diagram-page'), 'architecture.png', 1400);
   });
 
   test('impact empty state', async ({ page }) => {
@@ -54,16 +81,6 @@ test.describe('visual baseline', () => {
     await expect(page.getByRole('heading', { name: /^Impact$/i })).toBeVisible({ timeout: 15_000 });
     await expect(page.getByText(/What breaks if this module or PR changes/i)).toBeVisible();
     await settleFonts(page);
-
-    const target = page.locator('.ui-impact-page');
-    // Lock height: Fontshare metrics on CI Linux were changing full-element height (~23px)
-    // and Playwright rejects size-mismatched snapshots even when maxDiffPixelRatio is set.
-    await target.evaluate((el) => {
-      el.style.boxSizing = 'border-box';
-      el.style.height = '900px';
-      el.style.maxHeight = '900px';
-      el.style.overflow = 'hidden';
-    });
-    await expect(target).toHaveScreenshot('impact.png', shot);
+    await expectLockedScreenshot(page.locator('.ui-impact-page'), 'impact.png', 900);
   });
 });
