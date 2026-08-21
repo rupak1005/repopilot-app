@@ -60,6 +60,27 @@ function nodeColor(node: VisualizationNode, selected: boolean, dimmed: boolean):
   return '#52525b';
 }
 
+function nodeAccent(node: VisualizationNode): string {
+  if (node.blastRole === 'seed') return '#22d3ee';
+  if (node.entityType === 'cluster') return '#c4b5fd';
+  if ((node.metrics.hotspotScore ?? 0) >= 40) return '#fdba74';
+  if (node.layer === 'api') return '#6ee7b7';
+  if (node.layer === 'web') return '#93c5fd';
+  if (node.layer === 'common') return '#d8b4fe';
+  return '#e4e4e7';
+}
+
+function pillarHeight(node: VisualizationNode): number {
+  const z = node.position?.z ?? 0;
+  if (node.entityType === 'cluster') return 0.55;
+  return 0.38 + z * 0.22 + ((node.metrics.hotspotScore ?? 0) / 100) * 0.35;
+}
+
+function pillarRadius(node: VisualizationNode): number {
+  if (node.entityType === 'cluster') return 0.42;
+  return mapMetricToSize(node.metrics.hotspotScore ?? 10, 100, { min: 0.16, maxSize: 0.32 });
+}
+
 function GraphNodeMesh({
   node,
   selected,
@@ -76,13 +97,11 @@ function GraphNodeMesh({
   onHover: (id: string | null) => void;
 }) {
   const pos = node.position ?? { x: 0, y: 0, z: 0 };
-  const maxScore = 100;
-  const size =
-    node.entityType === 'cluster'
-      ? 0.85
-      : mapMetricToSize(node.metrics.hotspotScore ?? 10, maxScore, { min: 0.28, maxSize: 0.7 });
-  const height = 0.2 + (pos.z || 0) * 0.15;
+  const height = pillarHeight(node);
+  const radius = pillarRadius(node);
   const color = nodeColor(node, selected, dimmed);
+  const accent = nodeAccent(node);
+  const opacity = dimmed ? 0.38 : 1;
 
   const showLabel =
     selected ||
@@ -93,59 +112,88 @@ function GraphNodeMesh({
 
   const farPoint = band === 'far' && !selected;
 
+  const pick = {
+    onClick: (e: { stopPropagation: () => void }) => {
+      e.stopPropagation();
+      onSelect(node.id);
+    },
+    onPointerOver: (e: { stopPropagation: () => void }) => {
+      e.stopPropagation();
+      onHover(node.id);
+      document.body.style.cursor = 'pointer';
+    },
+    onPointerOut: () => {
+      onHover(null);
+      document.body.style.cursor = 'auto';
+    }
+  };
+
   return (
-    <group position={[pos.x, pos.z * 0.5, pos.y]}>
+    <group position={[pos.x, 0, pos.y]}>
+      {/* soft ground mark */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.015, 0]}>
+        <circleGeometry args={[radius * 1.55, 24]} />
+        <meshBasicMaterial color="#1a1025" transparent opacity={dimmed ? 0.05 : 0.1} />
+      </mesh>
+
       {farPoint ? (
-        <mesh
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelect(node.id);
-          }}
-          onPointerOver={(e) => {
-            e.stopPropagation();
-            onHover(node.id);
-          }}
-          onPointerOut={() => onHover(null)}
-        >
-          <sphereGeometry args={[0.12, 8, 8]} />
-          <meshStandardMaterial color={color} transparent opacity={dimmed ? 0.35 : 0.9} />
+        <mesh position={[0, 0.18, 0]} {...pick}>
+          <sphereGeometry args={[0.14, 12, 10]} />
+          <meshStandardMaterial color={color} transparent opacity={opacity} roughness={0.4} />
         </mesh>
       ) : (
-        <mesh
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelect(node.id);
-          }}
-          onPointerOver={(e) => {
-            e.stopPropagation();
-            onHover(node.id);
-            document.body.style.cursor = 'pointer';
-          }}
-          onPointerOut={() => {
-            onHover(null);
-            document.body.style.cursor = 'auto';
-          }}
-        >
-          <boxGeometry args={[size, height, size * 0.7]} />
-          <meshStandardMaterial
-            color={color}
-            transparent
-            opacity={dimmed ? 0.35 : 1}
-            emissive={selected ? '#5b21b6' : '#000000'}
-            emissiveIntensity={selected ? 0.25 : 0}
-          />
-        </mesh>
+        <>
+          {/* pedestal */}
+          <mesh position={[0, 0.05, 0]} {...pick}>
+            <cylinderGeometry args={[radius * 1.2, radius * 1.35, 0.1, 20]} />
+            <meshStandardMaterial color="#f5f0ff" roughness={0.9} metalness={0} transparent opacity={opacity} />
+          </mesh>
+          {/* column */}
+          <mesh position={[0, height * 0.5 + 0.1, 0]} {...pick}>
+            <cylinderGeometry args={[radius * 0.92, radius, height, 22]} />
+            <meshStandardMaterial
+              color={color}
+              roughness={0.42}
+              metalness={0.12}
+              transparent
+              opacity={opacity}
+              emissive={selected ? '#5b21b6' : color}
+              emissiveIntensity={selected ? 0.28 : 0.04}
+            />
+          </mesh>
+          {/* accent ring */}
+          <mesh position={[0, height + 0.08, 0]} rotation={[Math.PI / 2, 0, 0]}>
+            <torusGeometry args={[radius * 0.78, 0.035, 8, 24]} />
+            <meshStandardMaterial
+              color={accent}
+              roughness={0.35}
+              metalness={0.2}
+              transparent
+              opacity={opacity}
+            />
+          </mesh>
+          {/* cap jewel */}
+          <mesh position={[0, height + 0.16, 0]}>
+            <sphereGeometry args={[radius * 0.48, 16, 12]} />
+            <meshStandardMaterial
+              color={selected ? '#ddd6fe' : accent}
+              roughness={0.25}
+              metalness={0.35}
+              transparent
+              opacity={opacity}
+            />
+          </mesh>
+        </>
       )}
+
       {showLabel ? (
         <Html
-          position={[0, height * 0.5 + 0.35, 0]}
+          position={[0, height + 0.55, 0]}
           center
-          distanceFactor={selected ? 10 : 14}
+          distanceFactor={selected ? 9 : 13}
           style={{ pointerEvents: 'none' }}
         >
-          <div
-            className={`ui-viz-spike__label${selected ? ' ui-viz-spike__label--selected' : ''}`}
-          >
+          <div className={`ui-viz-spike__label${selected ? ' ui-viz-spike__label--selected' : ''}`}>
             {node.entityType === 'cluster' ? node.label : node.label.split('/').pop() ?? node.label}
           </div>
           {selected && node.path ? <div className="ui-viz-spike__tag mono">{node.path}</div> : null}
@@ -297,16 +345,20 @@ function GraphEdges({
     const list = band === 'far' ? edges.filter((e) => e.highlighted) : edges;
     return list
       .map((edge) => {
-        const a = nodesById.get(edge.source)?.position;
-        const b = nodesById.get(edge.target)?.position;
-        if (!a || !b) return null;
+        const sourceNode = nodesById.get(edge.source);
+        const targetNode = nodesById.get(edge.target);
+        const a = sourceNode?.position;
+        const b = targetNode?.position;
+        if (!sourceNode || !targetNode || !a || !b) return null;
         const related =
           selectedId && (edge.source === selectedId || edge.target === selectedId);
+        const ah = pillarHeight(sourceNode);
+        const bh = pillarHeight(targetNode);
         return {
           edge,
           points: [
-            new THREE.Vector3(a.x, a.z * 0.5, a.y),
-            new THREE.Vector3(b.x, b.z * 0.5, b.y)
+            new THREE.Vector3(a.x, Math.max(0.35, ah * 0.55), a.y),
+            new THREE.Vector3(b.x, Math.max(0.35, bh * 0.55), b.y)
           ] as [THREE.Vector3, THREE.Vector3],
           related: Boolean(related)
         };
@@ -395,7 +447,7 @@ function FocusCamera({
     const node = nodesById.get(focusId);
     const p = node?.position;
     if (!p) return;
-    const target = new THREE.Vector3(p.x, p.z * 0.5 + 0.5, p.y);
+    const target = new THREE.Vector3(p.x, pillarHeight(node) * 0.55 + 0.2, p.y);
     const offset = new THREE.Vector3(6, 5, 8);
     const nextCam = target.clone().add(offset);
     if (reduceMotion) {
@@ -503,7 +555,7 @@ function FitGraphCamera({ graph }: { graph: VisualizationGraph }) {
     for (const node of graph.nodes) {
       const p = node.position ?? { x: 0, y: 0, z: 0 };
       const wx = p.x;
-      const wy = p.z * 0.5;
+      const wy = pillarHeight(node) * 0.5;
       const wz = p.y;
       minX = Math.min(minX, wx);
       maxX = Math.max(maxX, wx);
@@ -514,12 +566,12 @@ function FitGraphCamera({ graph }: { graph: VisualizationGraph }) {
     }
 
     const cx = (minX + maxX) / 2;
-    const cy = (minY + maxY) / 2;
+    const cy = Math.max(0.6, (minY + maxY) / 2);
     const cz = (minZ + maxZ) / 2;
-    const span = Math.max(maxX - minX, maxZ - minZ, maxY - minY, 4);
+    const span = Math.max(maxX - minX, maxZ - minZ, 4);
     const dist = Math.max(12, span * 1.35);
-    const target = new THREE.Vector3(cx, cy + 0.4, cz);
-    const nextCam = new THREE.Vector3(cx + dist * 0.55, cy + dist * 0.45, cz + dist * 0.7);
+    const target = new THREE.Vector3(cx, cy, cz);
+    const nextCam = new THREE.Vector3(cx + dist * 0.55, cy + dist * 0.4, cz + dist * 0.7);
 
     camera.position.copy(nextCam);
     controls.target.copy(target);
@@ -599,11 +651,12 @@ function SceneInner({
 
   return (
     <>
-      <color attach="background" args={['#f3e8ff']} />
-      <ambientLight intensity={0.85} />
-      <hemisphereLight args={['#f5f0ff', '#d4d4d8', 0.55]} />
-      <directionalLight position={[8, 12, 6]} intensity={0.65} castShadow />
-      <gridHelper args={[80, 40, '#d8b4fe', '#e9d5ff']} position={[0, -0.05, 0]} />
+      <color attach="background" args={['#efe6fb']} />
+      <ambientLight intensity={0.72} />
+      <hemisphereLight args={['#faf5ff', '#c4b5d4', 0.7]} />
+      <directionalLight position={[10, 16, 8]} intensity={0.85} />
+      <directionalLight position={[-6, 8, -4]} intensity={0.25} />
+      <gridHelper args={[80, 40, '#c4b5fd', '#e9d5ff']} position={[0, 0, 0]} />
 
       <GraphEdges
         edges={graph.edges}

@@ -370,7 +370,7 @@ export default function VizSpikePage() {
           : '#';
 
   return (
-    <div className="ui-viz-spike">
+    <div className={`ui-viz-spike${mode === '2d' || webglLost ? ' ui-viz-spike--2d' : ''}`}>
       <div className="ui-viz-spike__toolbar">
         <div className="ui-viz-spike__toolbar-title">
           <p className="label-caps">{title}</p>
@@ -477,41 +477,43 @@ export default function VizSpikePage() {
         )}
       </div>
 
-      <div className="ui-viz-spike__dock">
-        <div className="ui-viz-spike__panel">
-          <h2>Selection</h2>
-          <p>
-            {selectedNode
-              ? `${selectedNode.label}${selectedNode.path ? ` · ${selectedNode.path}` : ''}`
-              : 'Click a node to inspect'}
-          </p>
-          {hoverId ? <p>Hover: {hoverId}</p> : null}
+      {mode === '3d' && !webglLost ? (
+        <div className="ui-viz-spike__dock">
+          <div className="ui-viz-spike__panel">
+            <h2>Selection</h2>
+            <p>
+              {selectedNode
+                ? `${selectedNode.label}${selectedNode.path ? ` · ${selectedNode.path}` : ''}`
+                : 'Click a node to inspect'}
+            </p>
+            {hoverId ? <p className="ui-viz-spike__hover">Hover: {hoverId}</p> : null}
+          </div>
+          <div className="ui-viz-spike__panel">
+            <h2>Pipeline</h2>
+            <p>
+              Architecture API → <code>buildArchitectureView</code> → dagre → shared{' '}
+              <code>VisualizationGraph</code> → 2D / 3D.
+            </p>
+          </div>
+          <div className="ui-viz-spike__panel">
+            <h2>Counts</h2>
+            <ul className="ui-viz-spike__counts">
+              <li>
+                <strong>{graph?.nodes.length ?? 0}</strong>
+                <span>Source</span>
+              </li>
+              <li>
+                <strong>{vizGraph?.nodes.length ?? forceData?.nodes.length ?? 0}</strong>
+                <span>Visible</span>
+              </li>
+              <li>
+                <strong>{vizGraph?.edges.length ?? forceData?.links.length ?? 0}</strong>
+                <span>Edges</span>
+              </li>
+            </ul>
+          </div>
         </div>
-        <div className="ui-viz-spike__panel">
-          <h2>Pipeline</h2>
-          <p>
-            Architecture API → <code>buildArchitectureView</code> → dagre → shared{' '}
-            <code>VisualizationGraph</code> → 2D / 3D.
-          </p>
-        </div>
-        <div className="ui-viz-spike__panel">
-          <h2>Counts</h2>
-          <ul className="ui-viz-spike__counts">
-            <li>
-              <strong>{graph?.nodes.length ?? 0}</strong>
-              <span>Source</span>
-            </li>
-            <li>
-              <strong>{vizGraph?.nodes.length ?? forceData?.nodes.length ?? 0}</strong>
-              <span>Visible</span>
-            </li>
-            <li>
-              <strong>{vizGraph?.edges.length ?? forceData?.links.length ?? 0}</strong>
-              <span>Edges</span>
-            </li>
-          </ul>
-        </div>
-      </div>
+      ) : null}
     </div>
   );
 }
