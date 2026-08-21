@@ -7,7 +7,7 @@
 |------|--------|--------|
 | **A — Graph Trust** | Deterministic relationships, provenance, stronger symbol resolution, fixtures | **Complete** (2026-08-21) |
 | **B — Impact Trust** | Embedded impact graph, explainable risk, similarity, test impact | **Complete** (2026-08-21) |
-| **C — Engineering Loop** | Plan → agent → PR → impact → review → verify | **Next** |
+| **C — Engineering Loop** | Plan → agent → PR → impact → review → verify | **In progress** (loop strip + agent brief) |
 | **D — Visual Differentiation** | 3D topography, impact theater, architecture replay | Spike only (`/viz-spike`) |
 
 ## Gate A — shipped
@@ -49,4 +49,11 @@ See `docs/GRAPH_AUDIT.md`.
 
 ## Gate C — next
 
-Plan → agent → PR → impact → review → verify loop. Start from planning + MCP handoff already on Impact.
+Plan → agent → PR → impact → review → verify loop.
+
+Shipped so far:
+
+- `EngineeringLoopStrip` on Planning + Impact (`engineeringLoop.ts`)
+- Copyable agent brief (`get_context_pack` + `find_impact` + verify reminders)
+
+See `docs/ENGINEERING_LOOP_AUDIT.md`.

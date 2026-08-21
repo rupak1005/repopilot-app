@@ -9,6 +9,7 @@ import { ErrorBanner } from '../../../components/ui/ErrorBanner';
 import { ImpactBlastGraph } from '../../../components/ui/ImpactBlastGraph';
 import { ImpactBlastMap } from '../../../components/ui/ImpactBlastMap';
 import { ImpactTestPlanPanel } from '../../../components/ui/ImpactTestPlanPanel';
+import { EngineeringLoopStrip } from '../../../components/ui/EngineeringLoopStrip';
 import { IndexHint } from '../../../components/ui/IndexHint';
 import { KpiTile } from '../../../components/ui/KpiTile';
 import { PageLoading } from '../../../components/ui/Skeleton';
@@ -811,11 +812,17 @@ function FileImpactView({
         </BentoPanel>
       ) : null}
       {repoId ? (
-        <BentoPanel title="Handoff">
+        <BentoPanel title="Engineering loop">
           <div className="ui-impact-handoff">
             <p className="ui-finding-card__desc">
-              Carry this blast radius into a change plan or agent tooling before you open a PR.
+              Plan → agent → PR → impact → review → verify for this file.
             </p>
+            <EngineeringLoopStrip
+              repoId={repoId}
+              filePath={result.target.filePath}
+              revisionSha={revisionSha}
+              active="impact"
+            />
             <div className="ui-impact-handoff__actions">
               <Link
                 className="ui-diagram__action"

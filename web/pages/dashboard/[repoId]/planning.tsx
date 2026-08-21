@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import { Path } from '@phosphor-icons/react';
+import { EngineeringLoopStrip } from '../../../components/ui/EngineeringLoopStrip';
 import { useDashboardContext, useNeedsIndexHint } from '../../../lib/dashboard';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { ErrorBanner } from '../../../components/ui/ErrorBanner';
@@ -82,7 +83,8 @@ export default function PlanningPage() {
         <div className="page-title-block">
           <h1>Planning</h1>
           <p>
-            Change candidates from topography hotspots — open Impact and Graph before you cut a PR
+            Plan → agent → PR → impact → review → verify. Candidates come from topography hotspots —
+            walk the loop before you cut a PR
             {repoFullName ? (
               <>
                 {' '}
@@ -114,6 +116,17 @@ export default function PlanningPage() {
           />
         ) : null}
 
+        {repoId && candidates[0] ? (
+          <div className="ui-planning-loop">
+            <p className="label-caps">Engineering loop</p>
+            <EngineeringLoopStrip
+              repoId={repoId}
+              filePath={seed ?? candidates[0].filePath}
+              active="plan"
+            />
+          </div>
+        ) : null}
+
         <ol className="ui-planning-list">
           {candidates.map((candidate, index) => (
             <li key={candidate.filePath} className="ui-planning-card">
@@ -127,26 +140,39 @@ export default function PlanningPage() {
                   Score {candidate.score.toFixed(2)} · {candidate.changeCount} recent changes
                 </p>
                 {repoId ? (
-                  <div className="ui-planning-card__actions">
-                    <Link
-                      className="ui-diagram__action"
-                      href={impactHref(repoId, { file: candidate.filePath })}
-                    >
-                      Impact
-                    </Link>
-                    <Link
-                      className="ui-diagram__action"
-                      href={architectureHref(repoId, {
-                        file: candidate.filePath,
-                        blast: true
-                      })}
-                    >
-                      Graph blast
-                    </Link>
-                    <Link className="ui-diagram__action" href={`${base}/pulls`}>
-                      PRs
-                    </Link>
-                  </div>
+                  <>
+                    <div className="ui-planning-card__actions">
+                      <Link
+                        className="ui-diagram__action"
+                        href={impactHref(repoId, { file: candidate.filePath })}
+                      >
+                        Impact
+                      </Link>
+                      <Link
+                        className="ui-diagram__action"
+                        href={architectureHref(repoId, {
+                          file: candidate.filePath,
+                          blast: true
+                        })}
+                      >
+                        Graph blast
+                      </Link>
+                      <Link className="ui-diagram__action" href={`${base}/mcp`}>
+                        Agent
+                      </Link>
+                      <Link className="ui-diagram__action" href={`${base}/pulls`}>
+                        PRs
+                      </Link>
+                    </div>
+                    {index === 0 || candidate.filePath === seed ? (
+                      <EngineeringLoopStrip
+                        repoId={repoId}
+                        filePath={candidate.filePath}
+                        active="plan"
+                        compact
+                      />
+                    ) : null}
+                  </>
                 ) : null}
               </div>
             </li>
