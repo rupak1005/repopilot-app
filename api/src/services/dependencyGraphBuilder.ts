@@ -1,9 +1,9 @@
 import path from 'node:path';
 import {
-  DEFAULT_CALL_CONFIDENCE,
   defaultImportConfidence
 } from '@repopilot/common';
 import { getPrisma, prismaInteractiveTxOptions } from '../db/prisma';
+import { callEdgeProvenance, type CallEvidence } from '../repo/callEdgePolicy';
 import { resolveModuleSpecifier, collectPackageExportsFromFiles } from '../repo/moduleResolve';
 import {
   resolveImportedSymbolId,
@@ -282,19 +282,24 @@ function extractEdgesForSymbol(args: {
 }): SymbolEdge[] {
   const edges = new Map<string, SymbolEdge>();
 
-  const addEdge = (toSymbolId: string, sourceLine?: number, targetLine?: number) => {
+  const addEdge = (
+    toSymbolId: string,
+    evidence: CallEvidence,
+    sourceLine?: number,
+    targetLine?: number
+  ) => {
     const key = `${args.fromSymbolId}:${toSymbolId}`;
-    if (!edges.has(key)) {
-      edges.set(key, {
-        fromSymbolId: args.fromSymbolId,
-        toSymbolId,
-        sourceLine,
-        targetLine,
-        confidence: DEFAULT_CALL_CONFIDENCE,
-        detector: 'heuristic',
-        kind: 'calls'
-      });
-    }
+    if (edges.has(key)) return;
+    const provenance = callEdgeProvenance(evidence);
+    edges.set(key, {
+      fromSymbolId: args.fromSymbolId,
+      toSymbolId,
+      sourceLine,
+      targetLine,
+      confidence: provenance.confidence,
+      detector: provenance.detector,
+      kind: provenance.kind
+    });
   };
 
   const lookupTargetLine = (toSymbolId: string): number | undefined => {
@@ -305,10 +310,10 @@ function extractEdgesForSymbol(args: {
     return undefined;
   };
 
-  const resolveLocalIdentifier = (identifier: string, sourceLine?: number) => {
+  const resolveCalleeIdentifier = (identifier: string, sourceLine?: number) => {
     const localTarget = args.currentFile.symbols.find((symbol) => symbol.name === identifier);
     if (localTarget) {
-      addEdge(localTarget.id, sourceLine, localTarget.startLine);
+      addEdge(localTarget.id, 'ast-call-local', sourceLine, localTarget.startLine);
       return;
     }
 
@@ -335,10 +340,12 @@ function extractEdgesForSymbol(args: {
       pathAliases: args.pathAliases,
       packageExports: args.packageExports
     });
-    if (toSymbolId) addEdge(toSymbolId, sourceLine, lookupTargetLine(toSymbolId));
+    if (toSymbolId) {
+      addEdge(toSymbolId, 'ast-call-import', sourceLine, lookupTargetLine(toSymbolId));
+    }
   };
 
-  const resolveMemberExpression = (node: TreeSitterSyntaxNode, sourceLine?: number) => {
+  const resolveCalleeMember = (node: TreeSitterSyntaxNode, sourceLine?: number) => {
     const objectNode = node.childForFieldName('object');
     const propertyNode = node.childForFieldName('property') ?? node.childForFieldName('attribute');
     if (!objectNode) return;
@@ -350,7 +357,8 @@ function extractEdgesForSymbol(args: {
 
     const localTarget = args.currentFile.symbols.find((symbol) => symbol.name === objectName);
     if (localTarget) {
-      addEdge(localTarget.id, sourceLine, localTarget.startLine);
+      // Method itself usually isn't a top-level symbol — keep a weak edge to the object.
+      addEdge(localTarget.id, 'ast-call-local-object', sourceLine, localTarget.startLine);
       return;
     }
 
@@ -378,28 +386,26 @@ function extractEdgesForSymbol(args: {
       pathAliases: args.pathAliases,
       packageExports: args.packageExports
     });
-    if (toSymbolId) addEdge(toSymbolId, sourceLine, lookupTargetLine(toSymbolId));
+    if (toSymbolId) {
+      addEdge(toSymbolId, 'ast-call-import-member', sourceLine, lookupTargetLine(toSymbolId));
+    }
   };
 
   walk(args.declarationNode, (node) => {
+    // Only real call sites create `calls` edges — bare property access is not a call.
+    if (node.type !== 'call_expression' && node.type !== 'call') return;
+
     const sourceLine = node.startPosition.row + 1;
-    if (node.type === 'call_expression' || node.type === 'call') {
-      const expressionNode = node.childForFieldName('function') ?? node.childForFieldName('expression');
-      if (!expressionNode) return;
+    const expressionNode = node.childForFieldName('function') ?? node.childForFieldName('expression');
+    if (!expressionNode) return;
 
-      if (expressionNode.type === 'identifier') {
-        resolveLocalIdentifier(nodeText(args.currentFile.content, expressionNode).trim(), sourceLine);
-        return;
-      }
-
-      if (expressionNode.type === 'member_expression' || expressionNode.type === 'attribute') {
-        resolveMemberExpression(expressionNode, sourceLine);
-      }
+    if (expressionNode.type === 'identifier') {
+      resolveCalleeIdentifier(nodeText(args.currentFile.content, expressionNode).trim(), sourceLine);
       return;
     }
 
-    if (node.type === 'member_expression' || node.type === 'attribute') {
-      resolveMemberExpression(node, sourceLine);
+    if (expressionNode.type === 'member_expression' || expressionNode.type === 'attribute') {
+      resolveCalleeMember(expressionNode, sourceLine);
     }
   });
 

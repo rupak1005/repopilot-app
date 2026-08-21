@@ -22,11 +22,12 @@ Shipped in this gate so far:
 - Fixture suites for alias / barrel / package exports / dynamic import
 - Neighborhood path closure (BFS ancestors kept so depth-2 edges stay real, not star-to-seed)
 - Edge `targetLine` (+ import `sourceLine`) persisted and returned in graph provenance
-- Call edges remain explicitly `detector: heuristic` (Phase 1.2 still open)
+- Stronger call edges: only AST `call_expression`; tiered confidence; no bare property-access “calls”
+- Still not a type checker — unresolved/ambiguous callees stay omitted or low-confidence
 
 Still open for Gate A:
 
-- Type-aware call relationships (replace heuristics gradually)
+- True type-aware call resolution (tsc/language service) when worth the cost
 - Precision/recall scoreboard beyond fixtures
 - Remaining unresolved aliases when no `paths` / `@/` match
 

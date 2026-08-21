@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   CONTEXT_EDGE_KINDS,
   CONTEXT_NODE_KINDS,
+  CALL_CONFIDENCE_LOCAL,
   DEFAULT_CALL_CONFIDENCE,
   defaultImportConfidence,
   externalNodeId,
@@ -54,6 +55,8 @@ describe('contextGraph URNs', () => {
     expect(defaultImportConfidence(true)).toBe(1);
     expect(defaultImportConfidence(false)).toBe(0.85);
     expect(DEFAULT_CALL_CONFIDENCE).toBeLessThan(1);
+    expect(CALL_CONFIDENCE_LOCAL).toBeGreaterThan(DEFAULT_CALL_CONFIDENCE);
+    expect(CALL_CONFIDENCE_LOCAL).toBeLessThan(1);
   });
 
   it('exposes shared vocabulary lists', () => {

@@ -161,5 +161,21 @@ export function defaultImportConfidence(resolvedToKnownFile: boolean): number {
   return resolvedToKnownFile ? 1 : 0.85;
 }
 
-/** Call edges are heuristic (name-based), not type-aware. */
+/**
+ * Call edges are never fully type-aware yet.
+ * Prefer the tiered helpers in `callEdgePolicy` for new edges; this default
+ * remains for legacy/weak paths and must stay below 1.0.
+ */
 export const DEFAULT_CALL_CONFIDENCE = 0.65;
+
+/** AST `call_expression` whose callee resolves to a local declaration. */
+export const CALL_CONFIDENCE_LOCAL = 0.9;
+
+/** AST call whose callee resolves through a named/default import binding. */
+export const CALL_CONFIDENCE_IMPORT = 0.85;
+
+/** AST call like `ns.fn()` / `mod.fn()` resolved via import + property. */
+export const CALL_CONFIDENCE_IMPORT_MEMBER = 0.8;
+
+/** AST call on a local object/class where the method itself isn't resolved. */
+export const CALL_CONFIDENCE_LOCAL_OBJECT = 0.7;
