@@ -42,8 +42,9 @@ Rules:
 | Hover / select | Pointer on meshes; selection dims non-neighbors |
 | Focus | Smooth camera tween to node (skipped when reduced motion) |
 | Impact edges | Flowing dashed paths source→target; static dashes when `prefers-reduced-motion` |
+| Labels | Lightweight HTML labels (Troika Text dropped — worker crashes blanked the scene) |
 | Topography batching | Edge-free graphs ≥24 nodes: InstancedMesh for plain file pillars (far/medium); clusters/selection/labels stay interactive |
-| Labels | drei/Troika `Text` only near / selected / hotspot / cluster — not every far node |
+| Stage sizing | Explicit stage height + absolute canvas so R3F gets a non-zero viewport |
 | LOD | `far` (>55): point clouds, few edges · `medium`: boxes + sparse labels · `near`: full basename labels + selection metadata HTML |
 | Perf overlay | FPS, frame ms, nodes, edges, visible labels, WebGL draw calls, triangles, camera distance |
 | Fixtures | `live` / `small` (15) / `medium` (60) / `large` (250, synth-padded if needed) |
