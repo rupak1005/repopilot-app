@@ -449,6 +449,13 @@ a.ui-impact-owner-chip:hover {
   gap: var(--space-4);
 }
 
+.ui-impact-blast-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+}
+
 .ui-impact-blast-graph {
   border: var(--border-medium);
   border-radius: var(--radius-md);

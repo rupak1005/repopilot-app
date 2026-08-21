@@ -9,7 +9,8 @@ import {
   visualizationFromFileImpact,
   visualizationFromHotspots,
   visualizationFromLaidOutForceGraph,
-  visualizationToForceGraphIds
+  visualizationToForceGraphIds,
+  layoutImpactTheater
 } from './visualizationModel';
 import { layoutWithDagre } from './dagreLayout';
 import { buildArchitectureView } from './architecture';
@@ -102,6 +103,31 @@ describe('visualizationFromFileImpact', () => {
     expect(viz.nodes.find((n) => n.entityType === 'test')?.path).toBe('api/src/pay.test.ts');
     expect(viz.edges.some((e) => e.type === 'impact' && e.highlighted)).toBe(true);
     expect(viz.edges.some((e) => e.type === 'imports')).toBe(true);
+  });
+
+  it('layoutImpactTheater spreads rings without collapsing XY', () => {
+    const impact: FileImpactAnalysis = {
+      target: { filePath: 'api/src/pay.ts' },
+      revisionSha: 'deadbeef',
+      risk: 'HIGH',
+      confidence: 'HIGH',
+      riskFactors: [],
+      directDependents: ['api/src/order.ts', 'api/src/cart.ts'],
+      transitiveDependents: ['web/checkout.tsx'],
+      outboundImports: ['api/src/db.ts'],
+      relevantTests: [{ filePath: 'api/src/pay.test.ts', reason: 'covers pay', confidence: 'HIGH' }],
+      coChanges: [],
+      hotspot: null,
+      checklist: [],
+      summary: 'theater'
+    };
+    const theater = layoutImpactTheater(visualizationFromFileImpact(impact));
+    const seed = theater.nodes.find((n) => n.blastRole === 'seed');
+    const directs = theater.nodes.filter((n) => n.blastRole === 'direct');
+    expect(seed?.position?.x).toBe(0);
+    expect(seed?.position?.y).toBe(0);
+    expect(directs[0]?.position?.y).not.toBeCloseTo(directs[1]?.position?.y ?? 0, 5);
+    expect((directs[0]?.position?.z ?? 0) > (seed?.position?.z ?? 0)).toBe(true);
   });
 });
 

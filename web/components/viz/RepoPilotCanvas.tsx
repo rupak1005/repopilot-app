@@ -41,6 +41,10 @@ type SceneProps = {
 function nodeColor(node: VisualizationNode, selected: boolean, dimmed: boolean): string {
   if (selected) return '#5b21b6';
   if (dimmed) return '#c4b5d4';
+  if (node.blastRole === 'seed') return '#0891b2';
+  if (node.blastRole === 'direct') return '#ea580c';
+  if (node.blastRole === 'transitive') return '#7c3aed';
+  if (node.entityType === 'test') return '#059669';
   if ((node.metrics.hotspotScore ?? 0) >= 40) return '#c2410c';
   if (node.entityType === 'cluster') return '#7c3aed';
   if (node.layer === 'api') return '#059669';
@@ -76,6 +80,8 @@ function GraphNodeMesh({
   const showLabel =
     selected ||
     band === 'near' ||
+    node.blastRole === 'seed' ||
+    node.blastRole === 'direct' ||
     (band === 'medium' && (node.entityType === 'cluster' || (node.metrics.hotspotScore ?? 0) >= 40));
 
   const farPoint = band === 'far' && !selected;

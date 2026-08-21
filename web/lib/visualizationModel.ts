@@ -386,6 +386,56 @@ export function visualizationFromFileImpact(
   };
 }
 
+/**
+ * Radial XY layout for Impact theater: rings by blast layer, amplified Z for R3F.
+ * Does not invent edges — only places nodes already in the impact viz graph.
+ */
+export function layoutImpactTheater(graph: VisualizationGraph): VisualizationGraph {
+  const nodes = graph.nodes.map((n) => ({
+    ...n,
+    position: { x: 0, y: 0, z: n.position?.z ?? 0 },
+    state: { ...n.state }
+  }));
+
+  const seed = nodes.filter((n) => n.blastRole === 'seed');
+  const direct = nodes.filter((n) => n.blastRole === 'direct');
+  const transitive = nodes.filter((n) => n.blastRole === 'transitive');
+  const tests = nodes.filter((n) => n.entityType === 'test');
+  const imports = nodes.filter(
+    (n) => n.blastRole == null && n.entityType !== 'test' && Math.abs((n.position?.z ?? 0) - 0.5) < 0.01
+  );
+  const placed = new Set(
+    [...seed, ...direct, ...transitive, ...tests, ...imports].map((n) => n.id)
+  );
+  const other = nodes.filter((n) => !placed.has(n.id));
+
+  function ring(list: VisualizationNode[], radius: number, z: number) {
+    const count = list.length;
+    if (count === 0) return;
+    list.forEach((node, i) => {
+      if (radius <= 0) {
+        node.position = { x: 0, y: 0, z };
+        return;
+      }
+      const angle = (i / count) * Math.PI * 2 - Math.PI / 2;
+      node.position = {
+        x: Math.cos(angle) * radius,
+        y: Math.sin(angle) * radius,
+        z
+      };
+    });
+  }
+
+  ring(seed, 0, 0);
+  ring(imports, 1.6, 1.2);
+  ring(direct, 2.6, 2.4);
+  ring(other, 3.4, 3.2);
+  ring(transitive, 4.4, 4.6);
+  ring(tests, 5.6, 6.8);
+
+  return { ...graph, nodes };
+}
+
 /** Bridge back to the existing force-graph canvas without rewriting ArchitectureGraph yet. */
 export function visualizationToForceGraphIds(graph: VisualizationGraph): {
   nodeIds: string[];

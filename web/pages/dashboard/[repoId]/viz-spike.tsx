@@ -21,18 +21,23 @@ import {
   type ForceGraphData
 } from '../../../lib/architecture';
 import { layoutWithDagre } from '../../../lib/dagreLayout';
-import { DEMO_ARCHITECTURE } from '../../../lib/demoData';
 import { isDemoMode } from '../../../lib/demoMode';
 import { usePendingIndexJobRepoId, useRepoIndexStatus } from '../../../lib/dashboard';
 import { isRepoIndexInProgress } from '../../../lib/indexStatus';
 import {
   REVISION_QUERY_KEY,
   parseRevisionQuery,
-  withRevisionSha
+  withRevisionSha,
+  impactHref
 } from '../../../lib/revisionScope';
 import { repoApiPath } from '../../../lib/serverApi';
+import { DEMO_ARCHITECTURE, demoFileImpact } from '../../../lib/demoData';
+import type { FileImpactAnalysis } from '../../../lib/types';
+import { forceGraphFromFileImpact } from '../../../lib/impactBlastGraph';
 import {
   isViz3dSpikeEnabled,
+  layoutImpactTheater,
+  visualizationFromFileImpact,
   visualizationFromLaidOutForceGraph
 } from '../../../lib/visualizationModel';
 
@@ -67,11 +72,14 @@ export default function VizSpikePage() {
     typeof router.query.file === 'string' && router.query.file.trim()
       ? router.query.file.trim()
       : null;
+  const wantBlast = router.query.blast === '1' || router.query.blast === 'true';
+  const theaterMode = Boolean(wantBlast && deepFile);
   const reduceMotion = useReducedMotion() === true;
   const spikeEnabled = isViz3dSpikeEnabled();
 
   const [repoFullName, setRepoFullName] = useState('');
   const [graph, setGraph] = useState<ArchitectureGraph | null>(null);
+  const [impact, setImpact] = useState<FileImpactAnalysis | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<RenderMode>('3d');
@@ -100,7 +108,52 @@ export default function VizSpikePage() {
   }, [repoId]);
 
   useEffect(() => {
-    if (!repoId) return;
+    if (!repoId || !theaterMode || !deepFile) {
+      setImpact(null);
+      return;
+    }
+    let cancelled = false;
+    async function loadImpact() {
+      setLoading(true);
+      try {
+        if (isDemoMode()) {
+          const demo = demoFileImpact(deepFile!);
+          if (!demo) throw new Error('Demo impact not found for this file.');
+          if (!cancelled) {
+            setImpact(demo);
+            setError(null);
+          }
+          return;
+        }
+        const response = await fetch(
+          repoApiPath(
+            repoId!,
+            withRevisionSha(`impact?filePath=${encodeURIComponent(deepFile!)}&depth=2`, revisionSha)
+          )
+        );
+        if (!response.ok) throw new Error('Could not load impact for 3D theater.');
+        const data = (await response.json()) as FileImpactAnalysis;
+        if (!cancelled) {
+          setImpact(data);
+          setError(null);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setImpact(null);
+          setError(err instanceof Error ? err.message : 'Failed to load impact theater');
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    void loadImpact();
+    return () => {
+      cancelled = true;
+    };
+  }, [repoId, theaterMode, deepFile, revisionSha]);
+
+  useEffect(() => {
+    if (!repoId || theaterMode) return;
     if (isDemoMode()) {
       setGraph(DEMO_ARCHITECTURE);
       setError(null);
@@ -133,7 +186,7 @@ export default function VizSpikePage() {
     return () => {
       cancelled = true;
     };
-  }, [repoId, revisionSha]);
+  }, [repoId, revisionSha, theaterMode]);
 
   useEffect(() => {
     const id = window.setInterval(() => setStatsTick((n) => n + 1), 500);
@@ -159,6 +212,9 @@ export default function VizSpikePage() {
 
   /** Pre-layout force graph shared by 2D fallback and 3D layout adapter. */
   const forceData: ForceGraphData | null = useMemo(() => {
+    if (theaterMode && impact) {
+      return forceGraphFromFileImpact(impact).data;
+    }
     if (!architectureView) return null;
     const base = { nodes: architectureView.nodes, links: architectureView.links };
     if (sizePreset === 'live') return base;
@@ -166,7 +222,7 @@ export default function VizSpikePage() {
       return ensureSpikeNodeCount(base, SPIKE_SIZE_LIMITS.large);
     }
     return sliceForceGraphForSpike(base, SPIKE_SIZE_LIMITS[sizePreset]);
-  }, [architectureView, sizePreset]);
+  }, [architectureView, sizePreset, theaterMode, impact]);
 
   const laidOut: ForceGraphData | null = useMemo(() => {
     if (!forceData) return null;
@@ -174,9 +230,12 @@ export default function VizSpikePage() {
   }, [forceData]);
 
   const vizGraph = useMemo(() => {
+    if (theaterMode && impact) {
+      return layoutImpactTheater(visualizationFromFileImpact(impact));
+    }
     if (!laidOut) return null;
     return visualizationFromLaidOutForceGraph(laidOut, { revisionSha, scale: 40 });
-  }, [laidOut, revisionSha]);
+  }, [laidOut, revisionSha, theaterMode, impact]);
 
   useEffect(() => {
     if (!deepFile || !vizGraph) return;
@@ -213,7 +272,7 @@ export default function VizSpikePage() {
   return (
     <div className="ui-viz-spike">
       <div className="ui-viz-spike__toolbar">
-        <p className="label-caps">3D architecture spike</p>
+        <p className="label-caps">{theaterMode ? '3D impact theater' : '3D architecture spike'}</p>
         <div className="ui-viz-spike__seg" role="group" aria-label="Renderer">
           <button type="button" aria-pressed={mode === '3d'} onClick={() => setMode('3d')}>
             3D
@@ -229,28 +288,45 @@ export default function VizSpikePage() {
             2D fallback
           </button>
         </div>
-        <div className="ui-viz-spike__seg" role="group" aria-label="Fixture size">
-          {(['live', 'small', 'medium', 'large'] as const).map((key) => (
-            <button
-              key={key}
-              type="button"
-              aria-pressed={sizePreset === key}
-              onClick={() => setSizePreset(key)}
-            >
-              {key}
-            </button>
-          ))}
-        </div>
-        <a className="ui-diagram__action" href={repoId ? `/dashboard/${repoId}/architecture` : '#'}>
-          Production Architecture
+        {!theaterMode ? (
+          <div className="ui-viz-spike__seg" role="group" aria-label="Fixture size">
+            {(['live', 'small', 'medium', 'large'] as const).map((key) => (
+              <button
+                key={key}
+                type="button"
+                aria-pressed={sizePreset === key}
+                onClick={() => setSizePreset(key)}
+              >
+                {key}
+              </button>
+            ))}
+          </div>
+        ) : null}
+        <a
+          className="ui-diagram__action"
+          href={
+            theaterMode && deepFile && repoId
+              ? impactHref(repoId, { file: deepFile, revisionSha })
+              : repoId
+                ? `/dashboard/${repoId}/architecture`
+                : '#'
+          }
+        >
+          {theaterMode ? 'Back to Impact' : 'Production Architecture'}
         </a>
       </div>
 
       <p className="ui-viz-spike__hint">
-        Isolated R3F prototype. Same architecture API + dagre layout positions →{' '}
-        <code>visualizationFromLaidOutForceGraph</code>. Does not replace the 2D product graph.
-        Orbit to change LOD (far / medium / near). Click a node to focus.
-        {repoId ? (
+        {theaterMode
+          ? 'Impact theater: seed / direct / transitive / tests on Z layers (radial XY). Opt-in only — product Impact stays 2D.'
+          : 'Isolated R3F prototype. Same architecture API + dagre layout positions → '}
+        {!theaterMode ? (
+          <>
+            <code>visualizationFromLaidOutForceGraph</code>. Does not replace the 2D product graph.
+            Orbit to change LOD (far / medium / near). Click a node to focus.
+          </>
+        ) : null}
+        {repoId && !theaterMode ? (
           <>
             {' '}
             <a href={`/dashboard/${repoId}/architecture`}>Back to Architecture 2D</a>

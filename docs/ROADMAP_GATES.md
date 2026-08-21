@@ -66,5 +66,6 @@ Shipped so far:
 
 - Opt-in **Explore 3D** from Architecture + Topography (`viz3dHref`)
 - Spike deep-link focus for `?file=` / `?rev=`
+- **Impact theater** (`layoutImpactTheater` + Impact **Explore 3D theater**)
 
 See `docs/VISUAL_DIFF_AUDIT.md`.

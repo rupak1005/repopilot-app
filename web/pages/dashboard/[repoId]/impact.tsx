@@ -29,8 +29,10 @@ import {
   matchRevisionValue,
   parseRevisionQuery,
   revisionSelectLabel,
+  viz3dHref,
   withRevisionSha
 } from '../../../lib/revisionScope';
+import { isViz3dSpikeEnabled } from '../../../lib/visualizationModel';
 import { repoApiPath } from '../../../lib/serverApi';
 import type { FileImpactAnalysis, PullImpactAnalysis, SymbolImpactAnalysis } from '../../../lib/types';
 
@@ -709,15 +711,28 @@ function FileImpactView({
           title="Blast radius"
           action={
             repoId ? (
-              <Link
-                href={architectureHref(repoId, {
-                  file: result.target.filePath,
-                  blast: true,
-                  revisionSha
-                })}
-              >
-                Open graph →
-              </Link>
+              <span className="ui-impact-blast-actions">
+                <Link
+                  href={architectureHref(repoId, {
+                    file: result.target.filePath,
+                    blast: true,
+                    revisionSha
+                  })}
+                >
+                  Open graph →
+                </Link>
+                {isViz3dSpikeEnabled() ? (
+                  <Link
+                    href={viz3dHref(repoId, {
+                      file: result.target.filePath,
+                      blast: true,
+                      revisionSha
+                    })}
+                  >
+                    Explore 3D theater →
+                  </Link>
+                ) : null}
+              </span>
             ) : undefined
           }
         >
