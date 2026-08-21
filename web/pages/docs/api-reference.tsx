@@ -46,7 +46,7 @@ GET /health`}</DocsCode>
             ['GET', '/hotspots', 'Hotspot rankings (?topK=&windowDays=7|30|90|365)'],
             ['GET', '/co-change', 'Files that change together'],
             ['POST', '/search/history', 'Search commit messages and PR titles'],
-            ['GET', '/similar-changes', 'Find similar historical diffs (?pullNumber=)'],
+            ['GET', '/similar-changes', 'Find similar historical diffs (?pullNumber= or ?file=)'],
             ['GET', '/findings', 'Latest-review findings across PRs (?limit=)'],
             ['GET', '/wiki', 'Indexed markdown / ADR pages (?path=&revisionSha=&limit=)'],
             ['GET', '/ownership', 'CODEOWNERS rules + owners for ?path='],

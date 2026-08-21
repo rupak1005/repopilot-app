@@ -43,6 +43,8 @@ export type SimilarChangeResult = {
   title: string;
   overlapFiles: string[];
   overlapCount: number;
+  /** 0–1 Jaccard-ish similarity against the seed file set (file mode). */
+  similarity?: number;
 };
 
 export type ArchitectureNode = {
@@ -386,6 +388,104 @@ export async function findSimilarChanges(args: {
   }
 
   return results.sort((a, b) => b.overlapCount - a.overlapCount).slice(0, topK);
+}
+
+/** Jaccard similarity of two path sets (Gate B historical similarity). */
+export function pathSetSimilarity(seed: Iterable<string>, changed: Iterable<string>): number {
+  const a = new Set(seed);
+  const b = new Set(changed);
+  if (a.size === 0 && b.size === 0) return 1;
+  let inter = 0;
+  for (const path of a) {
+    if (b.has(path)) inter += 1;
+  }
+  const union = a.size + b.size - inter;
+  return union <= 0 ? 0 : inter / union;
+}
+
+/**
+ * Find historical PRs whose changed files overlap this file (and its co-change partners).
+ */
+export async function findSimilarChangesForFile(args: {
+  repositoryId: string;
+  filePath: string;
+  topK?: number;
+}): Promise<SimilarChangeResult[]> {
+  const topK = Math.max(1, args.topK ?? 5);
+  const coChanges = await getCoChanges({
+    repositoryId: args.repositoryId,
+    filePath: args.filePath,
+    topK: 8
+  });
+  const seedPaths = new Set<string>([args.filePath, ...coChanges.map((row) => row.pairedWith)]);
+
+  const prisma = getPrisma();
+  const otherPulls = (await prisma.$queryRawUnsafe(
+    `
+      SELECT "number", "title", "headRevision", "baseRevision"
+      FROM "PullRequest"
+      WHERE "repositoryId" = $1
+      ORDER BY "updatedAt" DESC
+      LIMIT 30
+    `,
+    args.repositoryId
+  )) as Array<{
+    number: number;
+    title: string;
+    headRevision: string;
+    baseRevision: string;
+  }>;
+
+  const results: SimilarChangeResult[] = [];
+  for (const pull of otherPulls) {
+    const pullHead = await resolveRepositoryRevision({
+      repositoryId: args.repositoryId,
+      revisionSha: pull.headRevision
+    });
+    const pullBase = await resolveRepositoryRevision({
+      repositoryId: args.repositoryId,
+      revisionSha: pull.baseRevision
+    });
+    if (!pullHead || !pullBase) continue;
+
+    const changedFiles = (await prisma.$queryRawUnsafe(
+      `
+        SELECT DISTINCT h."path"
+        FROM "File" h
+        LEFT JOIN "File" b
+          ON b."revisionId" = $2
+         AND b."path" = h."path"
+         AND b."content" = h."content"
+        WHERE h."revisionId" = $1
+          AND (b."id" IS NULL)
+      `,
+      pullHead.id,
+      pullBase.id
+    )) as Array<{ path: string }>;
+
+    const changedPaths = changedFiles.map((row) => row.path);
+    if (!changedPaths.includes(args.filePath) && !changedPaths.some((path) => seedPaths.has(path))) {
+      continue;
+    }
+
+    const overlapFiles = changedPaths.filter((path) => seedPaths.has(path));
+    if (overlapFiles.length === 0) continue;
+
+    results.push({
+      pullNumber: pull.number,
+      title: pull.title,
+      overlapFiles,
+      overlapCount: overlapFiles.length,
+      similarity: pathSetSimilarity(seedPaths, changedPaths)
+    });
+  }
+
+  return results
+    .sort(
+      (a, b) =>
+        (b.similarity ?? 0) - (a.similarity ?? 0) || b.overlapCount - a.overlapCount
+    )
+    .slice(0, topK);
 }
 
 export async function getArchitectureGraph(args: {

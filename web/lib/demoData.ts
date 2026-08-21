@@ -636,6 +636,25 @@ const DEMO_FILE_IMPACT: Record<string, FileImpactAnalysis> = {
       { file: 'api/src/services/PaymentService.ts', pairedWith: 'api/src/routes/checkout.ts', count: 8 },
       { file: 'api/src/services/PaymentService.ts', pairedWith: 'api/prisma/schema.prisma', count: 3 }
     ],
+    similarChanges: [
+      {
+        pullNumber: 287,
+        title: 'Fix payment retry ordering',
+        overlapFiles: [
+          'api/src/services/PaymentService.ts',
+          'api/src/routes/checkout.ts'
+        ],
+        overlapCount: 2,
+        similarity: 0.87
+      },
+      {
+        pullNumber: 241,
+        title: 'Ledger append before commit',
+        overlapFiles: ['api/src/services/PaymentService.ts'],
+        overlapCount: 1,
+        similarity: 0.42
+      }
+    ],
     hotspot: { score: 62, changeCount: 14, reasons: ['high churn', 'review findings'] },
     checklist: [
       'Confirm direct dependents still behave correctly after your change.',

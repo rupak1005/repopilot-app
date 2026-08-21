@@ -1,6 +1,6 @@
 # Impact Audit
 
-**Updated:** 2026-08-20  
+**Updated:** 2026-08-21  
 **Scope:** Impact analysis product surface
 
 ## What exists
@@ -12,6 +12,7 @@
 | Risk factors UI | Structured chips | Impact page |
 | Blast map | Lists + ArchitectureGraph overlay (`?blast=1`) | `ImpactBlastMap`, graph deep link |
 | Co-change | Real | `getCoChanges` |
+| Similar changes | Real for PR + **file impact** (seed = file ∪ co-change partners) | `findSimilarChanges`, `findSimilarChangesForFile`, Impact file panel |
 | Ownership | CODEOWNERS from indexed revision | `GET …/ownership`, Impact panel |
 | Handoff | Planning / MCP / Copy context pack / Graph blast | Impact file view |
 | Citations | Graph / Impact / GitHub from Ask, Search, PRs | `citationLinks.ts` |
@@ -25,7 +26,7 @@
 ## Remaining debt
 
 1. Impact canvas still mostly tabular (blast map + deep link to ArchitectureGraph, not a full embedded graph)
-2. Similar-changes API exists; Impact file mode does not surface it strongly
+2. ~~Similar-changes API exists; Impact file mode does not surface it strongly~~ — file impact returns + shows similar PRs (2026-08-21)
 3. No “run impacted tests” automation (recommendations are listed only)
 4. Diff / security-specific impact modes not built
 

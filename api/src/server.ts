@@ -39,6 +39,7 @@ import { getRepositoryOwnership } from './services/repositoryOwnership';
 import { ingestRepositoryHistory } from './services/historyIngest';
 import {
   findSimilarChanges,
+  findSimilarChangesForFile,
   getArchitectureGraph,
   getCoChanges,
   getSymbolChangeHistory,
@@ -599,18 +600,27 @@ async function bootstrap() {
 
   server.get('/api/v1/repositories/:repoId/similar-changes', async (request, reply) => {
     const params = request.params as { repoId: string };
-    const query = request.query as { pullNumber?: string; topK?: string };
-    const pullNumber = query.pullNumber ? Number(query.pullNumber) : NaN;
+    const query = request.query as { pullNumber?: string; file?: string; topK?: string };
+    const topK = query.topK ? Number(query.topK) : undefined;
 
+    if (query.file?.trim()) {
+      return findSimilarChangesForFile({
+        repositoryId: params.repoId,
+        filePath: query.file.trim(),
+        topK
+      });
+    }
+
+    const pullNumber = query.pullNumber ? Number(query.pullNumber) : NaN;
     if (!Number.isFinite(pullNumber) || pullNumber < 1) {
       reply.code(400);
-      return { error: 'pullNumber query parameter is required' };
+      return { error: 'file or pullNumber query parameter is required' };
     }
 
     return findSimilarChanges({
       repositoryId: params.repoId,
       pullNumber,
-      topK: query.topK ? Number(query.topK) : undefined
+      topK
     });
   });
 

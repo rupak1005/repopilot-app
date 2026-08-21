@@ -3,7 +3,7 @@ import {
   getModuleDependencyTraversal,
   getSymbolDependencyTraversal
 } from './dependencyGraphQueries';
-import { getCoChanges } from './engineeringIntelligence';
+import { getCoChanges, findSimilarChangesForFile } from './engineeringIntelligence';
 import {
   buildFileChangesFromRevisions,
   getPullRequestDetails
@@ -38,6 +38,13 @@ export type ImpactAnalysisResult = {
   outboundImports: string[];
   relevantTests: ImpactTestRecommendation[];
   coChanges: Array<{ file: string; pairedWith: string; count: number }>;
+  similarChanges: Array<{
+    pullNumber: number;
+    title: string;
+    overlapFiles: string[];
+    overlapCount: number;
+    similarity?: number;
+  }>;
   hotspot: { score: number; changeCount: number; reasons: string[] } | null;
   checklist: string[];
   summary: string;
@@ -381,6 +388,12 @@ async function finalizeImpact(args: {
     topK: 5
   });
 
+  const similarChanges = await findSimilarChangesForFile({
+    repositoryId: args.repositoryId,
+    filePath: lookupPath,
+    topK: 5
+  });
+
   const hotspotRows = (await prisma.$queryRawUnsafe(
     `
       SELECT "score", "changeCount", "reasons"
@@ -437,6 +450,7 @@ async function finalizeImpact(args: {
     outboundImports,
     relevantTests,
     coChanges,
+    similarChanges,
     hotspot: hotspotRow
       ? {
           score: hotspotRow.score,

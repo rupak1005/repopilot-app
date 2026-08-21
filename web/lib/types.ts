@@ -61,6 +61,7 @@ export type SimilarChange = {
   title: string;
   overlapFiles: string[];
   overlapCount: number;
+  similarity?: number;
 };
 
 export type PullImpactSummary = {
@@ -94,6 +95,7 @@ export type FileImpactAnalysis = {
   outboundImports: string[];
   relevantTests: ImpactTestRecommendation[];
   coChanges: Array<{ file: string; pairedWith: string; count: number }>;
+  similarChanges?: SimilarChange[];
   hotspot: { score: number; changeCount: number; reasons: string[] } | null;
   checklist: string[];
   summary: string;

@@ -773,6 +773,35 @@ function FileImpactView({
           </ul>
         </BentoPanel>
       ) : null}
+      {(result.similarChanges?.length ?? 0) > 0 ? (
+        <BentoPanel title="Similar past changes">
+          <ul className="ui-similar-list">
+            {result.similarChanges!.map((item) => (
+              <li key={item.pullNumber} className="ui-similar-item">
+                <p className="ui-similar-item__title">
+                  {item.similarity != null
+                    ? `${Math.round(item.similarity * 100)}% similar to PR #${item.pullNumber}`
+                    : `PR #${item.pullNumber}`}
+                  {' — '}
+                  {item.title}
+                </p>
+                <p className="ui-similar-item__meta">
+                  Overlap: {item.overlapFiles.slice(0, 4).join(', ')}
+                  {item.overlapFiles.length > 4 ? '…' : ''}
+                </p>
+                {repoId ? (
+                  <Link
+                    className="ui-diagram__action"
+                    href={`/dashboard/${repoId}/pulls/${item.pullNumber}`}
+                  >
+                    View PR
+                  </Link>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </BentoPanel>
+      ) : null}
       {result.hotspot ? (
         <BentoPanel title="Hotspot overlay">
           <div className="ui-impact-panel">
