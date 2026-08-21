@@ -88,7 +88,9 @@ export default function VizSpikePage() {
   const topoMode = Boolean(wantTopo);
   const reduceMotion = useReducedMotion() === true;
   const spikeEnabled = isViz3dSpikeEnabled();
-  const demo = isDemoMode();
+  const envDemo = isDemoMode();
+  const [forceDemoFixtures, setForceDemoFixtures] = useState(false);
+  const demo = envDemo || forceDemoFixtures;
 
   const [repoFullName, setRepoFullName] = useState('');
   const [graph, setGraph] = useState<ArchitectureGraph | null>(null);
@@ -225,7 +227,13 @@ export default function VizSpikePage() {
         const data = (await response.json()) as ArchitectureGraph;
         if (!cancelled) {
           setGraph(data);
-          setError(null);
+          if (!data.nodes?.length) {
+            setError(
+              'No module graph for this revision — the index has no importable source files (e.g. docs-only repos). Try demo fixtures or another repo.'
+            );
+          } else {
+            setError(null);
+          }
         }
       } catch (err) {
         if (!cancelled) {
@@ -407,6 +415,16 @@ export default function VizSpikePage() {
 
       {error ? <ErrorBanner>{error}</ErrorBanner> : null}
       {indexInProgress ? <IndexHint repoFullName={repoFullName || undefined} /> : null}
+      {!demo && graph && graph.nodes.length === 0 && !loading ? (
+        <div className="ui-viz-spike__empty-actions">
+          <button type="button" className="ui-diagram__action" onClick={() => setForceDemoFixtures(true)}>
+            Load demo fixtures
+          </button>
+          <a className="ui-diagram__action" href={repoId ? `/dashboard/${repoId}/architecture` : '#'}>
+            Open Architecture 2D
+          </a>
+        </div>
+      ) : null}
 
       <div className="ui-viz-spike__stage">
         {mode === '2d' || webglLost ? (
@@ -450,7 +468,11 @@ export default function VizSpikePage() {
           </>
         ) : (
           <p className="ui-viz-spike__empty">
-            {loading ? 'Loading architecture…' : 'No graph yet — enable Demo data or index the repo.'}
+            {loading
+              ? 'Loading architecture…'
+              : graph && graph.nodes.length === 0
+                ? 'No modules to render — this revision has an empty architecture graph.'
+                : 'No graph yet — index the repo or load demo fixtures.'}
           </p>
         )}
       </div>

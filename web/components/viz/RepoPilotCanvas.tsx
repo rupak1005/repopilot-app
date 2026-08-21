@@ -646,7 +646,7 @@ function SceneInner({
       />
       <OrbitControls
         makeDefault
-        enableDamping={!reduceMotion}
+        enableDamping={!reduceMotion && graph.nodes.length > 0}
         dampingFactor={0.08}
         maxDistance={120}
         minDistance={4}

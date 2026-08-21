@@ -300,6 +300,12 @@
   height: 100%;
 }
 
+.ui-viz-spike__empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .ui-viz-spike__empty {
   position: absolute;
   inset: 0;
