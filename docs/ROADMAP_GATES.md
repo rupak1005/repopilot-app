@@ -6,7 +6,7 @@
 | Gate | Focus | Status |
 |------|--------|--------|
 | **A — Graph Trust** | Deterministic relationships, provenance, stronger symbol resolution, fixtures | **Complete** (2026-08-21) |
-| **B — Impact Trust** | Embedded impact graph, explainable risk, similarity, test impact | **In progress** (similar changes on file impact) |
+| **B — Impact Trust** | Embedded impact graph, explainable risk, similarity, test impact | **In progress** (similar changes + embedded blast graph) |
 | **C — Engineering Loop** | Plan → agent → PR → impact → review → verify | Not started |
 | **D — Visual Differentiation** | 3D topography, impact theater, architecture replay | Spike only (`/viz-spike`) |
 
@@ -39,7 +39,7 @@ See `docs/GRAPH_AUDIT.md`.
 
 Start from `docs/IMPACT_AUDIT.md`:
 
-1. Embed impact graph (not only tabular + Architecture deep link)
+1. ~~Embed impact graph~~ — `ImpactBlastGraph` on file Impact (capped force graph from impact payload)
 2. ~~Surface similar changes strongly~~ — file impact + `?file=` on `/similar-changes` (2026-08-21)
 3. Explainable risk / confidence (already partly shipped — keep)
 4. Test impact automation entry point (run later; classify first)

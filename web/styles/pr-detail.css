@@ -449,6 +449,49 @@ a.ui-impact-owner-chip:hover {
   gap: var(--space-4);
 }
 
+.ui-impact-blast-graph {
+  border: var(--border-medium);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--diagram-canvas-bg, #0c0c0e);
+}
+
+.ui-impact-blast-graph__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: var(--border-medium);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.ui-impact-blast-graph__swatch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.ui-impact-blast-graph__swatch::before {
+  content: '';
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 2px;
+  border: 2px solid currentColor;
+}
+
+.ui-impact-blast-graph__swatch--seed {
+  color: var(--diagram-accent, #22d3ee);
+}
+
+.ui-impact-blast-graph__swatch--direct {
+  color: var(--diagram-hotspot, #fb923c);
+}
+
+.ui-impact-blast-graph__swatch--trans {
+  color: var(--diagram-link-active, rgba(34, 211, 238, 0.7));
+}
+
 .ui-impact-blast-wrap .ui-impact-panel__risk {
   margin: 0;
 }

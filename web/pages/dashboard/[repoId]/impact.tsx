@@ -6,6 +6,7 @@ import { BentoPanel } from '../../../components/ui/BentoPanel';
 import { Button } from '../../../components/ui/Button';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { ErrorBanner } from '../../../components/ui/ErrorBanner';
+import { ImpactBlastGraph } from '../../../components/ui/ImpactBlastGraph';
 import { ImpactBlastMap } from '../../../components/ui/ImpactBlastMap';
 import { IndexHint } from '../../../components/ui/IndexHint';
 import { KpiTile } from '../../../components/ui/KpiTile';
@@ -592,6 +593,7 @@ function FileImpactView({
   repoId: string | null;
   revisionSha: string | null;
 }) {
+  const router = useRouter();
   const [packHint, setPackHint] = useState<string | null>(null);
   const [ownership, setOwnership] = useState<OwnershipSummary | null>(null);
   const dash = useDashboardContext();
@@ -719,6 +721,15 @@ function FileImpactView({
               <Warning size={18} weight="fill" aria-hidden />
               Risk: {result.risk}
             </p>
+            <ImpactBlastGraph
+              impact={result}
+              repoId={repoId}
+              revisionSha={revisionSha}
+              onSelectFile={(file) => {
+                if (!repoId) return;
+                void router.push(impactHref(repoId, { file, revisionSha }));
+              }}
+            />
             <ImpactBlastMap
               target={result.target.filePath}
               directDependents={result.directDependents}

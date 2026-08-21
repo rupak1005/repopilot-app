@@ -10,7 +10,7 @@
 | API | File / symbol / PR modes | `impactAnalysis.ts`, `GET …/impact` |
 | Risk + confidence | Deterministic + calibrated fixtures | `computeRisk`, `impactCalibration.ts` |
 | Risk factors UI | Structured chips | Impact page |
-| Blast map | Lists + ArchitectureGraph overlay (`?blast=1`) | `ImpactBlastMap`, graph deep link |
+| Blast map | Lists + **embedded force graph** + Architecture deep link | `ImpactBlastGraph`, `ImpactBlastMap`, `?blast=1` |
 | Co-change | Real | `getCoChanges` |
 | Similar changes | Real for PR + **file impact** (seed = file ∪ co-change partners) | `findSimilarChanges`, `findSimilarChangesForFile`, Impact file panel |
 | Ownership | CODEOWNERS from indexed revision | `GET …/ownership`, Impact panel |
@@ -25,7 +25,7 @@
 
 ## Remaining debt
 
-1. Impact canvas still mostly tabular (blast map + deep link to ArchitectureGraph, not a full embedded graph)
+1. ~~Impact canvas still mostly tabular~~ — embedded `ImpactBlastGraph` on file Impact (2026-08-21); full Architecture still via deep link
 2. ~~Similar-changes API exists; Impact file mode does not surface it strongly~~ — file impact returns + shows similar PRs (2026-08-21)
 3. No “run impacted tests” automation (recommendations are listed only)
 4. Diff / security-specific impact modes not built
