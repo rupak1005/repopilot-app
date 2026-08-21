@@ -1,7 +1,6 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Billboard, Html, Line, OrbitControls, Text } from '@react-three/drei';
+import { Html, Line, OrbitControls } from '@react-three/drei';
 import {
-  Suspense,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -113,7 +112,6 @@ function GraphNodeMesh({
         </mesh>
       ) : (
         <mesh
-          castShadow
           onClick={(e) => {
             e.stopPropagation();
             onSelect(node.id);
@@ -139,25 +137,19 @@ function GraphNodeMesh({
         </mesh>
       )}
       {showLabel ? (
-        <Billboard position={[0, height * 0.5 + 0.35, 0]} follow>
-          {/* Troika SDF via drei Text — only for near/selected/important, not every far node */}
-          <Text
-            fontSize={selected ? 0.32 : band === 'near' ? 0.22 : 0.18}
-            color={selected ? '#1a1025' : '#3f3f46'}
-            anchorX="center"
-            anchorY="middle"
-            maxWidth={4}
-            outlineWidth={0.01}
-            outlineColor="#f5f0ff"
+        <Html
+          position={[0, height * 0.5 + 0.35, 0]}
+          center
+          distanceFactor={selected ? 10 : 14}
+          style={{ pointerEvents: 'none' }}
+        >
+          <div
+            className={`ui-viz-spike__label${selected ? ' ui-viz-spike__label--selected' : ''}`}
           >
             {node.entityType === 'cluster' ? node.label : node.label.split('/').pop() ?? node.label}
-          </Text>
-          {selected && node.path ? (
-            <Html distanceFactor={12} position={[0, 0.4, 0]} center>
-              <div className="ui-viz-spike__tag mono">{node.path}</div>
-            </Html>
-          ) : null}
-        </Billboard>
+          </div>
+          {selected && node.path ? <div className="ui-viz-spike__tag mono">{node.path}</div> : null}
+        </Html>
       ) : null}
     </group>
   );
@@ -263,7 +255,6 @@ function TopoInstancedTerrain({
     <instancedMesh
       ref={meshRef}
       args={[undefined, undefined, poses.length]}
-      castShadow
       onClick={(e) => {
         e.stopPropagation();
         const id = idsRef.current[e.instanceId ?? -1];
@@ -462,6 +453,14 @@ function PerfSampler({
     frames.current += 1;
     acc.current += dt;
     const dist = camera.position.length();
+    // Always keep entity counts fresh even before the first FPS window.
+    statsRef.current = {
+      ...statsRef.current,
+      nodes: nodeCount,
+      edges: edgeCount,
+      visibleLabels: labelCount,
+      cameraDistance: Math.round(dist * 10) / 10
+    };
     if (acc.current >= 500) {
       const fps = (frames.current * 1000) / acc.current;
       const info = gl.info.render;
@@ -480,6 +479,65 @@ function PerfSampler({
     }
   });
 
+  return null;
+}
+
+function FitGraphCamera({ graph }: { graph: VisualizationGraph }) {
+  const { camera, invalidate } = useThree();
+  const controls = useThree((s) => s.controls) as { target: THREE.Vector3; update: () => void } | null;
+  const fittedKey = useRef<string | null>(null);
+
+  useEffect(() => {
+    const key = `${graph.nodes.length}:${graph.revisionSha ?? ''}:${graph.nodes[0]?.id ?? ''}`;
+    if (fittedKey.current === key) return;
+    if (graph.nodes.length === 0) return;
+    // Wait until OrbitControls registers as default controls.
+    if (!controls) return;
+
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
+    let minZ = Infinity;
+    let maxZ = -Infinity;
+    for (const node of graph.nodes) {
+      const p = node.position ?? { x: 0, y: 0, z: 0 };
+      const wx = p.x;
+      const wy = p.z * 0.5;
+      const wz = p.y;
+      minX = Math.min(minX, wx);
+      maxX = Math.max(maxX, wx);
+      minY = Math.min(minY, wy);
+      maxY = Math.max(maxY, wy);
+      minZ = Math.min(minZ, wz);
+      maxZ = Math.max(maxZ, wz);
+    }
+
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
+    const cz = (minZ + maxZ) / 2;
+    const span = Math.max(maxX - minX, maxZ - minZ, maxY - minY, 4);
+    const dist = Math.max(12, span * 1.35);
+    const target = new THREE.Vector3(cx, cy + 0.4, cz);
+    const nextCam = new THREE.Vector3(cx + dist * 0.55, cy + dist * 0.45, cz + dist * 0.7);
+
+    camera.position.copy(nextCam);
+    controls.target.copy(target);
+    controls.update();
+    fittedKey.current = key;
+    invalidate();
+  }, [graph, camera, controls, invalidate]);
+
+  return null;
+}
+
+function SceneKick({ deps }: { deps: unknown }) {
+  const { invalidate } = useThree();
+  useEffect(() => {
+    invalidate();
+    const t = window.setTimeout(() => invalidate(), 50);
+    return () => window.clearTimeout(t);
+  }, [deps, invalidate]);
   return null;
 }
 
@@ -578,6 +636,8 @@ function SceneInner({
       ))}
 
       <FocusCamera focusId={focusId} nodesById={nodesById} reduceMotion={reduceMotion} />
+      <FitGraphCamera graph={graph} />
+      <SceneKick deps={`${graph.nodes.length}:${selectedId}:${band}`} />
       <PerfSampler
         statsRef={statsRef}
         nodeCount={graph.nodes.length}
@@ -628,7 +688,6 @@ export function RepoPilotCanvas({
   return (
     <div className="ui-viz-spike__canvas">
       <Canvas
-        shadows
         dpr={[1, 1.75]}
         frameloop="demand"
         camera={{ position: [18, 14, 22], fov: 45, near: 0.1, far: 400 }}
@@ -644,17 +703,15 @@ export function RepoPilotCanvas({
         }}
         onPointerMissed={() => onSelect(null)}
       >
-        <Suspense fallback={null}>
-          <SceneInner
-            graph={graph}
-            selectedId={selectedId}
-            focusId={focusId}
-            onSelect={onSelect}
-            onHover={onHover}
-            reduceMotion={reduceMotion}
-            statsRef={statsRef}
-          />
-        </Suspense>
+        <SceneInner
+          graph={graph}
+          selectedId={selectedId}
+          focusId={focusId}
+          onSelect={onSelect}
+          onHover={onHover}
+          reduceMotion={reduceMotion}
+          statsRef={statsRef}
+        />
       </Canvas>
     </div>
   );

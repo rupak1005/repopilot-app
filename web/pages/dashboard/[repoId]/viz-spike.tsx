@@ -88,6 +88,7 @@ export default function VizSpikePage() {
   const topoMode = Boolean(wantTopo);
   const reduceMotion = useReducedMotion() === true;
   const spikeEnabled = isViz3dSpikeEnabled();
+  const demo = isDemoMode();
 
   const [repoFullName, setRepoFullName] = useState('');
   const [graph, setGraph] = useState<ArchitectureGraph | null>(null);
@@ -129,7 +130,7 @@ export default function VizSpikePage() {
     async function loadTopo() {
       setLoading(true);
       try {
-        if (isDemoMode()) {
+        if (demo) {
           if (!cancelled) {
             setHotspots(scaleHotspotsForWindow(DEMO_HOTSPOTS, windowDays));
             setError(null);
@@ -158,7 +159,7 @@ export default function VizSpikePage() {
     return () => {
       cancelled = true;
     };
-  }, [repoId, topoMode, windowDays]);
+  }, [repoId, topoMode, windowDays, demo]);
 
   useEffect(() => {
     if (!repoId || !theaterMode || !deepFile) {
@@ -169,11 +170,11 @@ export default function VizSpikePage() {
     async function loadImpact() {
       setLoading(true);
       try {
-        if (isDemoMode()) {
-          const demo = demoFileImpact(deepFile!);
-          if (!demo) throw new Error('Demo impact not found for this file.');
+        if (demo) {
+          const demoImpact = demoFileImpact(deepFile!);
+          if (!demoImpact) throw new Error('Demo impact not found for this file.');
           if (!cancelled) {
-            setImpact(demo);
+            setImpact(demoImpact);
             setError(null);
           }
           return;
@@ -203,11 +204,11 @@ export default function VizSpikePage() {
     return () => {
       cancelled = true;
     };
-  }, [repoId, theaterMode, deepFile, revisionSha]);
+  }, [repoId, theaterMode, deepFile, revisionSha, demo]);
 
   useEffect(() => {
     if (!repoId || theaterMode || topoMode) return;
-    if (isDemoMode()) {
+    if (demo) {
       setGraph(DEMO_ARCHITECTURE);
       setError(null);
       setLoading(false);
@@ -239,7 +240,7 @@ export default function VizSpikePage() {
     return () => {
       cancelled = true;
     };
-  }, [repoId, revisionSha, theaterMode, topoMode]);
+  }, [repoId, revisionSha, theaterMode, topoMode, demo]);
 
   useEffect(() => {
     const id = window.setInterval(() => setStatsTick((n) => n + 1), 500);
@@ -263,7 +264,6 @@ export default function VizSpikePage() {
     });
   }, [graph, sizePreset]);
 
-  /** Pre-layout force graph shared by 2D fallback and 3D layout adapter. */
   const forceData: ForceGraphData | null = useMemo(() => {
     if (topoMode && hotspots.length > 0) {
       return {
@@ -309,7 +309,9 @@ export default function VizSpikePage() {
   useEffect(() => {
     if (!deepFile || !vizGraph) return;
     if (deepFileApplied.current === deepFile) return;
-    const hit = vizGraph.nodes.find((n) => n.path === deepFile || n.id === deepFile || n.id === `file:${deepFile}`);
+    const hit = vizGraph.nodes.find(
+      (n) => n.path === deepFile || n.id === deepFile || n.id === `file:${deepFile}`
+    );
     if (!hit) return;
     deepFileApplied.current = deepFile;
     setSelectedId(hit.id);
@@ -321,6 +323,18 @@ export default function VizSpikePage() {
 
   const selectedNode = vizGraph?.nodes.find((n) => n.id === selectedId) ?? null;
 
+  const title = topoMode
+    ? '3D topography'
+    : theaterMode
+      ? '3D impact theater'
+      : '3D architecture';
+
+  const lede = topoMode
+    ? 'Hotspot districts in terrain form. Product Topography stays 2D.'
+    : theaterMode
+      ? 'Blast rings on Z layers. Product Impact stays 2D.'
+      : 'Same architecture graph + dagre layout — orbit to change LOD.';
+
   function selectNode(id: string | null) {
     setSelectedId(id);
     if (id) setFocusId(id);
@@ -330,7 +344,7 @@ export default function VizSpikePage() {
     return (
       <div className="ui-viz-spike">
         <ErrorBanner>3D viz spike is disabled (NEXT_PUBLIC_VIZ_3D_SPIKE=false).</ErrorBanner>
-        <p className="ui-viz-spike__hint">
+        <p className="ui-viz-spike__lede">
           Open the production{' '}
           <a href={repoId ? `/dashboard/${repoId}/architecture` : '#'}>Architecture</a> view.
         </p>
@@ -338,16 +352,25 @@ export default function VizSpikePage() {
     );
   }
 
+  const backHref =
+    topoMode && repoId
+      ? `/dashboard/${repoId}/hotspots${windowDays === 30 ? '' : `?window=${windowDays}`}`
+      : theaterMode && deepFile && repoId
+        ? impactHref(repoId, { file: deepFile, revisionSha })
+        : repoId
+          ? `/dashboard/${repoId}/architecture`
+          : '#';
+
   return (
     <div className="ui-viz-spike">
       <div className="ui-viz-spike__toolbar">
-        <p className="label-caps">
-          {topoMode
-            ? '3D topography terrain'
-            : theaterMode
-              ? '3D impact theater'
-              : '3D architecture spike'}
-        </p>
+        <div className="ui-viz-spike__toolbar-title">
+          <p className="label-caps">{title}</p>
+          <p className="ui-viz-spike__lede">
+            {lede}
+            {demo ? ' Demo fixtures loaded.' : null}
+          </p>
+        </div>
         <div className="ui-viz-spike__seg" role="group" aria-label="Renderer">
           <button type="button" aria-pressed={mode === '3d'} onClick={() => setMode('3d')}>
             3D
@@ -360,7 +383,7 @@ export default function VizSpikePage() {
               setWebglLost(false);
             }}
           >
-            2D fallback
+            2D
           </button>
         </div>
         {!theaterMode && !topoMode ? (
@@ -377,51 +400,19 @@ export default function VizSpikePage() {
             ))}
           </div>
         ) : null}
-        <a
-          className="ui-diagram__action"
-          href={
-            topoMode && repoId
-              ? `/dashboard/${repoId}/hotspots${windowDays === 30 ? '' : `?window=${windowDays}`}`
-              : theaterMode && deepFile && repoId
-                ? impactHref(repoId, { file: deepFile, revisionSha })
-                : repoId
-                  ? `/dashboard/${repoId}/architecture`
-                  : '#'
-          }
-        >
-          {topoMode ? 'Back to Topography' : theaterMode ? 'Back to Impact' : 'Production Architecture'}
+        <a className="ui-diagram__action ui-viz-spike__back" href={backHref}>
+          {topoMode ? 'Back to Topography' : theaterMode ? 'Back to Impact' : 'Architecture 2D'}
         </a>
       </div>
 
-      <p className="ui-viz-spike__hint">
-        {topoMode
-          ? 'Topography terrain: directory districts with height from hotspot score. Dense file pillars use InstancedMesh (≥24 nodes). CSS map remains the product default.'
-          : theaterMode
-            ? 'Impact theater: seed / direct / transitive / tests on Z layers (radial XY). Blast edges use flowing dashes (static under prefers-reduced-motion). Opt-in only — product Impact stays 2D.'
-            : 'Isolated R3F prototype. Same architecture API + dagre layout positions → '}
-        {!theaterMode && !topoMode ? (
-          <>
-            <code>visualizationFromLaidOutForceGraph</code>. Does not replace the 2D product graph.
-            Orbit to change LOD (far / medium / near). Click a node to focus.
-          </>
-        ) : null}
-        {repoId && !theaterMode && !topoMode ? (
-          <>
-            {' '}
-            <a href={`/dashboard/${repoId}/architecture`}>Back to Architecture 2D</a>
-          </>
-        ) : null}
-      </p>
-
       {error ? <ErrorBanner>{error}</ErrorBanner> : null}
       {indexInProgress ? <IndexHint repoFullName={repoFullName || undefined} /> : null}
-      {loading && !graph ? <p className="ui-viz-spike__hint">Loading architecture…</p> : null}
 
       <div className="ui-viz-spike__stage">
         {mode === '2d' || webglLost ? (
           <div className="ui-viz-spike__2d">
             {webglLost ? (
-              <p className="ui-viz-spike__hint" role="alert">
+              <p className="ui-viz-spike__empty" role="alert">
                 WebGL context lost — showing 2D fallback.
               </p>
             ) : null}
@@ -434,9 +425,13 @@ export default function VizSpikePage() {
                 revisionSha={revisionSha}
                 loading={loading}
               />
-            ) : null}
+            ) : (
+              <p className="ui-viz-spike__empty">
+                {loading ? 'Loading graph…' : 'No graph to show.'}
+              </p>
+            )}
           </div>
-        ) : vizGraph ? (
+        ) : vizGraph && vizGraph.nodes.length > 0 ? (
           <>
             <RepoPilotCanvas
               graph={vizGraph}
@@ -453,35 +448,46 @@ export default function VizSpikePage() {
             />
             <VizStatsPanel stats={statsRef.current} band={band} />
           </>
-        ) : null}
+        ) : (
+          <p className="ui-viz-spike__empty">
+            {loading ? 'Loading architecture…' : 'No graph yet — enable Demo data or index the repo.'}
+          </p>
+        )}
       </div>
 
-      <div className="ui-viz-spike__side">
+      <div className="ui-viz-spike__dock">
         <div className="ui-viz-spike__panel">
           <h2>Selection</h2>
           <p>
             {selectedNode
               ? `${selectedNode.label}${selectedNode.path ? ` · ${selectedNode.path}` : ''}`
-              : 'None — click a node'}
+              : 'Click a node to inspect'}
           </p>
           {hoverId ? <p>Hover: {hoverId}</p> : null}
         </div>
         <div className="ui-viz-spike__panel">
-          <h2>Adapter boundary</h2>
-          <ul>
-            <li>Analysis: GET architecture (unchanged)</li>
-            <li>View: buildArchitectureView → layoutWithDagre</li>
-            <li>Shared model: visualizationFromLaidOutForceGraph</li>
-            <li>Renderers: 2D ArchitectureGraphView · 3D RepoPilotCanvas</li>
-          </ul>
+          <h2>Pipeline</h2>
+          <p>
+            Architecture API → <code>buildArchitectureView</code> → dagre → shared{' '}
+            <code>VisualizationGraph</code> → 2D / 3D.
+          </p>
         </div>
         <div className="ui-viz-spike__panel">
           <h2>Counts</h2>
-          <p>
-            Source files: {graph?.nodes.length ?? 0} · Visible nodes:{' '}
-            {vizGraph?.nodes.length ?? forceData?.nodes.length ?? 0} · Edges:{' '}
-            {vizGraph?.edges.length ?? forceData?.links.length ?? 0}
-          </p>
+          <ul className="ui-viz-spike__counts">
+            <li>
+              <strong>{graph?.nodes.length ?? 0}</strong>
+              <span>Source</span>
+            </li>
+            <li>
+              <strong>{vizGraph?.nodes.length ?? forceData?.nodes.length ?? 0}</strong>
+              <span>Visible</span>
+            </li>
+            <li>
+              <strong>{vizGraph?.edges.length ?? forceData?.links.length ?? 0}</strong>
+              <span>Edges</span>
+            </li>
+          </ul>
         </div>
       </div>
     </div>
