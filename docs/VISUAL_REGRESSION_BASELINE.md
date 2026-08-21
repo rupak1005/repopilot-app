@@ -19,13 +19,11 @@
 ## Automated coverage
 
 - `e2e/demo-dashboard.spec.ts` — demo nav smoke
-- `e2e/visual-baseline.spec.ts` — landing / architecture / impact screenshots (committed PNGs)
+- `e2e/visual-baseline.spec.ts` — landing / architecture / impact **structural** smoke (DOM assertions)
 
-Update baselines:
+Pixel PNG snapshots were removed from the required CI e2e job: GitHub Ubuntu Chromium and local Fontshare metrics produced recurring size/AA mismatches (Playwright rejects ±1px dimension drift even with `maxDiffPixelRatio`). Prefer Percy / Chromatic when visual lock is needed again.
 
-```bash
-yarn playwright test e2e/visual-baseline.spec.ts --update-snapshots=changed
-```
+Update / re-enable pixel baselines only behind an optional job, not the merge gate.
 
 ## Design DNA to preserve
 
