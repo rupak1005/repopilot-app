@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { extractStaticDynamicImportSpecifiers } from './dynamicImports';
+import { extractStaticDynamicImportSpecifiers, extractStaticDynamicImports } from './dynamicImports';
 import { resolveJsModule } from './moduleResolve';
 import {
   collectPackageExportsFromFiles,
@@ -102,6 +102,7 @@ describe('static dynamic import()', () => {
       './payment',
       '@acme/payments/ledger'
     ]);
+    expect(extractStaticDynamicImports(code)[0]?.sourceLine).toBe(2);
   });
 
   it('records dynamic imports during parse', () => {

@@ -120,6 +120,7 @@ model SymbolDependency {
   confidence   Float   @default(0.65)
   sourceFile   String?
   sourceLine   Int?
+  targetLine   Int?
   detector     String  @default("heuristic")
 
   revision   RepositoryRevision @relation(fields: [revisionId], references: [id], onDelete: Cascade)
@@ -146,6 +147,7 @@ model ModuleDependency {
   confidence   Float   @default(1)
   sourceFile   String?
   sourceLine   Int?
+  targetLine   Int?
   detector     String  @default("tree-sitter")
 
   @@unique([revisionId, fromModule, toModule])

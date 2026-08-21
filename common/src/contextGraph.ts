@@ -60,6 +60,8 @@ export type ContextEdgeProvenance = {
   confidence: number;
   sourceFile?: string;
   sourceLine?: number;
+  /** Declaration / target symbol line when known (call edges). */
+  targetLine?: number;
   revisionSha?: string;
 };
 

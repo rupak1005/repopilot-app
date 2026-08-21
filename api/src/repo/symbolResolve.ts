@@ -8,6 +8,8 @@ export type ImportBinding = {
   module: string;
   kind: ImportBindingKind;
   importedName: string;
+  /** 1-based line of the import / dynamic import when known. */
+  sourceLine?: number;
 };
 
 export type ResolveSymbolFile = {

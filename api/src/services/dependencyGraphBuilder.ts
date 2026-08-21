@@ -9,7 +9,7 @@ import {
   resolveImportedSymbolId,
   type ImportBinding
 } from '../repo/symbolResolve';
-import { extractStaticDynamicImportSpecifiers } from '../repo/dynamicImports';
+import { extractStaticDynamicImports } from '../repo/dynamicImports';
 import { collectPathAliasesFromFiles } from '../repo/tsconfigPaths';
 import {
   createTreeSitterParser,
@@ -48,6 +48,7 @@ type SymbolEdge = {
   fromSymbolId: string;
   toSymbolId: string;
   sourceLine?: number;
+  targetLine?: number;
   confidence: number;
   detector: string;
   kind: string;
@@ -58,6 +59,7 @@ type ModuleEdge = {
   toModule: string;
   sourceFile: string;
   sourceLine?: number;
+  targetLine?: number;
   confidence: number;
   detector: string;
   kind: string;
@@ -149,19 +151,20 @@ function getDeclarationNodes(
 function addParsedImportBindings(
   bindings: Map<string, ImportBinding>,
   module: string,
-  specifiers: string[]
+  specifiers: string[],
+  sourceLine?: number
 ) {
   if (specifiers.length === 0) {
     const local = module.split(/[./]/).filter(Boolean).pop() ?? module;
-    bindings.set(local, { module, kind: 'namespace', importedName: '*' });
+    bindings.set(local, { module, kind: 'namespace', importedName: '*', sourceLine });
     return;
   }
   for (const spec of specifiers) {
     if (spec === '*') {
-      bindings.set(module, { module, kind: 'namespace', importedName: '*' });
+      bindings.set(module, { module, kind: 'namespace', importedName: '*', sourceLine });
       continue;
     }
-    bindings.set(spec, { module, kind: 'named', importedName: spec });
+    bindings.set(spec, { module, kind: 'named', importedName: spec, sourceLine });
   }
 }
 
@@ -176,8 +179,9 @@ function extractImportBindings(
   if (ext === '.py') {
     for (const child of root.namedChildren) {
       if (child.type !== 'import_statement' && child.type !== 'import_from_statement') continue;
+      const sourceLine = child.startPosition.row + 1;
       for (const parsed of extractPythonImports(nodeText(code, child))) {
-        addParsedImportBindings(bindings, parsed.module, parsed.specifiers);
+        addParsedImportBindings(bindings, parsed.module, parsed.specifiers, sourceLine);
       }
     }
     return bindings;
@@ -186,8 +190,9 @@ function extractImportBindings(
   if (ext === '.go') {
     for (const child of root.namedChildren) {
       if (child.type !== 'import_declaration') continue;
+      const sourceLine = child.startPosition.row + 1;
       for (const parsed of extractGoImports(nodeText(code, child))) {
-        addParsedImportBindings(bindings, parsed.module, parsed.specifiers);
+        addParsedImportBindings(bindings, parsed.module, parsed.specifiers, sourceLine);
       }
     }
     return bindings;
@@ -197,6 +202,7 @@ function extractImportBindings(
     if (child.type !== 'import_statement') continue;
 
     const text = nodeText(code, child);
+    const sourceLine = child.startPosition.row + 1;
     const moduleMatch =
       text.match(/from\s+['"]([^'"]+)['"]/) ?? text.match(/import\s+['"]([^'"]+)['"]/);
     const module = moduleMatch?.[1];
@@ -208,7 +214,8 @@ function extractImportBindings(
       bindings.set(namespaceMatch[1], {
         module,
         kind: 'namespace',
-        importedName: '*'
+        importedName: '*',
+        sourceLine
       });
     }
 
@@ -224,7 +231,8 @@ function extractImportBindings(
         bindings.set(localName, {
           module,
           kind: 'named',
-          importedName
+          importedName,
+          sourceLine
         });
       }
     }
@@ -234,15 +242,21 @@ function extractImportBindings(
       bindings.set(defaultMatch[1], {
         module,
         kind: 'default',
-        importedName: 'default'
+        importedName: 'default',
+        sourceLine
       });
     }
   }
 
-  for (const module of extractStaticDynamicImportSpecifiers(code)) {
-    const key = `__import__(${module})`;
+  for (const entry of extractStaticDynamicImports(code)) {
+    const key = `__import__(${entry.module})`;
     if (!bindings.has(key)) {
-      bindings.set(key, { module, kind: 'namespace', importedName: '*' });
+      bindings.set(key, {
+        module: entry.module,
+        kind: 'namespace',
+        importedName: '*',
+        sourceLine: entry.sourceLine
+      });
     }
   }
 
@@ -268,13 +282,14 @@ function extractEdgesForSymbol(args: {
 }): SymbolEdge[] {
   const edges = new Map<string, SymbolEdge>();
 
-  const addEdge = (toSymbolId: string, sourceLine?: number) => {
+  const addEdge = (toSymbolId: string, sourceLine?: number, targetLine?: number) => {
     const key = `${args.fromSymbolId}:${toSymbolId}`;
     if (!edges.has(key)) {
       edges.set(key, {
         fromSymbolId: args.fromSymbolId,
         toSymbolId,
         sourceLine,
+        targetLine,
         confidence: DEFAULT_CALL_CONFIDENCE,
         detector: 'heuristic',
         kind: 'calls'
@@ -282,10 +297,18 @@ function extractEdgesForSymbol(args: {
     }
   };
 
+  const lookupTargetLine = (toSymbolId: string): number | undefined => {
+    for (const file of args.filesByPath.values()) {
+      const hit = file.symbols.find((symbol) => symbol.id === toSymbolId);
+      if (hit) return hit.startLine;
+    }
+    return undefined;
+  };
+
   const resolveLocalIdentifier = (identifier: string, sourceLine?: number) => {
     const localTarget = args.currentFile.symbols.find((symbol) => symbol.name === identifier);
     if (localTarget) {
-      addEdge(localTarget.id, sourceLine);
+      addEdge(localTarget.id, sourceLine, localTarget.startLine);
       return;
     }
 
@@ -312,7 +335,7 @@ function extractEdgesForSymbol(args: {
       pathAliases: args.pathAliases,
       packageExports: args.packageExports
     });
-    if (toSymbolId) addEdge(toSymbolId, sourceLine);
+    if (toSymbolId) addEdge(toSymbolId, sourceLine, lookupTargetLine(toSymbolId));
   };
 
   const resolveMemberExpression = (node: TreeSitterSyntaxNode, sourceLine?: number) => {
@@ -327,7 +350,7 @@ function extractEdgesForSymbol(args: {
 
     const localTarget = args.currentFile.symbols.find((symbol) => symbol.name === objectName);
     if (localTarget) {
-      addEdge(localTarget.id, sourceLine);
+      addEdge(localTarget.id, sourceLine, localTarget.startLine);
       return;
     }
 
@@ -355,7 +378,7 @@ function extractEdgesForSymbol(args: {
       pathAliases: args.pathAliases,
       packageExports: args.packageExports
     });
-    if (toSymbolId) addEdge(toSymbolId, sourceLine);
+    if (toSymbolId) addEdge(toSymbolId, sourceLine, lookupTargetLine(toSymbolId));
   };
 
   walk(args.declarationNode, (node) => {
@@ -419,9 +442,9 @@ async function replaceDependenciesForFile(args: {
         `
           INSERT INTO "SymbolDependency" (
             "revisionId", "fromSymbolId", "toSymbolId",
-            "kind", "confidence", "sourceFile", "sourceLine", "detector"
+            "kind", "confidence", "sourceFile", "sourceLine", "targetLine", "detector"
           )
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
           ON CONFLICT ("revisionId", "fromSymbolId", "toSymbolId") DO NOTHING
         `,
         args.revisionId,
@@ -431,6 +454,7 @@ async function replaceDependenciesForFile(args: {
         edge.confidence,
         args.file.path,
         edge.sourceLine ?? null,
+        edge.targetLine ?? null,
         edge.detector
       );
     }
@@ -440,9 +464,9 @@ async function replaceDependenciesForFile(args: {
         `
           INSERT INTO "ModuleDependency" (
             "repositoryId", "revisionId", "fromModule", "toModule",
-            "kind", "confidence", "sourceFile", "sourceLine", "detector"
+            "kind", "confidence", "sourceFile", "sourceLine", "targetLine", "detector"
           )
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
           ON CONFLICT ("revisionId", "fromModule", "toModule") DO NOTHING
         `,
         args.repositoryId,
@@ -453,6 +477,7 @@ async function replaceDependenciesForFile(args: {
         edge.confidence,
         edge.sourceFile,
         edge.sourceLine ?? null,
+        edge.targetLine ?? null,
         edge.detector
       );
     }
@@ -644,6 +669,7 @@ export async function buildDependencyGraph(args: {
         fromModule: file.path,
         toModule: resolvedModule,
         sourceFile: file.path,
+        sourceLine: binding.sourceLine,
         confidence: defaultImportConfidence(known),
         detector: 'tree-sitter',
         kind: 'imports'

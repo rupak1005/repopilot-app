@@ -40,6 +40,7 @@ type ModuleEdgeRow = {
   confidence: number | null;
   sourceFile: string | null;
   sourceLine: number | null;
+  targetLine: number | null;
   detector: string | null;
 };
 
@@ -90,7 +91,7 @@ function symbolNode(args: {
 }
 
 function provenanceFromRow(
-  row: Pick<ModuleEdgeRow, 'confidence' | 'sourceFile' | 'sourceLine' | 'detector'>,
+  row: Pick<ModuleEdgeRow, 'confidence' | 'sourceFile' | 'sourceLine' | 'targetLine' | 'detector'>,
   revisionSha: string,
   defaults: { confidence: number; detector: ContextEdgeDetector; sourceFile?: string }
 ): ContextEdgeProvenance {
@@ -99,6 +100,7 @@ function provenanceFromRow(
     confidence: row.confidence ?? defaults.confidence,
     sourceFile: row.sourceFile ?? defaults.sourceFile,
     sourceLine: row.sourceLine ?? undefined,
+    targetLine: row.targetLine ?? undefined,
     revisionSha
   };
 }
@@ -160,7 +162,7 @@ export async function getModuleArchitectureGraph(args: {
   const prisma = getPrisma();
   const edgeRows = (await prisma.$queryRawUnsafe(
     `
-      SELECT "fromModule", "toModule", "kind", "confidence", "sourceFile", "sourceLine", "detector"
+      SELECT "fromModule", "toModule", "kind", "confidence", "sourceFile", "sourceLine", "targetLine", "detector"
       FROM "ModuleDependency"
       WHERE "revisionId" = $1
     `,
@@ -236,7 +238,7 @@ export async function expandFromFile(args: {
   const prisma = getPrisma();
   const outboundRows = (await prisma.$queryRawUnsafe(
     `
-      SELECT "toModule", "kind", "confidence", "sourceFile", "sourceLine", "detector"
+      SELECT "toModule", "kind", "confidence", "sourceFile", "sourceLine", "targetLine", "detector"
       FROM "ModuleDependency"
       WHERE "revisionId" = $1
         AND "fromModule" = $2
@@ -289,6 +291,7 @@ export async function expandFromFile(args: {
           confidence: row.confidence,
           sourceFile: row.sourceFile,
           sourceLine: row.sourceLine,
+          targetLine: row.targetLine,
           detector: row.detector
         },
         revision.revisionSha,
@@ -335,6 +338,7 @@ export async function expandFromSymbol(args: {
         sd."confidence",
         sd."sourceFile",
         sd."sourceLine",
+        sd."targetLine",
         sd."detector"
       FROM "SymbolDependency" sd
       WHERE sd."revisionId" = $1
@@ -349,6 +353,7 @@ export async function expandFromSymbol(args: {
     confidence: number | null;
     sourceFile: string | null;
     sourceLine: number | null;
+    targetLine: number | null;
     detector: string | null;
   }>;
   const provenanceByCaller = new Map(edgeRows.map((row) => [row.fromSymbolId, row]));
@@ -380,6 +385,7 @@ export async function expandFromSymbol(args: {
         confidence: row?.confidence ?? 0.65,
         sourceFile: row?.sourceFile ?? undefined,
         sourceLine: row?.sourceLine ?? undefined,
+        targetLine: row?.targetLine ?? undefined,
         revisionSha: revision.revisionSha
       }
     });
@@ -603,7 +609,7 @@ export async function getModuleNeighborhood(args: {
 
   const edgeRows = (await prisma.$queryRawUnsafe(
     `
-      SELECT "fromModule", "toModule", "kind", "confidence", "sourceFile", "sourceLine", "detector"
+      SELECT "fromModule", "toModule", "kind", "confidence", "sourceFile", "sourceLine", "targetLine", "detector"
       FROM "ModuleDependency"
       WHERE "revisionId" = $1
     `,

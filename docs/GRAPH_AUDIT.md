@@ -18,6 +18,7 @@
 | Package `exports` / `main` | In-repo workspace packages via indexed `package.json` | `packageExports.ts` |
 | Static `import()` | Literal dynamic imports → module edges + FileImport | `dynamicImports.ts` |
 | Config discovery | `package.json` + tsconfig/jsconfig indexed (not parsed as code) | `fileDiscovery.ts` |
+| Edge provenance | `sourceLine` + `targetLine` + detector/confidence | schema + `dependencyGraphBuilder` / `contextGraph` |
 | Resolution fixtures | Alias, barrel, star re-export, package exports, dynamic import, cycles | `graphResolution.fixtures.test.ts`, `packageExports.test.ts` |
 | MCP | `trace_dependencies`, `get_context_pack` | `api/src/mcp/` |
 
@@ -33,7 +34,7 @@
 3. Symbol “calls” are heuristic, not type-aware (`detector: heuristic`, lower confidence)
 4. Large repos may need a server-only overview (client clustering helps but is not infinite)
 5. ~~`package.json` `exports` + static dynamic-`import()`~~ (done 2026-08-21)
-6. Edge `targetLine` not persisted
+6. ~~Edge `targetLine` not persisted~~ — `sourceLine` + `targetLine` on module/symbol edges (2026-08-21)
 
 ## Explicitly deferred (Gate B+)
 

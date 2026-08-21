@@ -21,12 +21,13 @@ Shipped in this gate so far:
 - Index `package.json` + tsconfig/jsconfig for resolve (no Tree-sitter parse)
 - Fixture suites for alias / barrel / package exports / dynamic import
 - Neighborhood path closure (BFS ancestors kept so depth-2 edges stay real, not star-to-seed)
+- Edge `targetLine` (+ import `sourceLine`) persisted and returned in graph provenance
 - Call edges remain explicitly `detector: heuristic` (Phase 1.2 still open)
 
 Still open for Gate A:
 
 - Type-aware call relationships (replace heuristics gradually)
-- `targetLine` on edges; precision/recall scoreboard beyond fixtures
+- Precision/recall scoreboard beyond fixtures
 - Remaining unresolved aliases when no `paths` / `@/` match
 
 See `docs/GRAPH_AUDIT.md`.
