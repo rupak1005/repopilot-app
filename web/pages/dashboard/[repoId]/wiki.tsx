@@ -170,7 +170,11 @@ export default function WikiPage() {
             <EmptyState
               icon={BookOpen}
               title="Page not found in index"
-              description="This path is missing from the indexed revision, or it is not markdown."
+              description={
+                selectedPath
+                  ? `${selectedPath} is missing from this indexed revision, or it is not markdown. This repo may only have a README — open Wiki for listed pages, or switch to a repo that includes docs/.`
+                  : 'This path is missing from the indexed revision, or it is not markdown.'
+              }
               action={
                 <button type="button" className="ui-diagram__action" onClick={closePage}>
                   Back to wiki →

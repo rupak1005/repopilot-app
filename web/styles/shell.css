@@ -351,6 +351,39 @@
   box-shadow: var(--shadow-hard-lg);
 }
 
+.topbar-popover__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.topbar-popover__head .topbar-popover__eyebrow {
+  margin: 0;
+}
+
+.topbar-popover__close {
+  appearance: none;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: 0;
+  padding: 0;
+  border: var(--border-medium);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted, var(--color-surface));
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.topbar-popover__close:hover {
+  color: var(--color-text);
+}
+
 .topbar-popover__eyebrow {
   margin: 0 0 var(--space-1);
   color: var(--color-text-subtle);

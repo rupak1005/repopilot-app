@@ -14,22 +14,39 @@ export type RepositoryRevisionStatus = RepositoryRevisionInfo & {
   moduleDependencyCount: number;
 };
 
+/** Accept full SHAs or UI short prefixes (`?rev=5117ce9`). Min 7 chars for prefix match. */
+export function normalizeRevisionShaQuery(revisionSha?: string | null): string | null {
+  if (typeof revisionSha !== 'string') return null;
+  const sha = revisionSha.trim().toLowerCase();
+  return sha.length > 0 ? sha : null;
+}
+
 export async function resolveRepositoryRevision(args: {
   repositoryId: string;
   revisionSha?: string;
 }): Promise<RepositoryRevisionInfo | null> {
   const prisma = getPrisma();
+  const sha = normalizeRevisionShaQuery(args.revisionSha);
   const rows = (await prisma.$queryRawUnsafe(
     `
       SELECT "id", "repositoryId", "revisionSha", "indexedAt"
       FROM "RepositoryRevision"
       WHERE "repositoryId" = $1
-        AND ($2::text IS NULL OR "revisionSha" = $2)
-      ORDER BY "indexedAt" DESC
+        AND (
+          $2::text IS NULL
+          OR lower("revisionSha") = $2
+          OR (
+            length($2) >= 7
+            AND lower("revisionSha") LIKE $2 || '%'
+          )
+        )
+      ORDER BY
+        CASE WHEN $2::text IS NOT NULL AND lower("revisionSha") = $2 THEN 0 ELSE 1 END,
+        "indexedAt" DESC
       LIMIT 1
     `,
     args.repositoryId,
-    args.revisionSha ?? null
+    sha
   )) as RepositoryRevisionInfo[];
 
   return rows[0] ?? null;
@@ -54,6 +71,9 @@ export async function getRepositoryRevisionStatus(args: {
   repositoryId: string;
   revisionSha: string;
 }): Promise<RepositoryRevisionStatus | null> {
+  const revision = await resolveRepositoryRevision(args);
+  if (!revision) return null;
+
   const prisma = getPrisma();
   const rows = (await prisma.$queryRawUnsafe(
     `
@@ -88,12 +108,10 @@ export async function getRepositoryRevisionStatus(args: {
         FROM "ModuleDependency"
         GROUP BY "revisionId"
       ) module_dep_counts ON module_dep_counts."revisionId" = rr."id"
-      WHERE rr."repositoryId" = $1
-        AND rr."revisionSha" = $2
+      WHERE rr."id" = $1
       LIMIT 1
     `,
-    args.repositoryId,
-    args.revisionSha
+    revision.id
   )) as RepositoryRevisionStatus[];
 
   return rows[0] ?? null;

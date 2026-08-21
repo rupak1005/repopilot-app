@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Bell } from '@phosphor-icons/react';
+import { Bell, X } from '@phosphor-icons/react';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   activityUnreadCount,
@@ -99,7 +99,17 @@ export function TopbarActivity({ repoId, repoFullName, indexStatus, className }:
       </IconButton>
       {open ? (
         <div id={panelId} className="topbar-popover__panel" role="dialog" aria-label="Activity">
-          <p className="topbar-popover__eyebrow label-caps">Activity</p>
+          <div className="topbar-popover__head">
+            <p className="topbar-popover__eyebrow label-caps">Activity</p>
+            <button
+              type="button"
+              className="topbar-popover__close"
+              aria-label="Close activity"
+              onClick={() => setOpen(false)}
+            >
+              <X size={14} weight="bold" />
+            </button>
+          </div>
           <ul className="topbar-activity">
             {items.map((item) => (
               <ActivityRow key={item.id} item={item} onNavigate={() => setOpen(false)} />

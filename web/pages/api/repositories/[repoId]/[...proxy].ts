@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import {
   assertRepoSession,
   proxyApiRequest,
+  repositoryProxyForwardQuery,
   repositoryProxySubpath
 } from '../../../../lib/serverApi';
 import { getSession } from '../../../../lib/session';
@@ -44,7 +45,7 @@ export default async function handler(
     return;
   }
 
-  // Never use req.query.path — it collides with ?path= for wiki/ownership.
+  // Read catch-all from pathname — never from req.query.proxy alone for safety.
   const subPath = repositoryProxySubpath(req.url, repoId);
   const head = subPath.split('/')[0] ?? '';
   if (!head || !ALLOWED_PREFIXES.includes(head)) {
@@ -52,8 +53,9 @@ export default async function handler(
     return;
   }
 
-  const queryIndex = req.url?.indexOf('?') ?? -1;
-  const queryString = queryIndex >= 0 ? req.url!.slice(queryIndex) : '';
+  // Rebuild query from req.query so ?path= / ?revisionSha= survive Next's URL parsing.
+  // Catch-all is [...proxy] (not [...path]) so wiki/ownership ?path= is not swallowed.
+  const queryString = repositoryProxyForwardQuery(req.query, ['repoId', 'proxy']);
   const apiPath = `/api/v1/repositories/${repoId}/${subPath}${queryString}`;
 
   const headers: Record<string, string> = { Accept: 'application/json' };

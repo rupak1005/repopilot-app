@@ -11,6 +11,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { MAIN_CONTENT_ID, firstFocusable } from '../lib/a11y';
 import { indexStatusLabel, isRepoIndexInProgress, useAnimatedIndexProgress, useIndexStatus } from '../lib/indexStatus';
 import { useIndexProgressUi } from '../lib/indexProgressUi';
+import { nextIndexFloatStartedFor, shouldAutoStartIndexFloat } from '../lib/indexProgressFloatGate';
 import { GITHUB_SIGN_IN_URL, signOut } from '../lib/auth';
 import { NAV_GROUPS } from '../lib/shellNav';
 import type { NavKey } from '../lib/shellChrome';
@@ -94,12 +95,30 @@ export function AppShell({
     .join(' ');
   const pulseIdle = !demoMode && indexStatus?.state === 'ready' && !indexInProgress;
   const revisionShort = indexStatus?.revisionSha?.slice(0, 7) ?? null;
+  const indexFloatStartedFor = useRef<string | null>(null);
 
   useEffect(() => {
-    if (demoMode || !indexStatus || indexStatus.state !== 'indexing') return;
-    if (job?.repoId === repoId) return;
-    startIndexProgress({ repoId, fullName: repoFullName });
-  }, [demoMode, indexStatus, repoId, repoFullName, job?.repoId, startIndexProgress]);
+    const indexing = indexStatus?.state === 'indexing';
+    const startedFor = indexFloatStartedFor.current;
+    // Mark this indexing run before start so dismiss (job → null) cannot re-open the float.
+    if (shouldAutoStartIndexFloat({
+      demoMode,
+      repoId,
+      indexing,
+      startedFor,
+      activeJobRepoId: job?.repoId
+    })) {
+      indexFloatStartedFor.current = repoId!;
+      startIndexProgress({ repoId: repoId!, fullName: repoFullName });
+      return;
+    }
+    indexFloatStartedFor.current = nextIndexFloatStartedFor({
+      demoMode,
+      repoId,
+      indexing,
+      startedFor
+    });
+  }, [demoMode, indexStatus?.state, repoId, repoFullName, job?.repoId, startIndexProgress]);
 
   useEffect(() => {
     function close() {

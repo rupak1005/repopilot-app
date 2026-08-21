@@ -70,7 +70,11 @@ export function IndexProgressFloat({ repoId, fullName, onReady, onFailed }: Inde
           type="button"
           className="index-progress-float__close"
           aria-label="Dismiss indexing progress"
-          onClick={() => clearIndexProgress()}
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            clearIndexProgress();
+          }}
         >
           <X size={14} weight="bold" />
         </button>

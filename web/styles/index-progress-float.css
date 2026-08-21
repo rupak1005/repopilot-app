@@ -62,17 +62,22 @@
 }
 
 .index-progress-float__close {
+  appearance: none;
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: var(--border-medium);
+  width: 1.75rem;
+  height: 1.75rem;
+  margin: -0.2rem -0.2rem 0 0;
+  border: var(--border-heavy);
   border-radius: var(--radius-sm);
-  background: var(--color-surface-muted);
-  color: var(--color-text-muted);
+  background: var(--color-surface);
+  color: var(--ink, #1a1025);
   cursor: pointer;
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
   box-shadow: var(--shadow-hard-sm);
 }
 

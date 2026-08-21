@@ -39,9 +39,8 @@ export function repoApiPath(repoId: string, subpath: string): string {
 }
 
 /**
- * Catch-all segments for `/api/repositories/:repoId/[...path]`.
- * Read from the pathname — never `req.query.path` — so a `?path=` query
- * (wiki / ownership) does not collide with the dynamic route name.
+ * Catch-all segments for `/api/repositories/:repoId/[...proxy]`.
+ * Read from the pathname — never the catch-all query key — so routing stays stable.
  */
 export function repositoryProxySubpath(reqUrl: string | undefined, repoId: string): string {
   const pathname = (reqUrl ?? '').split('?')[0] ?? '';
@@ -49,4 +48,24 @@ export function repositoryProxySubpath(reqUrl: string | undefined, repoId: strin
   const at = pathname.indexOf(needle);
   if (at < 0) return '';
   return pathname.slice(at + needle.length).replace(/^\/+|\/+$/g, '');
+}
+
+/**
+ * Forward client query params to the API, omitting Next route keys.
+ * Named `[...proxy]` (not `[...path]`) so wiki/ownership `?path=` is preserved.
+ */
+export function repositoryProxyForwardQuery(
+  query: Record<string, string | string[] | undefined>,
+  omitKeys: string[] = ['repoId', 'proxy']
+): string {
+  const omit = new Set(omitKeys);
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    if (omit.has(key) || value == null) continue;
+    for (const part of Array.isArray(value) ? value : [value]) {
+      if (part !== '') params.append(key, part);
+    }
+  }
+  const serialized = params.toString();
+  return serialized ? `?${serialized}` : '';
 }
