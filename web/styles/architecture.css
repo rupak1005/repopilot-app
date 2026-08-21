@@ -314,8 +314,8 @@
   border-radius: var(--radius-xl);
   border: var(--border-heavy);
   background-color: var(--diagram-canvas-bg);
-  background-image: radial-gradient(var(--diagram-canvas-dot) 1px, transparent 1px);
-  background-size: 20px 20px;
+  background-image: radial-gradient(var(--diagram-canvas-dot) 1.1px, transparent 1.1px);
+  background-size: 18px 18px;
   overflow: hidden;
   box-shadow: var(--shadow-hard-md);
 }

@@ -138,19 +138,20 @@
   --z-overlay: 50;
   --z-toast: 60;
 
-  /* Architecture canvas (Layer C) */
-  --diagram-canvas-bg: hsl(270 35% 94%);
-  --diagram-canvas-dot: hsl(270 15% 78%);
-  --diagram-node-fill: hsl(270 100% 99%);
-  --diagram-node-fill-dim: hsl(270 20% 88% / 0.75);
-  --diagram-node-fill-selected: hsl(270 97% 75% / 0.28);
-  --diagram-node-text: hsl(0 0% 10%);
-  --diagram-node-text-dim: hsl(0 0% 42%);
-  --diagram-link-active: hsl(270 85% 48% / 0.55);
-  --diagram-link-dim: hsl(270 10% 65% / 0.4);
-  --diagram-accent: hsl(270 90% 48%);
-  --diagram-hotspot: hsl(25 95% 48%);
-  --diagram-border-dim: hsl(270 10% 70% / 0.45);
+  /* Architecture canvas (Layer C) — soft Mermaid-like interactive graph */
+  --diagram-canvas-bg: hsl(270 40% 95%);
+  --diagram-canvas-dot: hsl(270 18% 82%);
+  --diagram-node-fill: hsl(270 70% 95%);
+  --diagram-node-fill-dim: hsl(270 25% 90% / 0.7);
+  --diagram-node-fill-selected: hsl(270 85% 88%);
+  --diagram-node-text: hsl(270 25% 14%);
+  --diagram-node-text-dim: hsl(270 10% 48%);
+  --diagram-node-border: hsl(270 28% 72%);
+  --diagram-link-active: hsl(270 8% 48% / 0.55);
+  --diagram-link-dim: hsl(270 10% 68% / 0.32);
+  --diagram-accent: hsl(270 75% 48%);
+  --diagram-hotspot: hsl(25 90% 48%);
+  --diagram-border-dim: hsl(270 12% 72% / 0.5);
 }
 
 [data-theme='dark'] {
@@ -193,12 +194,13 @@
 
   --diagram-canvas-bg: hsl(260 28% 7%);
   --diagram-canvas-dot: hsl(260 15% 22%);
-  --diagram-node-fill: hsl(260 24% 14%);
+  --diagram-node-fill: hsl(270 28% 18%);
   --diagram-node-fill-dim: hsl(260 20% 10% / 0.65);
-  --diagram-node-fill-selected: hsl(270 70% 68% / 0.18);
+  --diagram-node-fill-selected: hsl(270 50% 28%);
   --diagram-node-text: hsl(270 30% 94%);
   --diagram-node-text-dim: hsl(270 10% 55%);
-  --diagram-link-active: hsl(270 80% 72% / 0.45);
+  --diagram-node-border: hsl(270 30% 42%);
+  --diagram-link-active: hsl(270 15% 62% / 0.5);
   --diagram-link-dim: hsl(260 12% 28% / 0.55);
   --diagram-accent: hsl(270 80% 72%);
   --diagram-hotspot: hsl(25 95% 58%);

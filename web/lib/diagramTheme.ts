@@ -7,6 +7,7 @@ export type DiagramCanvasColors = {
   nodeFillSelected: string;
   nodeText: string;
   nodeTextDim: string;
+  nodeBorder: string;
   linkActive: string;
   linkDim: string;
   accent: string;
@@ -15,17 +16,18 @@ export type DiagramCanvasColors = {
 };
 
 const FALLBACK: DiagramCanvasColors = {
-  canvasBg: '#0c0c0e',
-  nodeFill: '#18181b',
-  nodeFillDim: 'rgba(24,24,27,0.55)',
-  nodeFillSelected: 'rgba(34,211,238,0.14)',
-  nodeText: '#fafafa',
-  nodeTextDim: 'rgba(161,161,170,0.5)',
-  linkActive: 'rgba(34,211,238,0.45)',
-  linkDim: 'rgba(63,63,70,0.18)',
-  accent: '#22d3ee',
-  hotspot: '#fb923c',
-  borderDim: 'rgba(63,63,70,0.35)'
+  canvasBg: '#efe6f8',
+  nodeFill: '#f3e8ff',
+  nodeFillDim: 'rgba(233, 213, 255, 0.55)',
+  nodeFillSelected: 'rgba(196, 181, 253, 0.55)',
+  nodeText: '#1a1025',
+  nodeTextDim: 'rgba(82, 82, 91, 0.55)',
+  nodeBorder: 'rgba(167, 139, 250, 0.85)',
+  linkActive: 'rgba(113, 113, 122, 0.55)',
+  linkDim: 'rgba(161, 161, 170, 0.28)',
+  accent: '#7c3aed',
+  hotspot: '#ea580c',
+  borderDim: 'rgba(196, 181, 253, 0.4)'
 };
 
 const VARS: Array<[keyof DiagramCanvasColors, string]> = [
@@ -35,6 +37,7 @@ const VARS: Array<[keyof DiagramCanvasColors, string]> = [
   ['nodeFillSelected', '--diagram-node-fill-selected'],
   ['nodeText', '--diagram-node-text'],
   ['nodeTextDim', '--diagram-node-text-dim'],
+  ['nodeBorder', '--diagram-node-border'],
   ['linkActive', '--diagram-link-active'],
   ['linkDim', '--diagram-link-dim'],
   ['accent', '--diagram-accent'],

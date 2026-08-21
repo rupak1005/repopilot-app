@@ -58,7 +58,7 @@ function shortLabel(filePath: string): string {
 
 /** Canvas box width — keep in sync with ArchitectureGraph paintNode. */
 export function nodeBoxWidth(label: string): number {
-  return Math.max(88, Math.min(168, label.length * 6.2 + 28));
+  return Math.max(96, Math.min(176, label.length * 6.4 + 32));
 }
 
 export function nodeCollideRadius(node: ForceGraphNode): number {

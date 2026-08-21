@@ -40,6 +40,11 @@ import { blastHighlightSet, blastRole, type BlastOverlay } from '../../lib/blast
 import { layoutWithDagre } from '../../lib/dagreLayout';
 import { layoutWithElk, type GraphLayoutAlgo } from '../../lib/elkLayout';
 import {
+  diagramLinkControlPoint,
+  diagramLinkCurvature,
+  diagramLinkEndTangent
+} from '../../lib/diagramCanvasPaint';
+import {
   cameraFromZoomTransform,
   type MinimapCamera
 } from '../../lib/graphMinimap';
@@ -460,12 +465,8 @@ export function ArchitectureGraphView({
   const linkCurvature = useCallback((link: LinkObject) => {
     const src = link.source as GraphNode;
     const tgt = link.target as GraphNode;
-    if (src.y == null || tgt.y == null || src.x == null || tgt.x == null) return 0;
-    return (
-      0.07 *
-      Math.max(-1, Math.min(1, (tgt.x - src.x) / 5)) *
-      Math.max(-1, Math.min(1, (tgt.y - src.y) / 5))
-    );
+    if (src.y == null || tgt.y == null || src.x == null || tgt.x == null) return 0.14;
+    return diagramLinkCurvature(tgt.x - src.x, tgt.y - src.y);
   }, []);
 
   const highlight = useMemo(() => {
@@ -588,63 +589,81 @@ export function ArchitectureGraphView({
       const isCluster = n.kind === 'cluster' || Boolean(parseClusterId(id));
       const lay = layerOf(n.id);
       const meta = lay === 'other' ? LAYER_META.other : LAYER_META[lay];
-      const w = nodeBoxWidth(n.label);
-      const h = isCluster ? 46 : 40;
+      const w = nodeBoxWidth(n.label) + (isCluster ? 8 : 4);
+      const h = isCluster ? 44 : 38;
       const x = n.x - w / 2;
       const y = n.y - h / 2;
+      const radius = isCluster ? 14 : 11;
+      const lw = Math.max(1.1, 1.35 / globalScale);
+
+      ctx.save();
+      if (!dimmed) {
+        ctx.shadowColor = 'rgba(45, 20, 70, 0.14)';
+        ctx.shadowBlur = 10 / Math.max(globalScale, 0.55);
+        ctx.shadowOffsetY = 2 / Math.max(globalScale, 0.55);
+      }
 
       ctx.beginPath();
-      ctx.roundRect(x, y, w, h, isCluster ? 12 : 8);
-      if (role === 'seed') {
+      ctx.roundRect(x, y, w, h, radius);
+      if (role === 'seed' || selected || pulsing) {
         ctx.fillStyle = colors.nodeFillSelected;
       } else if (dimmed) {
         ctx.fillStyle = colors.nodeFillDim;
-      } else if (selected || pulsing) {
-        ctx.fillStyle = colors.nodeFillSelected;
+      } else if (isCluster) {
+        ctx.fillStyle = colors.nodeFill;
       } else {
         ctx.fillStyle = colors.nodeFill;
       }
       ctx.fill();
+      ctx.shadowColor = 'transparent';
 
+      // Soft layer tint strip (Mermaid-like calm hierarchy without loud borders).
+      if (!dimmed && lay !== 'other') {
+        ctx.fillStyle = meta.color;
+        ctx.globalAlpha = selected ? 0.9 : 0.7;
+        ctx.fillRect(x + 1.5, y + 4, 4, h - 8);
+        ctx.globalAlpha = 1;
+      }
+
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, radius);
       if (role === 'seed') {
         ctx.strokeStyle = colors.accent;
-        ctx.lineWidth = 2.6 / globalScale;
+        ctx.lineWidth = 2.4 * lw;
       } else if (role === 'direct') {
         ctx.strokeStyle = colors.hotspot;
-        ctx.lineWidth = 2.2 / globalScale;
+        ctx.lineWidth = 2 * lw;
       } else if (role === 'transitive') {
         ctx.strokeStyle = meta.color;
-        ctx.lineWidth = 1.8 / globalScale;
+        ctx.lineWidth = 1.6 * lw;
+      } else if (n.isHotspot && !selected) {
+        ctx.strokeStyle = colors.hotspot;
+        ctx.lineWidth = 1.8 * lw;
+      } else if (selected || pulsing) {
+        ctx.strokeStyle = colors.accent;
+        ctx.lineWidth = 2.2 * lw;
       } else {
-        ctx.strokeStyle = dimmed
-          ? colors.borderDim
-          : n.isHotspot
-            ? colors.hotspot
-            : selected || pulsing
-              ? colors.accent
-              : meta.color;
-        ctx.lineWidth =
-          selected || pulsing ? 2.2 / globalScale : isCluster ? 1.8 / globalScale : 1.2 / globalScale;
+        ctx.strokeStyle = dimmed ? colors.borderDim : colors.nodeBorder;
+        ctx.lineWidth = isCluster ? 1.7 * lw : 1.35 * lw;
       }
-      if (isCluster) ctx.setLineDash([4 / globalScale, 3 / globalScale]);
       ctx.stroke();
-      ctx.setLineDash([]);
 
-      if (globalScale > 0.28) {
-        const fontSize = Math.max(8.5 / globalScale, 3.4);
-        ctx.font = `600 ${fontSize}px var(--font-sans, system-ui)`;
+      if (globalScale > 0.32) {
+        const fontSize = Math.max(9.5 / globalScale, 3.6);
+        ctx.font = `${isCluster ? 650 : 600} ${fontSize}px var(--font-sans, "General Sans", system-ui)`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = dimmed ? colors.nodeTextDim : colors.nodeText;
-        const label = n.label.length > 22 ? `${n.label.slice(0, 21)}…` : n.label;
-        ctx.fillText(label, n.x, n.y);
+        const label = n.label.length > 24 ? `${n.label.slice(0, 23)}…` : n.label;
+        ctx.fillText(label, n.x + (lay !== 'other' && !dimmed ? 1.5 : 0), n.y);
       }
+      ctx.restore();
     },
     [blastOverlay, colors, highlight, pulseId, selectedId]
   );
 
   const paintLink = useCallback(
-    (link: object, ctx: CanvasRenderingContext2D) => {
+    (link: object, ctx: CanvasRenderingContext2D, globalScale: number) => {
       const l = link as GraphLink;
       const src = l.source as GraphNode;
       const tgt = l.target as GraphNode;
@@ -653,15 +672,34 @@ export function ArchitectureGraphView({
       const srcId = String(typeof l.source === 'object' ? src.id : l.source);
       const tgtId = String(typeof l.target === 'object' ? tgt.id : l.target);
       const active = !highlight || (highlight.has(srcId) && highlight.has(tgtId));
+      const curvature = diagramLinkCurvature(tgt.x - src.x, tgt.y - src.y);
+      const { cx, cy } = diagramLinkControlPoint(src.x, src.y, tgt.x, tgt.y, curvature);
 
+      ctx.save();
       ctx.beginPath();
       ctx.moveTo(src.x, src.y);
-      ctx.lineTo(tgt.x, tgt.y);
+      ctx.quadraticCurveTo(cx, cy, tgt.x, tgt.y);
       ctx.strokeStyle = active ? colors.linkActive : colors.linkDim;
-      ctx.lineWidth = active ? 1.4 : 0.7;
-      if (l.uncertain) ctx.setLineDash([5, 4]);
+      ctx.lineWidth = (active ? 1.55 : 0.95) / Math.max(globalScale * 0.35, 0.65);
+      ctx.lineCap = 'round';
+      if (l.uncertain) ctx.setLineDash([5 / globalScale, 4 / globalScale]);
       ctx.stroke();
       ctx.setLineDash([]);
+
+      if (active && globalScale > 0.35) {
+        const { ux, uy } = diagramLinkEndTangent(cx, cy, tgt.x, tgt.y);
+        const size = 5.5 / Math.max(globalScale * 0.4, 0.7);
+        const tipX = tgt.x - ux * 2;
+        const tipY = tgt.y - uy * 2;
+        ctx.beginPath();
+        ctx.moveTo(tipX, tipY);
+        ctx.lineTo(tipX - ux * size - uy * size * 0.55, tipY - uy * size + ux * size * 0.55);
+        ctx.lineTo(tipX - ux * size + uy * size * 0.55, tipY - uy * size - ux * size * 0.55);
+        ctx.closePath();
+        ctx.fillStyle = colors.linkActive;
+        ctx.fill();
+      }
+      ctx.restore();
     },
     [colors, highlight]
   );
@@ -945,14 +983,14 @@ export function ArchitectureGraphView({
           width={dims.width}
           height={dims.height}
           graphData={layoutData}
+          backgroundColor="rgba(0,0,0,0)"
           nodeId="id"
           nodeVal="val"
           nodeLabel="label"
           warmupTicks={0}
           cooldownTicks={0}
           enableNodeDrag
-          linkDirectionalArrowLength={5}
-          linkDirectionalArrowRelPos={1}
+          linkDirectionalArrowLength={0}
           linkCurvature={linkCurvature}
           onEngineStop={fitGraph}
           onZoom={onGraphZoom}
@@ -973,9 +1011,9 @@ export function ArchitectureGraphView({
           nodePointerAreaPaint={(node, color, ctx) => {
             const n = node as GraphNode;
             if (n.x == null || n.y == null) return;
-            const w = nodeBoxWidth(n.label);
+            const w = nodeBoxWidth(n.label) + 8;
             ctx.beginPath();
-            ctx.roundRect(n.x - w / 2, n.y - 20, w, 40, 8);
+            ctx.roundRect(n.x - w / 2, n.y - 22, w, 44, 12);
             ctx.fillStyle = color;
             ctx.fill();
           }}
