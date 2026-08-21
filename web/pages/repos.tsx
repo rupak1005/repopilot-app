@@ -6,6 +6,7 @@ import { ErrorBanner } from '../components/ui/ErrorBanner';
 import { Pagination } from '../components/ui/Pagination';
 import { PublicPageLayout } from '../components/ui/PublicPageLayout';
 import { RepoCard } from '../components/ui/RepoCard';
+import { PageLoading } from '../components/ui/Skeleton';
 import {
   filterUserRepos,
   type RepoSort,
@@ -171,7 +172,7 @@ export default function ReposPage() {
         ) : null}
 
         {!needsSignIn && loading ? (
-          <p className="empty-state">Loading your GitHub repositories…</p>
+          <PageLoading label="Loading your GitHub repositories…" />
         ) : !needsSignIn && repos.length === 0 ? (
           <p className="empty-state">No repositories found on your GitHub account.</p>
         ) : !needsSignIn && filtered.length === 0 ? (

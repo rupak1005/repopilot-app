@@ -9,6 +9,7 @@ type SharedProps = {
   variant?: ButtonVariant;
   size?: ButtonSize;
   fullWidth?: boolean;
+  loading?: boolean;
   icon?: ReactNode;
   iconPosition?: 'left' | 'right';
   children: ReactNode;
@@ -25,6 +26,7 @@ export type ButtonProps = ButtonAsButton | ButtonAsLink;
 function classNames(props: ButtonProps): string {
   const parts = ['ui-button', `ui-button--${props.variant ?? 'primary'}`, `ui-button--${props.size ?? 'md'}`];
   if (props.fullWidth) parts.push('ui-button--full');
+  if (props.loading) parts.push('ui-button--loading');
   if (props.className) parts.push(props.className);
   return parts.join(' ');
 }
@@ -41,8 +43,8 @@ function ButtonContent({ icon, iconPosition = 'left', children }: SharedProps) {
 
 export function Button(props: ButtonProps) {
   const tap = useTapMotion();
-  const { variant, size, fullWidth, icon, iconPosition, children, className, ...rest } = props;
-  const shared = { variant, size, fullWidth, icon, iconPosition, children, className };
+  const { variant, size, fullWidth, loading, icon, iconPosition, children, className, ...rest } = props;
+  const shared = { variant, size, fullWidth, loading, icon, iconPosition, children, className };
 
   if ('href' in props && props.href) {
     const { href, ...linkRest } = rest as AnchorHTMLAttributes<HTMLAnchorElement>;
@@ -50,6 +52,7 @@ export function Button(props: ButtonProps) {
       <motion.a
         href={href}
         className={classNames(props)}
+        aria-busy={loading || undefined}
         {...tap}
         {...(linkRest as HTMLMotionProps<'a'>)}
       >
@@ -59,12 +62,15 @@ export function Button(props: ButtonProps) {
   }
 
   const buttonRest = rest as ButtonHTMLAttributes<HTMLButtonElement>;
+  const { disabled: disabledProp, ...buttonSafe } = buttonRest;
   return (
     <motion.button
       type="button"
       className={classNames(props)}
+      aria-busy={loading || undefined}
+      disabled={Boolean(disabledProp || loading)}
       {...tap}
-      {...(buttonRest as HTMLMotionProps<'button'>)}
+      {...(buttonSafe as HTMLMotionProps<'button'>)}
     >
       <ButtonContent {...shared} />
     </motion.button>

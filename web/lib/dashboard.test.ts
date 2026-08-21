@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { formatLatency, hotspotScoreClass } from './metrics';
 
 describe('formatLatency', () => {
-  it('returns n/a for null', () => {
-    expect(formatLatency(null)).toBe('n/a');
+  it('returns Not available for null', () => {
+    expect(formatLatency(null)).toBe('Not available');
   });
 
   it('formats sub-second values in ms', () => {

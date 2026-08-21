@@ -100,7 +100,8 @@
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
-  --space-5: 20px;
+  /* Prefer 4/8/12/16/24…; --space-5 kept as alias of --space-6 for legacy call sites */
+  --space-5: var(--space-6);
   --space-6: 24px;
   --space-8: 32px;
   --space-10: 40px;
@@ -120,7 +121,7 @@
   --radius: var(--radius-sm);
 
   /* ——— Layout ——— */
-  --sidebar-width: 240px;
+  --sidebar-width: 280px;
   --header-height: 64px;
   --container-max: 1280px;
 

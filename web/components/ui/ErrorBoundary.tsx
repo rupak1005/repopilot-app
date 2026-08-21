@@ -43,11 +43,11 @@ export class ErrorBoundary extends Component<Props, State> {
       <div className="ui-error-boundary">
         <EmptyState
           icon={WarningCircle}
-          title="Something broke in this view"
+          title="This view couldn’t render"
           description={
             process.env.NODE_ENV === 'development'
               ? this.state.error.message
-              : 'Try again. If it keeps failing, reload the page.'
+              : 'The rest of RepoPilot is still available. Try again, or reload if it keeps failing.'
           }
           action={
             <div className="ui-error-boundary__actions">

@@ -128,8 +128,8 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  min-height: 36px;
-  min-width: 36px;
+  min-height: var(--space-10);
+  min-width: var(--space-10);
   padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-md);
   border: var(--border-medium);
@@ -162,7 +162,7 @@
   align-items: center;
   gap: var(--space-2);
   flex-shrink: 0;
-  min-height: 36px;
+  min-height: var(--space-10);
   padding: var(--space-2) var(--space-4);
   background: var(--color-surface-muted);
   border-bottom: var(--border-light);
@@ -413,7 +413,7 @@
 .topbar-popover__link {
   display: inline-flex;
   align-items: center;
-  min-height: 36px;
+  min-height: var(--space-10);
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm);
   border: var(--border-medium);

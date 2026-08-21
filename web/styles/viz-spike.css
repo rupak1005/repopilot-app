@@ -1,27 +1,27 @@
 .ui-viz-spike {
   display: flex;
   flex-direction: column;
-  gap: 0.7rem;
+  gap: var(--space-3);
   min-height: 0;
   height: 100%;
-  padding: 0.1rem 0.1rem 0.65rem;
+  padding: 0 0 var(--space-3);
 }
 
 .ui-viz-spike__toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 0.5rem 0.7rem;
-  padding: 0.15rem 0.1rem 0;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-1) 0 0;
 }
 
 .ui-viz-spike__toolbar-title {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: var(--space-1);
   min-width: 10rem;
   margin-right: auto;
-  padding-bottom: 0.1rem;
+  padding-bottom: 0;
 }
 
 .ui-viz-spike__toolbar .label-caps {
@@ -31,17 +31,18 @@
 
 .ui-viz-spike__lede {
   margin: 0;
-  font-size: 0.78rem;
-  color: var(--muted, #52525b);
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
   max-width: 34rem;
   line-height: 1.4;
 }
 
 .ui-viz-spike__seg {
   display: inline-flex;
-  border: 2px solid var(--ink, #1a1025);
-  box-shadow: 2px 2px 0 var(--ink, #1a1025);
-  background: #fff;
+  border: var(--border-medium);
+  border-color: var(--color-border-strong);
+  box-shadow: 2px 2px 0 var(--shadow-color);
+  background: var(--color-surface);
 }
 
 .ui-viz-spike__seg button {
@@ -50,17 +51,18 @@
   background: transparent;
   padding: 0.42rem 0.72rem;
   font: inherit;
-  font-size: 0.78rem;
+  font-size: var(--text-caption);
   cursor: pointer;
-  color: var(--ink, #1a1025);
+  color: var(--color-text);
 }
 
 .ui-viz-spike__seg button + button {
-  border-left: 2px solid var(--ink, #1a1025);
+  border-left: var(--border-medium);
+  border-color: var(--color-border-strong);
 }
 
 .ui-viz-spike__seg button[aria-pressed='true'] {
-  background: var(--lavender-300, #d8b4fe);
+  background: var(--color-primary);
   font-weight: 600;
 }
 
@@ -86,11 +88,12 @@
   flex: 1 1 auto;
   height: clamp(26rem, 58vh, 40rem);
   min-height: 26rem;
-  border: 2px solid var(--ink, #1a1025);
-  box-shadow: 5px 5px 0 var(--ink, #1a1025);
+  border: var(--border-medium);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-hard-md);
   background:
-    radial-gradient(ellipse 65% 50% at 48% 38%, rgba(255, 255, 255, 0.62), transparent 72%),
-    linear-gradient(165deg, #f4ecff 0%, #ebe0fb 48%, #e4d4fa 100%);
+    radial-gradient(ellipse 65% 50% at 48% 38%, color-mix(in srgb, var(--color-surface) 62%, transparent), transparent 72%),
+    linear-gradient(165deg, var(--color-background) 0%, var(--color-surface-muted) 48%, var(--color-surface-accent) 100%);
   overflow: hidden;
 }
 
@@ -103,9 +106,10 @@
   min-height: 0;
   max-height: clamp(26rem, 58vh, 40rem);
   overflow: auto;
-  border: 2px solid var(--ink, #1a1025);
-  box-shadow: 5px 5px 0 var(--ink, #1a1025);
-  background: #fff;
+  border: var(--border-medium);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-hard-md);
+  background: var(--color-surface);
 }
 
 .ui-viz-spike__inspector-slot .ui-diagram__inspector,
@@ -146,10 +150,11 @@
   right: 0.75rem;
   z-index: 2;
   padding: 0.65rem 0.75rem;
-  border: 2px solid var(--ink, #1a1025);
-  box-shadow: 3px 3px 0 var(--ink, #1a1025);
-  background: rgba(255, 255, 255, 0.94);
-  font-size: 0.7rem;
+  border: var(--border-medium);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-hard-sm);
+  background: color-mix(in srgb, var(--color-surface) 94%, transparent);
+  font-size: var(--text-micro);
   pointer-events: none;
   backdrop-filter: blur(6px);
 }
@@ -170,34 +175,34 @@
 }
 
 .ui-viz-spike__stats dt {
-  color: var(--muted, #52525b);
+  color: var(--color-text-muted);
 }
 
 .ui-viz-spike__stats dd {
   margin: 0;
   font-variant-numeric: tabular-nums;
   text-align: right;
-  font-family: var(--font-mono, ui-monospace, monospace);
+  font-family: var(--font-mono);
 }
 
 .ui-viz-spike__budget {
-  margin: 0 0 0.4rem;
+  margin: 0 0 var(--space-2);
   font-weight: 700;
-  font-size: 0.66rem;
+  font-size: var(--text-micro);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
 .ui-viz-spike__budget--ok {
-  color: #047857;
+  color: var(--color-success);
 }
 
 .ui-viz-spike__budget--warn {
-  color: #c2410c;
+  color: var(--color-warning);
 }
 
 .ui-viz-spike__budget--fail {
-  color: #b91c1c;
+  color: var(--color-danger);
 }
 
 .ui-viz-spike__metric--ok {
@@ -205,66 +210,68 @@
 }
 
 .ui-viz-spike__metric--warn {
-  color: #c2410c;
+  color: var(--color-warning);
 }
 
 .ui-viz-spike__metric--fail {
-  color: #b91c1c;
+  color: var(--color-danger);
   font-weight: 700;
 }
 
 .ui-viz-spike__budget-notes {
   list-style: none;
-  margin: 0.45rem 0 0;
+  margin: var(--space-2) 0 0;
   padding: 0;
   max-width: 11rem;
-  color: var(--muted, #52525b);
-  font-size: 0.62rem;
+  color: var(--color-text-muted);
+  font-size: var(--text-micro);
   line-height: 1.35;
 }
 
 .ui-viz-spike__budget-notes li + li {
-  margin-top: 0.2rem;
+  margin-top: var(--space-1);
 }
 
 .ui-viz-spike__tag {
-  margin-top: 0.25rem;
-  padding: 0.22rem 0.5rem;
-  border: 1.5px solid var(--ink, #1a1025);
-  background: #fff;
-  font-size: 0.62rem;
+  margin-top: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border: var(--border-soft-width);
+  border-color: var(--color-border-strong);
+  background: var(--color-surface);
+  font-size: var(--text-micro);
   white-space: nowrap;
   max-width: 16rem;
   overflow: hidden;
   text-overflow: ellipsis;
-  box-shadow: 1px 1px 0 var(--ink, #1a1025);
+  box-shadow: 1px 1px 0 var(--shadow-color);
 }
 
 .ui-viz-spike__label {
-  padding: 0.18rem 0.45rem;
-  border: 1.5px solid var(--ink, #1a1025);
-  background: rgba(255, 255, 255, 0.94);
-  color: #1a1025;
-  font-size: 0.68rem;
+  padding: var(--space-1) var(--space-2);
+  border: var(--border-soft-width);
+  border-color: var(--color-border-strong);
+  background: color-mix(in srgb, var(--color-surface) 94%, transparent);
+  color: var(--color-text);
+  font-size: var(--text-micro);
   font-weight: 650;
   letter-spacing: 0.01em;
   white-space: nowrap;
   max-width: 11rem;
   overflow: hidden;
   text-overflow: ellipsis;
-  box-shadow: 2px 2px 0 rgba(26, 16, 37, 0.35);
+  box-shadow: 2px 2px 0 color-mix(in srgb, var(--shadow-color) 35%, transparent);
 }
 
 .ui-viz-spike__label--selected {
-  background: #f5f0ff;
-  font-size: 0.74rem;
-  box-shadow: 2px 2px 0 var(--ink, #1a1025);
+  background: var(--color-primary-container);
+  font-size: var(--text-caption);
+  box-shadow: 2px 2px 0 var(--shadow-color);
 }
 
 .ui-viz-spike__counts {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem 0.85rem;
+  gap: var(--space-2) var(--space-3);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -273,21 +280,21 @@
 .ui-viz-spike__counts li {
   display: flex;
   flex-direction: column;
-  gap: 0.08rem;
+  gap: 2px;
 }
 
 .ui-viz-spike__counts strong {
-  font-family: var(--font-mono, ui-monospace, monospace);
-  font-size: 1.05rem;
-  color: var(--ink, #1a1025);
+  font-family: var(--font-mono);
+  font-size: var(--text-body);
+  color: var(--color-text);
   font-variant-numeric: tabular-nums;
 }
 
 .ui-viz-spike__counts span {
-  font-size: 0.64rem;
+  font-size: var(--text-micro);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--muted, #52525b);
+  color: var(--color-text-muted);
 }
 
 .ui-viz-spike__fallback {
@@ -295,13 +302,13 @@
   inset: 0;
   display: grid;
   place-content: center;
-  padding: 2rem 1.25rem;
+  padding: var(--space-8) var(--space-5);
   text-align: center;
 }
 
 .ui-viz-spike__fallback h2 {
-  margin: 0 0 0.5rem;
-  font-size: 1.15rem;
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-h2);
 }
 
 .ui-viz-spike__2d {
@@ -313,8 +320,8 @@
 .ui-viz-spike__empty-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  padding: 0 0.1rem;
+  gap: var(--space-2);
+  padding: 0 var(--space-1);
 }
 
 .ui-viz-spike__empty {
@@ -322,10 +329,10 @@
   inset: 0;
   display: grid;
   place-content: center;
-  padding: 2rem;
+  padding: var(--space-8);
   text-align: center;
-  color: var(--muted, #52525b);
-  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  font-size: var(--text-ui);
 }
 
 .ui-viz-spike__dock {

@@ -1,5 +1,5 @@
 export function formatLatency(ms: number | null): string {
-  if (ms == null) return 'n/a';
+  if (ms == null) return 'Not available';
   if (ms >= 1000) return `${(ms / 1000).toFixed(1)}s`;
   return `${ms}ms`;
 }

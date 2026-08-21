@@ -1,8 +1,10 @@
 # RepoPilot Design System — Master
 
-**Design read:** Developer tool with **neo-brutalist tactile hierarchy** inspired by [GitDiagram](https://gitdiagram.com/) principles — not a visual clone. Technical, confident, purple/lavender surfaces, hard offset shadows, evidence-dense dashboard.
+**Design read:** Developer tool with **neo-brutalist tactile hierarchy** — technical, confident, purple/lavender surfaces, hard offset shadows, evidence-dense dashboard. Not a visual clone of any reference product.
 
 **Dials:** Variance 6 · Motion 4 · Density 7
+
+Canonical product rules: root [`DESIGN.md`](../../DESIGN.md). Tokens: [`styles/tokens.css`](../styles/tokens.css).
 
 ## Anti-patterns (never ship)
 
@@ -12,6 +14,7 @@
 - Glassmorphism on main panels
 - Cloning GitDiagram copy, logo, or page structure
 - Material Symbols / mixed icon families
+- Extra fonts beyond Cabinet Grotesk + General Sans + JetBrains Mono
 
 ## Palette
 
@@ -25,15 +28,22 @@ See `styles/tokens.css` — semantic `--color-*` with light default and `[data-t
 
 ## Typography
 
-- **UI:** Geist Sans
-- **Data:** JetBrains Mono
+- **Display (marketing):** Cabinet Grotesk — `--font-display`
+- **UI / body / nav:** General Sans — `--font-sans`
+- **Data / paths / SHAs:** JetBrains Mono — `--font-mono`
 - Headlines normal case; uppercase only for micro labels
+
+## Layout
+
+- Desktop sidebar: `280px` (`--sidebar-width`)
+- Header: `--header-height: 64px`
 
 ## Motion
 
-- Hover: `translate(-2px, -2px)` on primary controls
-- Active: `translate(1px, 1px) scale(0.97)`
-- Easing: `cubic-bezier(0.23, 1, 0.32, 1)`
+- Hover: hard-shadow lift on primary controls
+- Active: `translate(1px, 1px)` compress (buttons)
+- Easing: `cubic-bezier(0.23, 1, 0.32, 1)` via `--ease-out-expo`
+- Respect `prefers-reduced-motion`
 
 ## Iconography
 

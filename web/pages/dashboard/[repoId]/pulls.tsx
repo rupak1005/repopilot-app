@@ -8,10 +8,13 @@ import { IndexHint } from '../../../components/ui/IndexHint';
 import { OutcomeIcon } from '../../../components/ui/OutcomeIcon';
 import { StatusBadge, reviewStatusVariant } from '../../../components/ui/StatusBadge';
 import { rowLinkProps } from '../../../lib/a11y';
-import { shouldShowIndexHint, usePendingIndexJobRepoId, useRepoData, useRepoIndexStatus } from '../../../lib/dashboard';
+import { shouldShowIndexHint, useDashboardContext, usePendingIndexJobRepoId, useRepoData, useRepoIndexStatus } from '../../../lib/dashboard';
+import { PageLoading } from '../../../components/ui/Skeleton';
 export default function PullsPage() {
   const router = useRouter();
+  const dash = useDashboardContext();
   const repoId = typeof router.query.repoId === 'string' ? router.query.repoId : null;
+  const repoFullName = dash?.repoFullName;
   const { pulls, analytics, hotspots, error, loading } = useRepoData(repoId);
   const indexStatus = useRepoIndexStatus(repoId);
   const pendingIndexJobRepoId = usePendingIndexJobRepoId();
@@ -24,6 +27,7 @@ export default function PullsPage() {
     pendingIndexJobRepoId
   );
   const base = repoId ? `/dashboard/${repoId}` : '';
+  const githubPullsHref = repoFullName ? `https://github.com/${repoFullName}/pulls` : null;
 
   return (
     <div className="canvas-inner">
@@ -34,7 +38,7 @@ export default function PullsPage() {
 
         {error ? <ErrorBanner>{error}</ErrorBanner> : null}
         {needsIndex ? <IndexHint /> : null}
-        {loading ? <p className="empty-state">Loading pull requests…</p> : null}
+        {loading ? <PageLoading label="Loading pull requests…" /> : null}
 
         <BentoPanel title="All Pull Requests">
           {pulls.length === 0 ? (
@@ -42,8 +46,22 @@ export default function PullsPage() {
               compact
               className="ui-panel-empty"
               icon={GitPullRequest}
-              title="No pull requests indexed yet"
-              description="Open PRs appear here after the repository is synced and reviewed."
+              title="No pull requests in this indexed revision"
+              description="PRs will appear here after GitHub history is synced for this repository."
+              action={
+                <div className="ui-empty-state__actions">
+                  {githubPullsHref ? (
+                    <a className="ui-diagram__action" href={githubPullsHref} target="_blank" rel="noreferrer">
+                      View GitHub
+                    </a>
+                  ) : null}
+                  {base ? (
+                    <Link className="ui-diagram__action" href={`${base}/settings`}>
+                      Re-index →
+                    </Link>
+                  ) : null}
+                </div>
+              }
             />
           ) : (
             <div className="ui-table-scroll">

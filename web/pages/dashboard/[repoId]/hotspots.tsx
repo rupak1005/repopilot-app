@@ -7,6 +7,7 @@ import { ErrorBanner } from '../../../components/ui/ErrorBanner';
 import { HotspotList } from '../../../components/ui/HotspotList';
 import { IndexHint } from '../../../components/ui/IndexHint';
 import { TopographyMap } from '../../../components/ui/TopographyMap';
+import { PageLoading } from '../../../components/ui/Skeleton';
 import { shouldShowIndexHint, usePendingIndexJobRepoId, useRepoData, useRepoIndexStatus } from '../../../lib/dashboard';
 import { isDemoMode } from '../../../lib/demoMode';
 import { DEMO_HOTSPOTS } from '../../../lib/demoData';
@@ -133,7 +134,7 @@ export default function HotspotsPage() {
 
         {error || topoError ? <ErrorBanner>{error ?? topoError}</ErrorBanner> : null}
         {needsIndex ? <IndexHint /> : null}
-        {loading || topoLoading ? <p className="empty-state">Loading topography…</p> : null}
+        {loading || topoLoading ? <PageLoading label="Loading topography…" /> : null}
 
         <BentoPanel
           title={`Landscape · last ${windowLabel}`}

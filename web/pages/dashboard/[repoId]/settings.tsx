@@ -7,6 +7,7 @@ import { Button } from '../../../components/ui/Button';
 import { Dialog } from '../../../components/ui/Dialog';
 import { ErrorBanner } from '../../../components/ui/ErrorBanner';
 import { StatusBadge, type StatusBadgeVariant } from '../../../components/ui/StatusBadge';
+import { PageLoading } from '../../../components/ui/Skeleton';
 import { useToast } from '../../../components/ui/ToastProvider';
 import { usePendingIndexJobRepoId, useRepoIndexStatus } from '../../../lib/dashboard';
 import { isDemoMode } from '../../../lib/demoMode';
@@ -167,7 +168,7 @@ export default function SettingsPage() {
               <dd>{user.name ?? '—'}</dd>
             </dl>
           ) : (
-            <p className="empty-state">Loading…</p>
+            <PageLoading label="Loading settings…" />
           )}
         </BentoPanel>
 

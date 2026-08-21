@@ -30,7 +30,8 @@
 }
 
 .ui-button:hover:not(:disabled) {
-  box-shadow: var(--shadow-hard-sm);
+  box-shadow: var(--shadow-hard-md);
+  transform: translate(-1px, -1px);
 }
 
 .ui-button:active:not(:disabled) {
@@ -139,6 +140,15 @@
   background: var(--color-surface-muted);
 }
 
+.ui-button--loading {
+  cursor: progress;
+  pointer-events: none;
+}
+
+.ui-button--loading .ui-button__label {
+  opacity: 0.72;
+}
+
 .ui-button__icon {
   display: inline-flex;
   flex-shrink: 0;
@@ -157,6 +167,10 @@
   }
 
   .ui-button:active:not(:disabled) {
+    transform: none;
+  }
+
+  .ui-button:hover:not(:disabled) {
     transform: none;
   }
 }

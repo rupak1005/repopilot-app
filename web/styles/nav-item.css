@@ -34,13 +34,14 @@
 
 .ui-nav-item--active {
   color: var(--color-text);
-  background: var(--color-primary);
+  background: var(--color-primary-container);
   border-color: var(--color-border-strong);
   box-shadow: var(--shadow-hard-sm);
 }
 
 .ui-nav-item--active:hover {
-  transform: translate(-1px, -1px);
+  background: var(--color-primary);
+  transform: none;
 }
 
 .ui-nav-item__icon {

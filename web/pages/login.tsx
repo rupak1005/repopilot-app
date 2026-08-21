@@ -5,6 +5,7 @@ import { Code } from '@phosphor-icons/react';
 import { Button, GitHubIcon } from '../components/ui/Button';
 import { ErrorBanner } from '../components/ui/ErrorBanner';
 import { PublicPageLayout } from '../components/ui/PublicPageLayout';
+import { PageLoading } from '../components/ui/Skeleton';
 import { MARKETING_URL } from '../lib/types';
 import { isGitHubUser } from '../lib/auth';
 
@@ -51,7 +52,7 @@ export default function LoginPage() {
         shellClassName="login-shell"
         seo={seo}
       >
-        <p className="empty-state">Loading…</p>
+        <PageLoading label="Checking session…" />
       </PublicPageLayout>
     );
   }

@@ -19,10 +19,11 @@ export function StaleIndexBanner({ repoId, status, demoMode }: StaleIndexBannerP
     <div className="ui-stale-banner" role="status" aria-live="polite">
       <ArrowsClockwise size={16} weight="bold" aria-hidden />
       <span>
-        Index is behind GitHub HEAD ({indexed} → {remote}). Re-index to pick up new commits.
+        Indexed at <span className="mono">{indexed}</span> · GitHub HEAD{' '}
+        <span className="mono">{remote}</span> is newer. Re-index to refresh engineering views.
       </span>
       <Link className="ui-stale-banner__action" href={`/dashboard/${repoId}/settings`}>
-        Settings →
+        Refresh index →
       </Link>
     </div>
   );

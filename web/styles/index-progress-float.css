@@ -73,7 +73,7 @@
   border: var(--border-heavy);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
-  color: var(--ink, #1a1025);
+  color: var(--color-text);
   cursor: pointer;
   position: relative;
   z-index: 2;

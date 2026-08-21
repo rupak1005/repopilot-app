@@ -7,6 +7,7 @@ import { EmptyState } from '../../../components/ui/EmptyState';
 import { ErrorBanner } from '../../../components/ui/ErrorBanner';
 import { IndexHint } from '../../../components/ui/IndexHint';
 import { WikiMarkdown } from '../../../components/ui/WikiMarkdown';
+import { PageLoading } from '../../../components/ui/Skeleton';
 import { demoDelay, demoWikiPageDetail, demoWikiPages } from '../../../lib/demoData';
 import { isDemoMode } from '../../../lib/demoMode';
 import { githubModuleUrl } from '../../../lib/modulePaths';
@@ -164,7 +165,7 @@ export default function WikiPage() {
           </div>
 
           {error ? <ErrorBanner onDismiss={() => setError(null)}>{error}</ErrorBanner> : null}
-          {loading ? <p className="empty-state">Loading page…</p> : null}
+          {loading ? <PageLoading label="Loading page…" /> : null}
 
           {!loading && !active ? (
             <EmptyState
@@ -227,7 +228,7 @@ export default function WikiPage() {
           ))}
         </div>
 
-        {loading ? <p className="empty-state">Loading wiki…</p> : null}
+        {loading ? <PageLoading label="Loading wiki…" /> : null}
 
         {!loading && visible.length === 0 ? (
           <EmptyState

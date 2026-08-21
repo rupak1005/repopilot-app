@@ -11,6 +11,7 @@ import type {
 import { repoApiPath } from './serverApi';
 import { DemoBanner } from '../components/ui/DemoBanner';
 import { PublicGuestBanner } from '../components/ui/PublicGuestBanner';
+import { PageLoading } from '../components/ui/Skeleton';
 import {
   DEMO_ANALYTICS,
   DEMO_HOTSPOTS,
@@ -91,7 +92,7 @@ export function DashboardLayout({ activeNav, canvasClass, children }: DashboardL
     return (
       <main className="standalone-page">
         <SeoHead title="Dashboard" path="/dashboard" noIndex />
-        <p className="empty-state">Loading…</p>
+        <PageLoading label="Loading dashboard…" />
       </main>
     );
   }

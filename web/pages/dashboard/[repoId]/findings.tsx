@@ -7,6 +7,7 @@ import { EmptyState } from '../../../components/ui/EmptyState';
 import { ErrorBanner } from '../../../components/ui/ErrorBanner';
 import { IndexHint } from '../../../components/ui/IndexHint';
 import { ReviewFindingCard } from '../../../components/ui/ReviewFindingCard';
+import { PageLoading } from '../../../components/ui/Skeleton';
 import { demoDelay, demoRepoFindings } from '../../../lib/demoData';
 import { isDemoMode } from '../../../lib/demoMode';
 import {
@@ -198,15 +199,19 @@ export default function FindingsPage() {
             </p>
           ) : null}
 
-          {loading ? <p className="empty-state">Loading findings…</p> : null}
+          {loading ? <PageLoading label="Loading findings…" /> : null}
 
           {!loading && visible.length === 0 ? (
             <EmptyState
               icon={Warning}
-              title={findings.length === 0 ? 'No findings yet' : 'No findings match these filters'}
+              title={
+                findings.length === 0
+                  ? 'No high-confidence issues detected'
+                  : 'No findings match these filters'
+              }
               description={
                 findings.length === 0
-                  ? 'Open a pull request and run a review to populate this board.'
+                  ? 'Run a pull request review to populate this board with severity, confidence, and evidence.'
                   : 'Try clearing search, category, or severity.'
               }
               action={

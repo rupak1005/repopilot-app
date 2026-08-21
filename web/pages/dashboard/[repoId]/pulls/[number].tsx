@@ -13,6 +13,7 @@ import { OutcomeIcon } from '../../../../components/ui/OutcomeIcon';
 import { ReviewFindingCard } from '../../../../components/ui/ReviewFindingCard';
 import { StatusBadge, reviewStatusVariant } from '../../../../components/ui/StatusBadge';
 import { VerifyChecklist } from '../../../../components/ui/VerifyChecklist';
+import { PageLoading } from '../../../../components/ui/Skeleton';
 import {
   demoDelay,
   demoFileImpact,
@@ -245,7 +246,7 @@ export default function PullDetailPage() {
         </Link>
 
         {error ? <ErrorBanner>{error}</ErrorBanner> : null}
-        {loading ? <p className="empty-state">Loading pull request…</p> : null}
+        {loading ? <PageLoading label="Loading pull request…" /> : null}
 
         {detail && !loading ? (
           <>
@@ -458,7 +459,12 @@ export default function PullDetailPage() {
                       )}
                     </>
                   ) : (
-                    <EmptyState compact icon={GitPullRequest} title="No findings" description="Review passed without flagged issues." />
+                    <EmptyState
+                      compact
+                      icon={GitPullRequest}
+                      title="No high-confidence issues detected"
+                      description="Changed symbols were reviewed without flagged findings in this pass."
+                    />
                   )}
                 </BentoPanel>
 
