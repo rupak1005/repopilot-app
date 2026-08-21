@@ -77,3 +77,78 @@
 .ui-eng-loop__step.is-active .ui-eng-loop__link {
   color: var(--diagram-accent, #22d3ee);
 }
+
+.ui-verify-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.ui-verify-checklist__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.ui-verify-checklist__progress {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.ui-verify-checklist__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ui-verify-checklist__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: var(--border-medium);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.ui-verify-checklist__label {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.ui-verify-checklist__label input {
+  margin-top: 0.2rem;
+}
+
+.ui-verify-checklist__title {
+  display: block;
+  font-weight: 600;
+  font-size: var(--text-ui);
+}
+
+.ui-verify-checklist__detail {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  word-break: break-all;
+}
+
+.ui-verify-checklist__note {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}

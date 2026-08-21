@@ -1,7 +1,8 @@
 # Engineering Loop Audit
 
 **Updated:** 2026-08-21  
-**Gate:** C — Plan → agent → PR → impact → review → verify
+**Gate:** C — Plan → agent → PR → impact → review → verify  
+**Status:** Complete (navigational loop + verify checklist)
 
 ## What exists
 
@@ -12,17 +13,15 @@
 | PR | Pulls list / detail | `/pulls` |
 | Impact | File / symbol / PR blast + similar + testPlan | `/impact` |
 | Review | PR review findings + trigger | pull detail |
-| Verify | Classified local test commands (copy) | `testPlan` / Impact panel |
-| Loop UI | Ordered strip + copy brief; **PR-aware** when `pull` / pullNumber set | `EngineeringLoopStrip`, Planning, Impact, PR detail |
+| Verify | Tickable checklist from `testPlan` (localStorage) | `VerifyChecklist`, PR detail + pull Impact |
+| Loop UI | Ordered strip + copy brief; **PR-aware** | `EngineeringLoopStrip` |
 
 ## Mocked / deferred
 
-- No automated progression tracking (stages are navigational, not stateful)
 - No remote agent run or CI gate enforcement
-- Review stage links to `/pulls` until a PR number is known
+- Checklist progress is local-only (per browser), not synced to the server
+- Full stateful loop progress across users remains optional
 
-## Next Gate C chunks
+## Gate C acceptance
 
-1. Persist loop progress per file / PR (optional)
-2. ~~Wire Review stage to a specific PR when `?pull=` is present~~ — `pullNumber` on stages + PR detail strip (2026-08-21)
-3. Post-review verify checklist that ticks testPlan commands
+Walk Plan → Agent → PR → Impact → Review → Verify for a seeded file/PR without leaving the dashboard deep links.

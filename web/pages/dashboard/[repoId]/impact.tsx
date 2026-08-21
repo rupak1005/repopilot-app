@@ -10,6 +10,7 @@ import { ImpactBlastGraph } from '../../../components/ui/ImpactBlastGraph';
 import { ImpactBlastMap } from '../../../components/ui/ImpactBlastMap';
 import { ImpactTestPlanPanel } from '../../../components/ui/ImpactTestPlanPanel';
 import { EngineeringLoopStrip } from '../../../components/ui/EngineeringLoopStrip';
+import { VerifyChecklist } from '../../../components/ui/VerifyChecklist';
 import { IndexHint } from '../../../components/ui/IndexHint';
 import { KpiTile } from '../../../components/ui/KpiTile';
 import { PageLoading } from '../../../components/ui/Skeleton';
@@ -1015,6 +1016,15 @@ function PullImpactView({
         tests={result.relevantTests}
         testPlan={result.testPlan}
       />
+      {repoId ? (
+        <BentoPanel title="Verify">
+          <VerifyChecklist
+            repoId={repoId}
+            scope={`pull:${result.pullNumber}`}
+            testPlan={result.testPlan}
+          />
+        </BentoPanel>
+      ) : null}
     </>
   );
 }

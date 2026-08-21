@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ArrowLeft, GitPullRequest, Warning } from '@phosphor-icons/react';
 import { useEffect, useMemo, useState } from 'react';
+import { buildImpactTestPlan, type ImpactTestPlan } from '@repopilot/common';
 import { EngineeringLoopStrip } from '../../../../components/ui/EngineeringLoopStrip';
 import { BentoPanel } from '../../../../components/ui/BentoPanel';
 import { Button } from '../../../../components/ui/Button';
@@ -11,8 +12,10 @@ import { KpiTile } from '../../../../components/ui/KpiTile';
 import { OutcomeIcon } from '../../../../components/ui/OutcomeIcon';
 import { ReviewFindingCard } from '../../../../components/ui/ReviewFindingCard';
 import { StatusBadge, reviewStatusVariant } from '../../../../components/ui/StatusBadge';
+import { VerifyChecklist } from '../../../../components/ui/VerifyChecklist';
 import {
   demoDelay,
+  demoFileImpact,
   demoPullDetail,
   demoPullImpact,
   demoSimilarChanges
@@ -62,6 +65,7 @@ export default function PullDetailPage() {
 
   const [detail, setDetail] = useState<PullRequestDetail | null>(null);
   const [impact, setImpact] = useState<PullImpactSummary | null>(null);
+  const [testPlan, setTestPlan] = useState<ImpactTestPlan | null>(null);
   const [similar, setSimilar] = useState<SimilarChange[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -76,9 +80,10 @@ export default function PullDetailPage() {
           risk: PullImpactSummary['risk'];
           directDependents: string[];
           transitiveDependents: string[];
-          relevantTests: unknown[];
+          relevantTests: Array<{ filePath: string }>;
           analyzedFiles: string[];
           summary: string;
+          testPlan?: ImpactTestPlan;
         };
         setImpact({
           risk: pullImpact.risk,
@@ -88,12 +93,18 @@ export default function PullDetailPage() {
           changedModules: pullImpact.analyzedFiles.slice(0, 8),
           note: pullImpact.summary
         });
+        setTestPlan(
+          pullImpact.testPlan ??
+            buildImpactTestPlan(pullImpact.relevantTests.map((t) => t.filePath))
+        );
         return;
       }
     } catch {
       /* fall through */
     }
     setImpact(deriveImpact(fallbackReview));
+    const signals = fallbackReview?.summary.testSignals ?? [];
+    setTestPlan(signals.length ? buildImpactTestPlan(signals) : null);
   }
 
   useEffect(() => {
@@ -114,6 +125,19 @@ export default function PullDetailPage() {
             setDetail(demo);
             setImpact(demoPullImpact(pullNumber) ?? deriveImpact(demo.latestReview));
             setSimilar(demoSimilarChanges(pullNumber));
+            const seed =
+              demoPullImpact(pullNumber)?.changedModules[0] ??
+              demo.latestReview?.findings[0]?.evidence[0]?.file;
+            const demoImpact = seed ? demoFileImpact(seed) : null;
+            const signals = demo.latestReview?.summary.testSignals ?? [];
+            setTestPlan(
+              demoImpact?.testPlan ??
+                (signals.length
+                  ? buildImpactTestPlan(signals)
+                  : demoImpact
+                    ? buildImpactTestPlan(demoImpact.relevantTests.map((t) => t.filePath))
+                    : null)
+            );
           }
           return;
         }
@@ -265,6 +289,16 @@ export default function PullDetailPage() {
                   active={review ? 'review' : 'pr'}
                 />
               </div>
+            ) : null}
+
+            {repoId && (review || testPlan) ? (
+              <BentoPanel title="Verify">
+                <VerifyChecklist
+                  repoId={repoId}
+                  scope={`pull:${detail.pullNumber}`}
+                  testPlan={testPlan}
+                />
+              </BentoPanel>
             ) : null}
 
             {review ? (
