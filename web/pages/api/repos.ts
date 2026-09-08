@@ -38,19 +38,37 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'POST') {
     const { fullName } = req.body as { fullName?: string };
-    if (!fullName?.includes('/')) {
+    const requestedFullName = fullName?.trim();
+    if (!requestedFullName || !requestedFullName.includes('/')) {
       res.status(400).json({ error: 'fullName required (owner/repo)' });
       return;
     }
-    session.selectedRepoFullName = fullName;
-    const repoId = deriveRepositoryId(fullName);
-    session.selectedRepoId = repoId;
-    setSessionCookie(res, session);
-    res.status(200).json({
-      id: repoId,
-      fullName
-    });
-    return;
+
+    try {
+      const repos = await fetchGitHubRepos(session.accessToken);
+      const selectedRepo = repos.find(
+        (repo) => repo.full_name.toLowerCase() === requestedFullName.toLowerCase()
+      );
+      if (!selectedRepo) {
+        res.status(403).json({ error: 'Repository is not accessible for this user' });
+        return;
+      }
+
+      const selectedFullName = selectedRepo.full_name;
+      session.selectedRepoFullName = selectedFullName;
+      const repoId = deriveRepositoryId(selectedFullName);
+      session.selectedRepoId = repoId;
+      setSessionCookie(res, session);
+      res.status(200).json({
+        id: repoId,
+        fullName: selectedFullName
+      });
+      return;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load repositories';
+      res.status(502).json({ error: message });
+      return;
+    }
   }
 
   res.status(405).json({ error: 'Method not allowed' });

@@ -253,7 +253,7 @@ async function bootstrap() {
       server.log.error({ err, owner, name }, 'Public repository open failed');
       reply.code(500);
       return {
-        error: err instanceof Error ? err.message : 'Failed to index public repository'
+        error: 'Failed to index public repository'
       };
     }
   });
@@ -703,7 +703,7 @@ async function bootstrap() {
       server.log.error({ err, repositoryId: params.repoId }, 'Index start failed');
       reply.code(500);
       return {
-        error: err instanceof Error ? err.message : 'Failed to start repository index'
+        error: 'Failed to start repository index'
       };
     }
   });
@@ -1041,4 +1041,3 @@ bootstrap().catch((err) => {
   console.error(err);
   process.exit(1);
 });
-
