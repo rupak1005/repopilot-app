@@ -94,7 +94,7 @@ async function cloneOrUpdateFromRemote(args: {
     await execFileAsync('git', ['checkout', '-f', 'FETCH_HEAD'], { cwd: repoPath, env });
   } catch {
     await fs.rm(repoPath, { recursive: true, force: true }).catch(() => undefined);
-    await execFileAsync('git', ['clone', '--depth', '1', args.remote, repoPath], { env });
+    await execFileAsync('git', ['clone', '--depth', '1', '--', args.remote, repoPath], { env });
   }
 
   const revisionSha = await resolveHeadSha(repoPath);
