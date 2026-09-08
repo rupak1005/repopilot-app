@@ -4,6 +4,8 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
+const OWNER_RE = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/;
+const REPO_RE = /^[A-Za-z0-9](?:[A-Za-z0-9._-]{0,99})$/;
 
 export type CloneOrUpdateResult = {
   repoPath: string;
@@ -37,12 +39,19 @@ function gitAuthEnv(token?: string): NodeJS.ProcessEnv {
   };
 }
 
+function assertGitHubSlug(owner: string, name: string): void {
+  if (!OWNER_RE.test(owner) || !REPO_RE.test(name)) {
+    throw new Error('Invalid GitHub repository slug');
+  }
+}
+
 /** Clone or fetch a GitHub repository using the user's OAuth token. */
 export async function cloneOrUpdateRepository(args: {
   owner: string;
   name: string;
   accessToken: string;
 }): Promise<CloneOrUpdateResult> {
+  assertGitHubSlug(args.owner, args.name);
   const remote = `https://github.com/${args.owner}/${args.name}.git`;
   return cloneOrUpdateFromRemote({
     owner: args.owner,
@@ -57,6 +66,7 @@ export async function clonePublicRepository(args: {
   owner: string;
   name: string;
 }): Promise<CloneOrUpdateResult> {
+  assertGitHubSlug(args.owner, args.name);
   const token = process.env.GITHUB_TOKEN?.trim();
   const remote = `https://github.com/${args.owner}/${args.name}.git`;
   return cloneOrUpdateFromRemote({
