@@ -1,3 +1,4 @@
+import { deriveRepositoryId } from '@repopilot/common';
 import type { SessionData } from './session';
 
 export const API_ORIGIN = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
@@ -20,8 +21,9 @@ export function assertRepoSession(
   session: SessionData | null,
   repoId: string
 ): session is SessionData {
-  if (!session?.selectedRepoId) return false;
-  return session.selectedRepoId === repoId;
+  if (!session?.selectedRepoId || !session.selectedRepoFullName) return false;
+  if (session.selectedRepoId !== repoId) return false;
+  return deriveRepositoryId(session.selectedRepoFullName) === repoId;
 }
 
 export async function proxyApiRequest(
