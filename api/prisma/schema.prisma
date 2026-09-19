@@ -12,6 +12,17 @@ model User {
   createdAt DateTime @default(now())
 }
 
+model ProductAnalyticsEvent {
+  id         String   @id @default(uuid())
+  name       String
+  path       String?
+  properties Json?
+  createdAt  DateTime @default(now())
+
+  @@index([name, createdAt])
+  @@index([createdAt])
+}
+
 // ---- Phase 2: Repository Analyzer (Repository -> Parsed files -> Symbols/Imports/Exports) ----
 
 model Repository {
@@ -365,4 +376,3 @@ model ModuleHotspot {
   @@id([repositoryId, filePath])
   @@index([repositoryId])
 }
-

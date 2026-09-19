@@ -20,6 +20,7 @@ import {
 import { apiUnreachableMessage, parseJsonResponse } from '../lib/parseJsonResponse';
 import { MARKETING_URL } from '../lib/types';
 import { DEFAULT_DESCRIPTION, siteJsonLd } from '../lib/seo';
+import { track } from '../lib/analytics';
 
 export default function LandingPage() {
   const router = useRouter();
@@ -42,6 +43,7 @@ export default function LandingPage() {
   async function openRepo(input: string) {
     setLoading(true);
     setError(null);
+    track({ name: 'repository_open_started', properties: { source: 'landing' } });
     try {
       if (!parseGithubRepoUrl(input)) {
         throw new Error('Paste a public GitHub URL or owner/repo slug.');
@@ -63,6 +65,7 @@ export default function LandingPage() {
       if (!response.ok || !data.repositoryId) {
         throw new Error(data.error ?? 'Could not open repository');
       }
+      track({ name: 'repository_open_succeeded', properties: { demo: Boolean(isDemoMode()) } });
       if (data.indexing && !isDemoMode()) {
         const fullName = data.fullName ?? input;
         startIndexProgress({
@@ -76,6 +79,7 @@ export default function LandingPage() {
       }
       void router.push(`/dashboard/${data.repositoryId}`);
     } catch (err) {
+      track({ name: 'repository_open_failed' });
       setError(err instanceof Error ? err.message : 'Something went wrong');
       setLoading(false);
     }
@@ -107,7 +111,7 @@ export default function LandingPage() {
           <h1>{LANDING_HEADLINE}</h1>
           <p className="landing-lede">{LANDING_LEDE}</p>
 
-          <form className="landing-form" onSubmit={(event) => void handleSubmit(event)}>
+          <form id="repository-analyzer" className="landing-form" onSubmit={(event) => void handleSubmit(event)}>
             <label className="ui-field-label" htmlFor="github-url">
               GitHub repository
             </label>
@@ -176,6 +180,18 @@ export default function LandingPage() {
             ) : null}
           </p>
         </div>
+      </div>
+      <div className="landing-mobile-cta">
+        <Button
+          type="button"
+          variant="primary"
+          size="md"
+          fullWidth
+          onClick={() => document.getElementById('github-url')?.focus()}
+          disabled={loading}
+        >
+          Analyze a repository
+        </Button>
       </div>
 
       <section className="landing-section" aria-labelledby="landing-how-title">

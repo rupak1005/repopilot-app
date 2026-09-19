@@ -23,7 +23,7 @@ export function PublicSiteHeader({ active }: PublicSiteHeaderProps) {
         setUser(null);
         return;
       }
-      setUser((await response.json()) as PublicUser);
+      setUser((await response.json()) as PublicUser | null);
     }
     void load();
   }, [router.asPath]);
@@ -64,6 +64,15 @@ export function PublicSiteHeader({ active }: PublicSiteHeaderProps) {
       >
         Browse
       </Link>
+      <Link href="/privacy" className="public-header__link" onClick={() => setMenuOpen(false)}>
+        Privacy
+      </Link>
+      <Link href="/terms" className="public-header__link" onClick={() => setMenuOpen(false)}>
+        Terms
+      </Link>
+      <Link href="/contact" className="public-header__link" onClick={() => setMenuOpen(false)}>
+        Contact
+      </Link>
       {user?.selectedRepoId ? (
         <Link
           href={`/dashboard/${user.selectedRepoId}`}
@@ -86,7 +95,7 @@ export function PublicSiteHeader({ active }: PublicSiteHeaderProps) {
 
   return (
     <header className="public-header">
-      <Link href="/" className="public-header__brand">
+      <Link href="/" className="public-header__brand" aria-label="RepoPilot home">
         <span className="public-header__mark" aria-hidden>
           <Code size={20} weight="light" />
         </span>

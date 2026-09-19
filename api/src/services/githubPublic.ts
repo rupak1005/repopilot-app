@@ -1,3 +1,5 @@
+import { fetchWithTimeout } from '../lib/fetchWithTimeout';
+
 export type PublicRepositoryMeta = {
   fullName: string;
   owner: string;
@@ -10,7 +12,7 @@ export async function fetchPublicRepositoryMeta(args: {
   owner: string;
   name: string;
 }): Promise<PublicRepositoryMeta | null> {
-  const response = await fetch(`https://api.github.com/repos/${args.owner}/${args.name}`, {
+  const response = await fetchWithTimeout(`https://api.github.com/repos/${args.owner}/${args.name}`, {
     headers: githubHeaders()
   });
 
@@ -44,7 +46,7 @@ export async function fetchRemoteHeadSha(args: {
   if (!meta) return null;
 
   const ref = encodeURIComponent(meta.defaultBranch);
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `https://api.github.com/repos/${args.owner}/${args.name}/commits/${ref}`,
     { headers: githubHeaders() }
   );
@@ -106,7 +108,7 @@ export async function searchPublicRepositories(args: {
     page: String(page)
   });
 
-  const response = await fetch(`https://api.github.com/search/repositories?${params}`, {
+  const response = await fetchWithTimeout(`https://api.github.com/search/repositories?${params}`, {
     headers: githubHeaders()
   });
 

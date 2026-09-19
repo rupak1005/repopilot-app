@@ -1,14 +1,14 @@
 import type { AppProps } from 'next/app';
-import { useEffect } from 'react';
+import dynamic from 'next/dynamic';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { AnimatePresence, MotionConfig, motion } from 'motion/react';
-import { ToastProvider } from '../components/ui/ToastProvider';
-import { IndexProgressFloatHost } from '../components/ui/IndexProgressFloat';
-import { IndexProgressProvider } from '../lib/indexProgressUi';
-import { DashboardLayout } from '../lib/dashboard';
+import { IndexProgressProvider, useIndexProgressUi } from '../lib/indexProgressUi';
 import { resolveDashboardChrome } from '../lib/dashboardChrome';
 import { usePageEnter, pageTransitionKey } from '../lib/motion';
 import { applyTheme, getStoredTheme, hasExplicitThemePreference, syncThemeFromSystem } from '../lib/theme';
+import { track } from '../lib/analytics';
+import { CookieConsent } from '../components/ui/CookieConsent';
 import '../styles/tokens.css';
 import '../styles/neo-panels.css';
 import '../styles/page-layout.css';
@@ -48,8 +48,27 @@ import '../styles/docs.css';
 import '../styles/globals.css';
 import '../styles/focus-audit.css';
 
+// Dashboard graphs, shell navigation, and repository data are not needed by
+// public pages. Keep them in a route-level chunk so / and /browse can become
+// interactive without downloading the dashboard runtime.
+const DashboardLayout = dynamic(
+  () => import('../lib/dashboard').then((module) => module.DashboardLayout),
+  { loading: () => null }
+);
+
+const LazyIndexProgressFloat = dynamic(
+  () => import('../components/ui/IndexProgressFloat').then((module) => module.IndexProgressFloat),
+  { ssr: false }
+);
+
+function IndexProgressFloatSlot() {
+  const { job } = useIndexProgressUi();
+  return job ? <LazyIndexProgressFloat {...job} /> : null;
+}
+
 function AnimatedPage({ Component, pageProps }: AppProps) {
   const router = useRouter();
+  const [routeLoading, setRouteLoading] = useState(false);
   const enter = usePageEnter();
   const chrome = resolveDashboardChrome(router.pathname);
 
@@ -68,6 +87,20 @@ function AnimatedPage({ Component, pageProps }: AppProps) {
     return () => media.removeEventListener('change', onChange);
   }, []);
 
+  useEffect(() => {
+    const start = () => setRouteLoading(true);
+    const done = () => setRouteLoading(false);
+    router.events.on('routeChangeStart', start);
+    router.events.on('routeChangeComplete', done);
+    router.events.on('routeChangeError', done);
+    track({ name: 'page_view', path: router.asPath });
+    return () => {
+      router.events.off('routeChangeStart', start);
+      router.events.off('routeChangeComplete', done);
+      router.events.off('routeChangeError', done);
+    };
+  }, [router.asPath, router.events]);
+
   const page = <Component {...pageProps} />;
   // Lift shell here so sidebar nav does not remount AppShell / re-flash auth.
   const body = chrome ? (
@@ -80,10 +113,11 @@ function AnimatedPage({ Component, pageProps }: AppProps) {
 
   return (
     <MotionConfig reducedMotion="user">
+      {routeLoading ? <div className="ui-route-progress" role="status" aria-label="Loading page" /> : null}
       {chrome ? (
         body
       ) : (
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={false}>
           <motion.div key={pageTransitionKey(router.asPath)} {...enter} style={{ minHeight: '100%' }}>
             {body}
           </motion.div>
@@ -96,12 +130,11 @@ function AnimatedPage({ Component, pageProps }: AppProps) {
 export default function App(props: AppProps) {
   return (
     <IndexProgressProvider>
-      <ToastProvider>
-        <AnimatedPage {...props} />
-        <div className="index-progress-float-host">
-          <IndexProgressFloatHost />
-        </div>
-      </ToastProvider>
+      <AnimatedPage {...props} />
+      <CookieConsent />
+      <div className="index-progress-float-host">
+        <IndexProgressFloatSlot />
+      </div>
     </IndexProgressProvider>
   );
 }

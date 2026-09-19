@@ -33,6 +33,10 @@
   z-index: 1;
 }
 
+.landing-mobile-cta {
+  display: none;
+}
+
 .landing-card {
   position: relative;
   z-index: 1;
@@ -317,6 +321,25 @@
 
   .landing-form__row .ui-button {
     width: 100%;
+  }
+
+  .landing-mobile-cta {
+    position: fixed;
+    right: var(--space-3);
+    bottom: calc(var(--space-3) + env(safe-area-inset-bottom));
+    left: var(--space-3);
+    z-index: var(--z-overlay);
+    display: block;
+    padding: var(--space-2);
+    border: var(--border-medium);
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+    box-shadow: var(--shadow-hard-md);
+    backdrop-filter: blur(10px);
+  }
+
+  .landing-page__main {
+    padding-bottom: calc(var(--space-16) + 72px + env(safe-area-inset-bottom));
   }
 }
 

@@ -55,7 +55,7 @@ import {
 } from './services/contextGraph';
 import { analyzeFileImpact, analyzePullImpact, analyzeSymbolImpact, resolveIndexedFilePath } from './services/impactAnalysis';
 import { requireInternalApiAuth } from './middleware/internalAuth';
-import { checkRateLimit, clientIp } from './middleware/rateLimit';
+import { checkDistributedRateLimit, clientIp } from './middleware/rateLimit';
 import {
   getRepositoryIndexStatus,
   rebuildRepositoryGraph,
@@ -91,6 +91,7 @@ async function bootstrap() {
   };
 
   const server = Fastify({
+    bodyLimit: 1_000_000,
     logger: {
       level: 'info'
     }
@@ -201,6 +202,27 @@ async function bootstrap() {
     }
   });
 
+  server.post('/api/v1/analytics', async (request, reply) => {
+    const body = ((request.body as ParsedJsonBody | undefined)?.json ?? {}) as {
+      name?: string;
+      path?: string;
+      properties?: Record<string, string | number | boolean | null>;
+    };
+    if (!body.name || !/^[a-z0-9_.-]{1,64}$/i.test(body.name)) {
+      reply.code(400);
+      return { error: 'Invalid event name' };
+    }
+    await prisma.productAnalyticsEvent.create({
+      data: {
+        name: body.name,
+        path: body.path?.slice(0, 500),
+        properties: body.properties ?? undefined
+      }
+    });
+    reply.code(204);
+    return null;
+  });
+
   server.post('/api/v1/public/repositories/open', async (request, reply) => {
     const body = ((request.body as ParsedJsonBody | undefined)?.json ?? {}) as {
       owner?: string;
@@ -218,7 +240,7 @@ async function bootstrap() {
     const name = body.name.trim();
 
     const ip = clientIp(request.headers as Record<string, unknown>, request.ip);
-    const limit = checkRateLimit(`public-open:${ip}`, 12, 60 * 60 * 1000);
+    const limit = await checkDistributedRateLimit(redis, `public-open:${ip}`, 12, 60 * 60 * 1000);
     if (!limit.allowed) {
       reply.code(429);
       return {

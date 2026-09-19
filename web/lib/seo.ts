@@ -20,6 +20,9 @@ export const PUBLIC_SITEMAP_PATHS: string[] = [
   '/',
   '/browse',
   '/mcp',
+  '/privacy',
+  '/terms',
+  '/contact',
   ...DOCS_NAV.map((item) => item.href)
 ];
 

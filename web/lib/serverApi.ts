@@ -2,6 +2,7 @@ import { deriveRepositoryId } from '@repopilot/common';
 import type { SessionData } from './session';
 
 export const API_ORIGIN = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+export const API_REQUEST_TIMEOUT_MS = 20_000;
 
 export function internalApiHeaders(extra?: HeadersInit): HeadersInit {
   const headers: Record<string, string> = {
@@ -32,7 +33,13 @@ export async function proxyApiRequest(
 ): Promise<Response> {
   const url = `${API_ORIGIN}${apiPath.startsWith('/') ? apiPath : `/${apiPath}`}`;
   const headers = internalApiHeaders(init?.headers);
-  return fetch(url, { ...init, headers });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), API_REQUEST_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...init, headers, signal: init?.signal ?? controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 export function repoApiPath(repoId: string, subpath: string): string {

@@ -3,6 +3,7 @@ import {
   outcomeToCheckConclusion,
   type ReviewOutcome
 } from './reviewPolicy';
+import { fetchWithTimeout } from '../lib/fetchWithTimeout';
 
 export type CheckAnnotation = {
   path: string;
@@ -83,7 +84,7 @@ export class GitHubCheckPublisher implements ReviewPublisher {
       ? `https://api.github.com/repos/${args.owner}/${args.repo}/check-runs/${args.existingCheckRunId}`
       : `https://api.github.com/repos/${args.owner}/${args.repo}/check-runs`;
 
-    const response = await fetch(endpoint, {
+    const response = await fetchWithTimeout(endpoint, {
       method: args.existingCheckRunId ? 'PATCH' : 'POST',
       headers: {
         Authorization: `Bearer ${this.token}`,
@@ -121,7 +122,7 @@ export class GitHubCheckPublisher implements ReviewPublisher {
         .slice(0, 50);
 
       if (annotations.length > 0) {
-        await fetch(
+        await fetchWithTimeout(
           `https://api.github.com/repos/${args.owner}/${args.repo}/check-runs/${checkRunId}/annotations`,
           {
             method: 'POST',

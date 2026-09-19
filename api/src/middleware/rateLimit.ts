@@ -1,3 +1,5 @@
+import type Redis from 'ioredis';
+
 type Bucket = { count: number; resetAt: number };
 
 // ponytail: in-memory per-process limiter; upgrade to Redis for multi-instance deploy
@@ -21,6 +23,23 @@ export function checkRateLimit(
   return {
     allowed: bucket.count <= limit,
     retryAfterSec
+  };
+}
+
+/** Redis-backed fixed-window limiter for multi-instance deployments. */
+export async function checkDistributedRateLimit(
+  redis: Redis,
+  key: string,
+  limit: number,
+  windowMs: number
+): Promise<{ allowed: boolean; retryAfterSec: number }> {
+  const redisKey = `repopilot:ratelimit:${key}`;
+  const count = await redis.incr(redisKey);
+  if (count === 1) await redis.pexpire(redisKey, windowMs);
+  const ttlMs = Math.max(1, await redis.pttl(redisKey));
+  return {
+    allowed: count <= limit,
+    retryAfterSec: Math.max(1, Math.ceil(ttlMs / 1000))
   };
 }
 

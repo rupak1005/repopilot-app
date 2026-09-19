@@ -30,7 +30,7 @@
     "prettier": "*",
     "ts-node-dev": "*",
     "turbo": "*",
-    "typescript": "^6.0.0",
+    "typescript": "5.9.3",
     "vitest": "*"
   }
 }

@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { fetchWithTimeout } from '../lib/fetchWithTimeout';
 
 export type ChatMessage = {
   role: 'system' | 'user' | 'assistant';
@@ -74,7 +75,7 @@ export class OpenAICompatibleLLMProvider implements LLMProvider {
       }
     }
 
-    const response = await fetch(`${this.baseUrl.replace(/\/$/, '')}/chat/completions`, {
+    const response = await fetchWithTimeout(`${this.baseUrl.replace(/\/$/, '')}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -127,7 +128,7 @@ export class GeminiLLMProvider implements LLMProvider {
       .join('\n\n');
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`;
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

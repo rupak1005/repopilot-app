@@ -166,6 +166,26 @@ Demo UI without indexing: `NEXT_PUBLIC_DEMO_MODE=true` in `web/.env.local`.
 
 Full detail: [docs/SETUP.md](docs/SETUP.md) · [docs/AI_PROVIDERS.md](docs/AI_PROVIDERS.md) · [docs/FREE_DEPLOY.md](docs/FREE_DEPLOY.md)
 
+## Lighthouse audit history
+
+Latest local mobile audit of `/browse`:
+
+| Run | Performance | Accessibility | Best Practices | SEO | Report |
+|-----|-------------|---------------|----------------|-----|--------|
+| 2026-09-20 02:22 | **91** | 100 | 100 | 100 | [HTML report](localhost_2026-09-20_02-22-17.report.html) |
+
+Earlier runs are retained for comparison:
+
+| Run | Performance | Accessibility | Best Practices | SEO | Report |
+|-----|-------------|---------------|----------------|-----|--------|
+| 2026-09-20 02:20 | 91 | 100 | 100 | 100 | [HTML report](localhost_2026-09-20_02-20-24.report.html) |
+| 2026-09-20 02:21 | 89 | 100 | 100 | 100 | [HTML report](localhost_2026-09-20_02-21-49.report.html) |
+| 2026-09-20 02:21 | 82 | 100 | 100 | 100 | [HTML report](localhost_2026-09-20_02-21-02.report.html) |
+| 2026-09-20 02:16 | 90 | 100 | 100 | 100 | [HTML report](localhost_2026-09-20_02-15-59.report.html) |
+| 2026-09-20 02:14 | 99 | 100 | 96 | 100 | [HTML report](localhost_2026-09-20_02-14-17.report.html) |
+
+These are Lighthouse CLI snapshots from a local production server using mobile emulation. Performance varies between runs; use the median of three runs when comparing changes. Commit the linked `.report.html` files with this README section for the report links to work on GitHub.
+
 ---
 
 ## Monorepo layout

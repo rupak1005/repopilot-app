@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">RepoPilot repository intelligence</title>
+  <desc id="desc">Dependency graphs, impact analysis, and evidence-backed code review.</desc>
+  <rect width="1200" height="630" fill="#100e18"/>
+  <path d="M80 480 310 210l210 150 250-220 270 190" fill="none" stroke="#c084fc" stroke-width="8"/>
+  <circle cx="80" cy="480" r="18" fill="#f3e8ff"/><circle cx="310" cy="210" r="18" fill="#f3e8ff"/>
+  <circle cx="520" cy="360" r="18" fill="#f3e8ff"/><circle cx="770" cy="140" r="18" fill="#f3e8ff"/>
+  <circle cx="1040" cy="330" r="18" fill="#f3e8ff"/>
+  <text x="80" y="105" fill="#f3e8ff" font-family="Arial, sans-serif" font-size="64" font-weight="700">RepoPilot</text>
+  <text x="84" y="565" fill="#d4c8e5" font-family="Arial, sans-serif" font-size="28">Repository intelligence for engineers</text>
+</svg>

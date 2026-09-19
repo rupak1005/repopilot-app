@@ -22,6 +22,7 @@ import { shouldShowIndexHint } from './indexHint';
 import { useIndexStatus } from './indexStatus';
 import { useIndexProgressUi } from './indexProgressUi';
 import { formatLatency } from './metrics';
+import { ToastProvider } from '../components/ui/ToastProvider';
 
 type DashboardContext = {
   repoId: string;
@@ -99,26 +100,28 @@ export function DashboardLayout({ activeNav, canvasClass, children }: DashboardL
 
   return (
     <DashboardCtx.Provider value={ctx}>
-      <AppShell
-        repoId={ctx.repoId}
-        repoFullName={ctx.repoFullName}
-        userLogin={ctx.user.login}
-        userAvatar={ctx.user.avatarUrl}
-        activeNav={activeNav}
-        canvasClass={canvasClass}
-        demoMode={isDemoMode()}
-        isPublicGuest={ctx.user.isPublicGuest}
-      >
-        <SeoHead
-          title={`${DASHBOARD_TITLES[activeNav]} · ${ctx.repoFullName}`}
-          description={`Indexed view of ${ctx.repoFullName} in RepoPilot.`}
-          path={`/dashboard/${ctx.repoId}`}
-          noIndex
-        />
-        {isDemoMode() ? <DemoBanner /> : null}
-        {ctx.user.isPublicGuest && !isDemoMode() ? <PublicGuestBanner /> : null}
-        {children}
-      </AppShell>
+      <ToastProvider>
+        <AppShell
+          repoId={ctx.repoId}
+          repoFullName={ctx.repoFullName}
+          userLogin={ctx.user.login}
+          userAvatar={ctx.user.avatarUrl}
+          activeNav={activeNav}
+          canvasClass={canvasClass}
+          demoMode={isDemoMode()}
+          isPublicGuest={ctx.user.isPublicGuest}
+        >
+          <SeoHead
+            title={`${DASHBOARD_TITLES[activeNav]} · ${ctx.repoFullName}`}
+            description={`Indexed view of ${ctx.repoFullName} in RepoPilot.`}
+            path={`/dashboard/${ctx.repoId}`}
+            noIndex
+          />
+          {isDemoMode() ? <DemoBanner /> : null}
+          {ctx.user.isPublicGuest && !isDemoMode() ? <PublicGuestBanner /> : null}
+          {children}
+        </AppShell>
+      </ToastProvider>
     </DashboardCtx.Provider>
   );
 }

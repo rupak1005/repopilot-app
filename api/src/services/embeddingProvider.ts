@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import { fetchWithTimeout } from '../lib/fetchWithTimeout';
 
 export const EMBEDDING_DIMENSIONS = 1536;
 
@@ -51,7 +52,7 @@ async function openAIEmbeddings(texts: string[]): Promise<number[][]> {
 
   for (let idx = 0; idx < texts.length; idx += batchSize) {
     const batch = texts.slice(idx, idx + batchSize);
-    const response = await fetch('https://api.openai.com/v1/embeddings', {
+    const response = await fetchWithTimeout('https://api.openai.com/v1/embeddings', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -87,7 +88,7 @@ async function ollamaEmbeddings(texts: string[]): Promise<number[][]> {
   const embeddings: number[][] = [];
 
   for (const text of texts) {
-    const response = await fetch(`${base}/api/embeddings`, {
+    const response = await fetchWithTimeout(`${base}/api/embeddings`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ model, prompt: text })

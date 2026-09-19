@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useCallback, useEffect, useState } from 'react';
-import { ArrowSquareOut, Graph } from '@phosphor-icons/react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ArrowSquareOut, Graph, MagnifyingGlass } from '@phosphor-icons/react';
 import { Button } from '../components/ui/Button';
 import { DifferentiatorsStrip } from '../components/ui/DifferentiatorsStrip';
+import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorBanner } from '../components/ui/ErrorBanner';
 import { PublicPageLayout } from '../components/ui/PublicPageLayout';
+import { Skeleton } from '../components/ui/Skeleton';
 import { githubUrl } from '../lib/exampleRepos';
 import { isDemoMode } from '../lib/demoMode';
 import { useIndexProgressUi } from '../lib/indexProgressUi';
@@ -49,12 +51,14 @@ export default function BrowsePage() {
   const [opening, setOpening] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const requestId = useRef(0);
 
   useEffect(() => {
     setPage(1);
   }, [query, sort, minStars]);
 
   const load = useCallback(async () => {
+    const currentRequest = ++requestId.current;
     setLoading(true);
     setError(null);
     try {
@@ -64,18 +68,28 @@ export default function BrowsePage() {
       const response = await fetch(`/api/public/browse?${params}`);
       if (!response.ok) throw new Error('Could not load repositories');
       const data = (await response.json()) as { totalCount?: number; items?: BrowseItem[] };
+      if (currentRequest !== requestId.current) return;
       setItems(data.items ?? []);
       setTotalCount(data.totalCount ?? 0);
     } catch (err) {
+      if (currentRequest !== requestId.current) return;
       setError(err instanceof Error ? err.message : 'Failed to load browse index');
       setItems([]);
       setTotalCount(0);
     } finally {
-      setLoading(false);
+      if (currentRequest === requestId.current) setLoading(false);
     }
   }, [query, sort, minStars, page]);
 
   const totalPages = browseTotalPages(totalCount);
+  const hasFilters = Boolean(query.trim() || minStars || sort !== 'stars');
+
+  function clearFilters() {
+    setQuery('');
+    setSort('stars');
+    setMinStars('');
+    setPage(1);
+  }
 
   useEffect(() => {
     const timer = window.setTimeout(() => void load(), 300);
@@ -143,6 +157,7 @@ export default function BrowsePage() {
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="owner/repo or keyword"
+              aria-label="Search repositories by owner, name, or keyword"
               spellCheck={false}
             />
           </label>
@@ -164,17 +179,48 @@ export default function BrowsePage() {
           </label>
         </div>
 
-        {error ? <ErrorBanner>{error}</ErrorBanner> : null}
+        {error ? <ErrorBanner onRetry={() => void load()}>{error}</ErrorBanner> : null}
 
-        <p className="browse-meta">
+        <p className="browse-meta" aria-live="polite">
           {loading
-            ? 'Loading…'
+            ? 'Finding public repositories…'
             : `Showing ${browseResultRange(page, totalCount, items.length)} public repositories`}
         </p>
 
         <div className="browse-table-wrap">
-          {items.length === 0 && !loading ? (
-            <p className="browse-empty">No repositories match your filters.</p>
+          {loading ? (
+            <div className="browse-skeleton" role="status" aria-label="Loading repositories">
+              <span className="sr-only">Loading repositories…</span>
+              {Array.from({ length: 5 }, (_, index) => (
+                <div className="browse-skeleton__row" key={index} aria-hidden>
+                  <div className="browse-skeleton__repo">
+                    <Skeleton width={index % 2 === 0 ? '48%' : '38%'} height={18} radius="sm" />
+                    <Skeleton width={index % 3 === 0 ? '74%' : '62%'} height={13} radius="sm" />
+                  </div>
+                  <Skeleton width={42} height={16} radius="sm" />
+                  <Skeleton width={96} height={16} radius="sm" />
+                  <Skeleton width={154} height={40} radius="sm" />
+                </div>
+              ))}
+            </div>
+          ) : items.length === 0 ? (
+            <EmptyState
+              className="browse-empty-state"
+              icon={MagnifyingGlass}
+              title={hasFilters ? 'No repositories match those filters' : 'No public repositories yet'}
+              description={
+                hasFilters
+                  ? 'Try a broader search, lower the minimum stars, or reset the filters.'
+                  : 'Public repositories will appear here when the browse index is available.'
+              }
+              action={
+                hasFilters ? (
+                  <Button type="button" variant="secondary" size="sm" onClick={clearFilters}>
+                    Clear filters
+                  </Button>
+                ) : null
+              }
+            />
           ) : (
             <table className="browse-table">
               <thead>
@@ -202,6 +248,7 @@ export default function BrowsePage() {
                           variant="primary"
                           size="md"
                           disabled={opening === repo.fullName}
+                          loading={opening === repo.fullName}
                           icon={<Graph size={16} weight="bold" />}
                           onClick={() => void openRepo(repo.fullName)}
                         >
