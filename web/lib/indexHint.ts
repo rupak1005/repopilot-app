@@ -26,5 +26,8 @@ export function shouldShowIndexHint(
   // Wait for first status poll — null looked like "Indexing" and flashed the empty hint.
   if (!indexStatus) return false;
   if (isRepoIndexInProgress(repoId ?? null, indexStatus, pendingIndexJobRepoId)) return false;
-  return showIndexHint(pulls, hotspots, analytics);
+  // An indexed repository can legitimately have no PR reviews, hotspots, or analytics yet.
+  // The index state is authoritative; metric emptiness is not evidence that indexing failed.
+  if (indexStatus.state === 'ready') return false;
+  return indexStatus.state === 'not_indexed' || indexStatus.state === 'failed';
 }

@@ -56,4 +56,30 @@ describe('shouldShowIndexHint', () => {
       }, 'repo-id', 'repo-id')
     ).toBe(false);
   });
+
+  it('hides hint for an indexed repository even when dashboard metrics are empty', () => {
+    expect(
+      shouldShowIndexHint([], [], emptyAnalytics, {
+        state: 'ready',
+        stage: 'ready',
+        revisionSha: '5117ce9abcdef',
+        fileCount: 39,
+        symbolCount: 0,
+        job: null
+      }, 'repo-id', null)
+    ).toBe(false);
+  });
+
+  it('shows hint when indexing has not started', () => {
+    expect(
+      shouldShowIndexHint([], [], emptyAnalytics, {
+        state: 'not_indexed',
+        stage: 'clone',
+        revisionSha: null,
+        fileCount: 0,
+        symbolCount: 0,
+        job: null
+      }, 'repo-id', null)
+    ).toBe(true);
+  });
 });
