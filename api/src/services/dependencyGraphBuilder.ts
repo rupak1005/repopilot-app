@@ -443,48 +443,74 @@ async function replaceDependenciesForFile(args: {
       args.file.path
     );
 
-    for (const edge of args.symbolEdges) {
+    if (args.symbolEdges.length > 0) {
+      const symbolValues: string[] = [];
+      const symbolParams: unknown[] = [];
+      let symbolParam = 1;
+      for (const edge of args.symbolEdges) {
+        symbolValues.push(
+          `($${symbolParam}, $${symbolParam + 1}, $${symbolParam + 2}, $${symbolParam + 3}, $${symbolParam + 4}, $${symbolParam + 5}, $${symbolParam + 6}, $${symbolParam + 7}, $${symbolParam + 8})`
+        );
+        symbolParams.push(
+          args.revisionId,
+          edge.fromSymbolId,
+          edge.toSymbolId,
+          edge.kind,
+          edge.confidence,
+          args.file.path,
+          edge.sourceLine ?? null,
+          edge.targetLine ?? null,
+          edge.detector
+        );
+        symbolParam += 9;
+      }
+
       await tx.$executeRawUnsafe(
         `
           INSERT INTO "SymbolDependency" (
             "revisionId", "fromSymbolId", "toSymbolId",
             "kind", "confidence", "sourceFile", "sourceLine", "targetLine", "detector"
           )
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+          VALUES ${symbolValues.join(', ')}
           ON CONFLICT ("revisionId", "fromSymbolId", "toSymbolId") DO NOTHING
         `,
-        args.revisionId,
-        edge.fromSymbolId,
-        edge.toSymbolId,
-        edge.kind,
-        edge.confidence,
-        args.file.path,
-        edge.sourceLine ?? null,
-        edge.targetLine ?? null,
-        edge.detector
+        ...symbolParams
       );
     }
 
-    for (const edge of args.moduleEdges) {
+    if (args.moduleEdges.length > 0) {
+      const moduleValues: string[] = [];
+      const moduleParams: unknown[] = [];
+      let moduleParam = 1;
+      for (const edge of args.moduleEdges) {
+        moduleValues.push(
+          `($${moduleParam}, $${moduleParam + 1}, $${moduleParam + 2}, $${moduleParam + 3}, $${moduleParam + 4}, $${moduleParam + 5}, $${moduleParam + 6}, $${moduleParam + 7}, $${moduleParam + 8}, $${moduleParam + 9})`
+        );
+        moduleParams.push(
+          args.repositoryId,
+          args.revisionId,
+          edge.fromModule,
+          edge.toModule,
+          edge.kind,
+          edge.confidence,
+          edge.sourceFile,
+          edge.sourceLine ?? null,
+          edge.targetLine ?? null,
+          edge.detector
+        );
+        moduleParam += 10;
+      }
+
       await tx.$executeRawUnsafe(
         `
           INSERT INTO "ModuleDependency" (
             "repositoryId", "revisionId", "fromModule", "toModule",
             "kind", "confidence", "sourceFile", "sourceLine", "targetLine", "detector"
           )
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          VALUES ${moduleValues.join(', ')}
           ON CONFLICT ("revisionId", "fromModule", "toModule") DO NOTHING
         `,
-        args.repositoryId,
-        args.revisionId,
-        edge.fromModule,
-        edge.toModule,
-        edge.kind,
-        edge.confidence,
-        edge.sourceFile,
-        edge.sourceLine ?? null,
-        edge.targetLine ?? null,
-        edge.detector
+        ...moduleParams
       );
     }
   }, prismaInteractiveTxOptions);

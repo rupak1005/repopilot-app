@@ -5,6 +5,7 @@ import { createEmbeddings, localEmbedding } from './embeddingProvider';
 const MAX_CHUNK_LINES = 40;
 const CHUNK_OVERLAP_LINES = 8;
 const CHUNK_INSERT_BATCH_SIZE = 50;
+const SEARCH_FILE_BATCH_SIZE = 40;
 
 type FileRow = {
   id: string;
@@ -37,6 +38,13 @@ export type SearchIndexResult = {
   chunksIndexed: number;
   provider: string;
 };
+
+function searchFileBatchSize(): number {
+  const configured = Number(process.env.SEARCH_FILE_BATCH_SIZE);
+  return Number.isFinite(configured) && configured > 0
+    ? Math.min(Math.floor(configured), 200)
+    : SEARCH_FILE_BATCH_SIZE;
+}
 
 function logEvent(event: string, fields: Record<string, unknown>) {
   console.log(
@@ -150,85 +158,113 @@ export async function indexRepositorySearch(args: {
   }
 
   const prisma = getPrisma();
-  const files = (await prisma.$queryRawUnsafe(
+  const fileCountRows = (await prisma.$queryRawUnsafe(
     `
-      SELECT "id", "path", "content"
+      SELECT COUNT(*)::int AS count
       FROM "File"
       WHERE "repositoryId" = $1
         AND "revisionId" = $2
-      ORDER BY "path" ASC
     `,
     args.repositoryId,
     revision.id
-  )) as FileRow[];
+  )) as Array<{ count: number }>;
+
+  const filesDiscovered = fileCountRows[0]?.count ?? 0;
 
   logEvent('search.indexing.start', {
     repositoryId: args.repositoryId,
     revisionId: revision.id,
     revisionSha: revision.revisionSha,
-    filesDiscovered: files.length
+    filesDiscovered
   });
 
-  const pendingChunks: PendingChunk[] = [];
+  await prisma.codeChunk.deleteMany({ where: { revisionId: revision.id } });
 
-  for (const file of files) {
-    for (const chunk of chunkText(file.content)) {
-      pendingChunks.push({
-        fileId: file.id,
-        filePath: file.path,
-        startLine: chunk.startLine,
-        endLine: chunk.endLine,
-        text: chunk.text
-      });
+  let chunksIndexed = 0;
+  let provider = 'local-hash';
+  const fileBatchSize = searchFileBatchSize();
+
+  // Keep only one bounded group of files/chunks/embeddings in memory. Large public
+  // repositories can contain thousands of files and previously exhausted the Render heap.
+  for (let offset = 0; offset < filesDiscovered; offset += fileBatchSize) {
+    const files = (await prisma.$queryRawUnsafe(
+      `
+        SELECT "id", "path", "content"
+        FROM "File"
+        WHERE "repositoryId" = $1
+          AND "revisionId" = $2
+        ORDER BY "path" ASC
+        LIMIT $3 OFFSET $4
+      `,
+      args.repositoryId,
+      revision.id,
+      fileBatchSize,
+      offset
+    )) as FileRow[];
+
+    const pendingChunks: PendingChunk[] = [];
+    for (const file of files) {
+      for (const chunk of chunkText(file.content)) {
+        pendingChunks.push({
+          fileId: file.id,
+          filePath: file.path,
+          startLine: chunk.startLine,
+          endLine: chunk.endLine,
+          text: chunk.text
+        });
+      }
     }
+
+    if (pendingChunks.length === 0) continue;
+
+    const embeddingResult = await createEmbeddings(pendingChunks.map((chunk) => chunk.text));
+    provider = embeddingResult.provider;
+    const insertBatches = buildChunkInsertBatches({
+      repositoryId: args.repositoryId,
+      revisionId: revision.id,
+      pendingChunks,
+      embeddings: embeddingResult.embeddings
+    });
+
+    await prisma.$transaction(async (tx: TxClient) => {
+      for (const batch of insertBatches) {
+        await tx.$executeRawUnsafe(
+          `
+            INSERT INTO "CodeChunk" (
+              "repositoryId",
+              "revisionId",
+              "fileId",
+              "filePath",
+              "startLine",
+              "endLine",
+              "chunkType",
+              "text",
+              "embedding"
+            )
+            VALUES ${batch.valueClauses.join(', ')}
+          `,
+          ...batch.params
+        );
+      }
+    }, prismaInteractiveTxOptions);
+
+    chunksIndexed += pendingChunks.length;
   }
-
-  const embeddingResult = await createEmbeddings(pendingChunks.map((chunk) => chunk.text));
-  const insertBatches = buildChunkInsertBatches({
-    repositoryId: args.repositoryId,
-    revisionId: revision.id,
-    pendingChunks,
-    embeddings: embeddingResult.embeddings
-  });
-
-  await prisma.$transaction(async (tx: TxClient) => {
-    await tx.codeChunk.deleteMany({ where: { revisionId: revision.id } });
-
-    for (const batch of insertBatches) {
-      await tx.$executeRawUnsafe(
-        `
-          INSERT INTO "CodeChunk" (
-            "repositoryId",
-            "revisionId",
-            "fileId",
-            "filePath",
-            "startLine",
-            "endLine",
-            "chunkType",
-            "text",
-            "embedding"
-          )
-          VALUES ${batch.valueClauses.join(', ')}
-        `,
-        ...batch.params
-      );
-    }
-  }, prismaInteractiveTxOptions);
 
   logEvent('search.indexing.completed', {
     repositoryId: args.repositoryId,
     revisionId: revision.id,
     revisionSha: revision.revisionSha,
-    provider: embeddingResult.provider,
-    chunksIndexed: pendingChunks.length
+    provider,
+    chunksIndexed
   });
 
   return {
     repositoryId: args.repositoryId,
     revisionId: revision.id,
     revisionSha: revision.revisionSha,
-    chunksIndexed: pendingChunks.length,
-    provider: embeddingResult.provider
+    chunksIndexed,
+    provider
   };
 }
 
