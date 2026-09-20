@@ -279,6 +279,8 @@ export async function runFullRepositoryIndex(args: {
   revisionSha: string;
   /** Heartbeat so status polling does not mark a long run abandoned. */
   onStage?: (stage: 'parse' | 'graph' | 'history') => Promise<void>;
+  /** Let the core index become ready while git history continues in the background. */
+  deferHistory?: boolean;
 }): Promise<void> {
   logEvent('repo.index.pipeline.started', {
     repositoryId: args.repositoryId,
@@ -300,26 +302,43 @@ export async function runFullRepositoryIndex(args: {
   });
   await args.onStage?.('graph');
 
-  try {
-    const maxCount = historyMaxCommits();
-    if (maxCount > 0) {
-      await args.onStage?.('history');
-      await ingestRepositoryHistory({
+  const runHistory = async () => {
+    try {
+      const maxCount = historyMaxCommits();
+      if (maxCount > 0) {
+        await args.onStage?.('history');
+        await ingestRepositoryHistory({
+          repositoryId: args.repositoryId,
+          repoPath: args.repoPath,
+          maxCount
+        });
+      } else {
+        logEvent('repo.index.history.skipped', {
+          repositoryId: args.repositoryId,
+          reason: 'HISTORY_MAX_COMMITS=0'
+        });
+      }
+    } catch (err) {
+      logEvent('repo.index.history.failed', {
         repositoryId: args.repositoryId,
-        repoPath: args.repoPath,
-        maxCount
-      });
-    } else {
-      logEvent('repo.index.history.skipped', {
-        repositoryId: args.repositoryId,
-        reason: 'HISTORY_MAX_COMMITS=0'
+        error: err instanceof Error ? err.message : String(err)
       });
     }
-  } catch (err) {
-    logEvent('repo.index.history.skipped', {
+  };
+
+  if (args.deferHistory) {
+    logEvent('repo.index.history.background.started', {
       repositoryId: args.repositoryId,
-      error: err instanceof Error ? err.message : String(err)
+      revisionSha: args.revisionSha
     });
+    void runHistory().then(() => {
+      logEvent('repo.index.history.background.completed', {
+        repositoryId: args.repositoryId,
+        revisionSha: args.revisionSha
+      });
+    });
+  } else {
+    await runHistory();
   }
 
   logEvent('repo.index.pipeline.completed', {
@@ -343,6 +362,7 @@ async function runFullRepositoryIndexWithJob(args: {
   try {
     await runFullRepositoryIndex({
       ...args,
+      deferHistory: true,
       onStage: jobId
         ? async () => {
             await touchIndexJob(jobId);
