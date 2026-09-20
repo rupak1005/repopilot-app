@@ -217,6 +217,7 @@ async function beginIndexJob(args: {
         SET "status" = 'RUNNING',
             "lastError" = NULL,
             "updatedAt" = NOW()
+        WHERE "QueuedJob"."status" <> 'RUNNING'
       RETURNING "id"
     `,
     args.repositoryId,
@@ -353,11 +354,20 @@ async function runFullRepositoryIndexWithJob(args: {
   owner: string;
   name: string;
   revisionSha: string;
+  jobId?: string;
 }): Promise<void> {
-  const jobId = await beginIndexJob({
+  const jobId = args.jobId ?? (await beginIndexJob({
     repositoryId: args.repositoryId,
     revisionSha: args.revisionSha
-  });
+  }));
+
+  if (!jobId) {
+    logEvent('repo.index.skipped_duplicate', {
+      repositoryId: args.repositoryId,
+      revisionSha: args.revisionSha
+    });
+    return;
+  }
 
   try {
     await runFullRepositoryIndex({
@@ -484,11 +494,20 @@ export async function startPublicRepositoryIndex(args: {
   };
 
   if (background) {
-    await beginIndexJob({
+    const jobId = await beginIndexJob({
       repositoryId: args.repositoryId,
       revisionSha
     });
-    void runFullRepositoryIndexWithJob(pipelineArgs).catch((err) => {
+
+    if (!jobId) {
+      logEvent('repo.index.public.skipped_duplicate', {
+        repositoryId: args.repositoryId,
+        revisionSha
+      });
+      return { queuedJobId: null, revisionSha, indexing: true };
+    }
+
+    void runFullRepositoryIndexWithJob({ ...pipelineArgs, jobId }).catch((err) => {
       logEvent('repo.index.public.background.failed', {
         repositoryId: args.repositoryId,
         revisionSha,
