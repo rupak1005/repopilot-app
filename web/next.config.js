@@ -16,7 +16,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://api.fontshare.com https://fonts.googleapis.com",
       "font-src 'self' data: https://cdn.fontshare.com https://fonts.gstatic.com",
       "img-src 'self' data: blob: https:",
-      "connect-src 'self' https: http://127.0.0.1:3000 http://127.0.0.1:3001 http://127.0.0.1:3999 http://localhost:3000 http://localhost:3001 http://localhost:3999",
+      "connect-src 'self' https:",
       "worker-src 'self' blob:",
       "child-src 'self' blob:"
     ].join('; ')
@@ -26,6 +26,12 @@ const securityHeaders = [
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // Next 16 defaults to the CLI checker, which is incompatible with this
+  // workspace's TypeScript 5.9 output during `next build`. Use the compiler
+  // API; the monorepo still runs an explicit standalone type-check in CI.
+  experimental: {
+    useTypeScriptCli: false
+  },
   transpilePackages: ['mermaid', 'three', '@react-three/fiber', '@react-three/drei'],
   async rewrites() {
     return [

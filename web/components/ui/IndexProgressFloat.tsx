@@ -110,7 +110,11 @@ export function IndexProgressFloat({ repoId, fullName, onReady, onFailed }: Inde
 
       {!isFailed && !isReady && status && (status.fileCount > 0 || status.symbolCount > 0) ? (
         <p className="index-progress-float__meta mono">
-          {status.fileCount > 0 ? `${status.fileCount} files` : null}
+          {status.stage === 'graph' && status.job?.graphProgress
+            ? `${status.job.graphProgress.processed}/${status.job.graphProgress.total} graph files`
+            : status.fileCount > 0
+              ? `${status.fileCount} files`
+              : null}
           {status.symbolCount > 0
             ? `${status.fileCount > 0 ? ' · ' : ''}${status.symbolCount} symbols`
             : null}

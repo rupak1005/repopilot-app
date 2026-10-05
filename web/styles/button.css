@@ -8,9 +8,9 @@
   justify-content: center;
   gap: var(--space-2);
   border: var(--border-medium);
-  border-color: var(--color-border-strong);
+  border-color: var(--color-border);
   font-family: var(--font-sans);
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: -0.01em;
   cursor: pointer;
   text-decoration: none;
@@ -26,17 +26,17 @@
 
 .ui-button:focus-visible {
   outline: none;
-  box-shadow: var(--shadow-hard-sm), var(--focus-ring);
+  box-shadow: var(--focus-ring);
 }
 
 .ui-button:hover:not(:disabled) {
-  box-shadow: var(--shadow-hard-md);
-  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-hard-sm);
+  transform: translateY(-1px);
 }
 
 .ui-button:active:not(:disabled) {
-  transform: translate(1px, 1px);
-  box-shadow: 1px 1px 0 var(--shadow-color);
+  transform: translateY(1px) scale(0.99);
+  box-shadow: none;
 }
 
 .ui-button--sm {
@@ -73,7 +73,7 @@
 }
 
 .ui-button--primary {
-  background: var(--color-primary);
+  background: var(--color-primary-strong);
   color: var(--color-on-primary);
 }
 

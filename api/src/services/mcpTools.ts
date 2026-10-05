@@ -7,6 +7,8 @@ import { searchHistory } from './engineeringIntelligence';
 import { analyzeFileImpact } from './impactAnalysis';
 import { resolveRepositoryRevision } from './repositoryRevisions';
 import { searchRepository } from './searchIndex';
+import { buildRepositoryDigest } from './repositoryDigest';
+import { buildRepositoryReversePrompt } from './repositoryReverse';
 
 export type McpProvenanceSource = 'parser' | 'retrieval' | 'history' | 'inference';
 
@@ -211,6 +213,37 @@ export async function mcpGetContextPack(args: {
     revisionSha,
     source: 'parser',
     data: pack
+  });
+}
+
+export async function mcpRepoDigest(args: {
+  repositoryId: string;
+  revisionSha?: string;
+  maxFileBytes?: number;
+  maxTotalBytes?: number;
+}): Promise<McpEnvelope<Awaited<ReturnType<typeof buildRepositoryDigest>>>> {
+  const digest = await buildRepositoryDigest(args);
+  if (!digest) throw new Error('No indexed revision for repository');
+  return wrapMcpResult({
+    repositoryId: args.repositoryId,
+    revisionSha: digest.revisionSha,
+    source: 'retrieval',
+    data: digest
+  });
+}
+
+export async function mcpReversePrompt(args: {
+  repositoryId: string;
+  revisionSha?: string;
+  mode?: 'quick' | 'deep';
+}): Promise<McpEnvelope<Awaited<ReturnType<typeof buildRepositoryReversePrompt>>>> {
+  const reverse = await buildRepositoryReversePrompt(args);
+  if (!reverse) throw new Error('No indexed revision for repository');
+  return wrapMcpResult({
+    repositoryId: args.repositoryId,
+    revisionSha: reverse.revisionSha,
+    source: 'inference',
+    data: reverse
   });
 }
 

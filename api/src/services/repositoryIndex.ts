@@ -5,6 +5,7 @@ import { buildDependencyGraph } from './dependencyGraphBuilder';
 import { cloneOrUpdateRepository, clonePublicRepository } from './githubClone';
 import { fetchRemoteHeadSha } from './githubPublic';
 import { ingestRepositoryHistory } from './historyIngest';
+import { indexRepositorySearch } from './searchIndex';
 import { syncRepository } from './repositorySync';
 import {
   getRepositoryRevisionStatus,
@@ -12,6 +13,7 @@ import {
 } from './repositoryRevisions';
 
 export type IndexJobStatus = 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'DEAD_LETTER';
+export type IndexGraphProgress = { processed: number; total: number };
 
 /** Default: abandon RUNNING/QUEUED index jobs with no heartbeat (Render free can kill mid-pipeline). */
 const DEFAULT_INDEX_JOB_STALE_MS = 20 * 60 * 1000;
@@ -48,6 +50,7 @@ export type RepositoryIndexStatus = {
     status: IndexJobStatus;
     lastError: string | null;
     updatedAt: string;
+    graphProgress: IndexGraphProgress | null;
   } | null;
 };
 
@@ -123,7 +126,7 @@ async function enqueueRepositorySyncJob(args: {
 async function latestIndexJob(repositoryId: string) {
   const rows = (await getPrisma().$queryRawUnsafe(
     `
-      SELECT "id", "status", "lastError", "updatedAt"
+      SELECT "id", "status", "lastError", "updatedAt", "payload"
       FROM "QueuedJob"
       WHERE "repositoryId" = $1
         AND "type" = 'repo-sync'
@@ -136,6 +139,7 @@ async function latestIndexJob(repositoryId: string) {
     status: IndexJobStatus;
     lastError: string | null;
     updatedAt: Date;
+    payload: unknown;
   }>;
 
   const job = rows[0];
@@ -144,32 +148,45 @@ async function latestIndexJob(repositoryId: string) {
     id: job.id,
     status: job.status,
     lastError: job.lastError,
-    updatedAt: job.updatedAt.toISOString()
+    updatedAt: job.updatedAt.toISOString(),
+    graphProgress:
+      job.payload && typeof job.payload === 'object' && 'graphProgress' in job.payload
+        ? (job.payload as { graphProgress?: IndexGraphProgress }).graphProgress ?? null
+        : null
   };
 }
 
-async function touchIndexJob(jobId: string): Promise<void> {
+async function touchIndexJob(jobId: string, graphProgress?: IndexGraphProgress): Promise<void> {
   await getPrisma().$executeRawUnsafe(
     `
       UPDATE "QueuedJob"
-      SET "updatedAt" = NOW()
+      SET "payload" = CASE
+        WHEN $2::jsonb IS NULL THEN "payload"
+        ELSE jsonb_set("payload", '{graphProgress}', $2::jsonb, true)
+      END,
+      "updatedAt" = NOW()
       WHERE "id" = $1
-        AND "status" IN ('QUEUED', 'RUNNING')
+      AND "status" IN ('QUEUED', 'RUNNING')
     `,
-    jobId
+    jobId,
+    graphProgress ? JSON.stringify(graphProgress) : null
   );
 }
+
+export { touchIndexJob };
 
 async function abandonStaleIndexJob(job: {
   id: string;
   status: IndexJobStatus;
   lastError: string | null;
   updatedAt: string;
+  graphProgress: IndexGraphProgress | null;
 }): Promise<{
   id: string;
   status: IndexJobStatus;
   lastError: string | null;
   updatedAt: string;
+  graphProgress: IndexGraphProgress | null;
 }> {
   if (job.status !== 'QUEUED' && job.status !== 'RUNNING') return job;
   if (!indexJobLooksAbandoned(job.updatedAt)) return job;
@@ -280,6 +297,7 @@ export async function runFullRepositoryIndex(args: {
   revisionSha: string;
   /** Heartbeat so status polling does not mark a long run abandoned. */
   onStage?: (stage: 'parse' | 'graph' | 'history') => Promise<void>;
+  onGraphProgress?: (progress: { processed: number; total: number }) => Promise<void>;
   /** Let the core index become ready while git history continues in the background. */
   deferHistory?: boolean;
 }): Promise<void> {
@@ -293,15 +311,43 @@ export async function runFullRepositoryIndex(args: {
     repoPath: args.repoPath,
     revisionSha: args.revisionSha,
     owner: args.owner,
-    repositoryName: args.name
+    repositoryName: args.name,
+    // Search embeddings are valuable, but they are not required to render
+    // the deterministic architecture graph. Do not block graph generation
+    // on a provider call or a large CodeChunk transaction.
+    skipSearchIndex: true
   });
   await args.onStage?.('parse');
 
   await buildDependencyGraph({
     repositoryId: args.repositoryId,
-    revisionSha: args.revisionSha
+    revisionSha: args.revisionSha,
+    onProgress: args.onGraphProgress
   });
   await args.onStage?.('graph');
+
+  // Continue building retrieval context after the core repository map is
+  // available. A failure here must not make architecture/indexing appear
+  // stuck or invalidate the already usable AST/import graph.
+  void indexRepositorySearch({
+    repositoryId: args.repositoryId,
+    revisionSha: args.revisionSha
+  })
+    .then((result) => {
+      logEvent('search.indexing.background.completed', {
+        repositoryId: args.repositoryId,
+        revisionSha: args.revisionSha,
+        chunksIndexed: result.chunksIndexed,
+        provider: result.provider
+      });
+    })
+    .catch((err) => {
+      logEvent('search.indexing.background.failed', {
+        repositoryId: args.repositoryId,
+        revisionSha: args.revisionSha,
+        error: err instanceof Error ? err.message : String(err)
+      });
+    });
 
   const runHistory = async () => {
     try {
@@ -376,6 +422,11 @@ async function runFullRepositoryIndexWithJob(args: {
       onStage: jobId
         ? async () => {
             await touchIndexJob(jobId);
+          }
+        : undefined,
+      onGraphProgress: jobId
+        ? async (progress) => {
+            await touchIndexJob(jobId, progress);
           }
         : undefined
     });

@@ -1,6 +1,6 @@
 # RepoPilot — Product Requirements Document (PRD)
 
-**Version:** 3.0 · **Status:** Current product (as shipped) · **Date:** August 2026
+**Version:** 3.1 · **Status:** Current product (as shipped) · **Date:** October 2026
 
 ---
 
@@ -51,6 +51,8 @@ Typical “repo diagram” tools guess architecture with an LLM. RepoPilot:
 
 - Clone public (or token-backed) repos  
 - Progress stages: `clone → parse → graph → history → ready` (SSE + floating UI)  
+- Search embeddings are deferred until the deterministic graph is available, so architecture is usable sooner.
+- Clone acquisition uses per-repository locking and atomic staging swaps to prevent partial checkout corruption.
 - Inline indexing for local/dev (`INDEX_INLINE=true`) or queued worker  
 - Cap history ingest via `HISTORY_MAX_COMMITS`  
 
@@ -63,7 +65,9 @@ Typical “repo diagram” tools guess architecture with an LLM. RepoPilot:
 | Ask | Grounded Q&A with citations; structured LLM JSON |
 | Pulls | List PRs; detail + review findings; trigger review |
 | Hotspots | Ranked churn modules |
-| Architecture | Interactive force/dagre graph from real edges |
+| Architecture | Evidence-backed semantic system map plus interactive file graph from real edges |
+| Digest | Revision-aware Markdown, TXT, and JSON repository context export |
+| Reverse | Evidence-labeled quick/deep build prompt for the codebase |
 | Impact | File-centric dependent modules / blast radius |
 | Settings | Session/repo context |
 | MCP | Connect instructions for Cursor / Claude |

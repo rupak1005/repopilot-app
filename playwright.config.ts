@@ -37,6 +37,7 @@ export default defineConfig({
       PORT: String(PORT),
       SESSION_SECRET: process.env.SESSION_SECRET ?? 'e2e-test-session-secret-32chars-minimum',
       NEXT_PUBLIC_DEMO_MODE: 'true',
+      REPOPILOT_API_URL: process.env.REPOPILOT_API_URL ?? 'http://127.0.0.1:3999',
       NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:3999'
     }
   }

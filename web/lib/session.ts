@@ -101,7 +101,7 @@ export function createPublicGuestSession(args: {
 }
 
 function cookieFlags(maxAge: number): string {
-  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+  const secure = process.env.NODE_ENV === 'production' && process.env.SESSION_COOKIE_SECURE !== 'false' ? '; Secure' : '';
   return `Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${secure}`;
 }
 

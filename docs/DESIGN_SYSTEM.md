@@ -7,9 +7,9 @@
 
 | Role | Family | Token |
 |------|--------|-------|
-| Display / headings | Cabinet Grotesk | `--font-display` |
-| Body / UI | General Sans | `--font-sans` |
-| Technical | JetBrains Mono | `--font-mono` |
+| Display / headings | Geist | `--font-display` |
+| Body / UI | Geist | `--font-sans` |
+| Technical | Geist Mono | `--font-mono` |
 
 Do not use monospace for ordinary prose.
 

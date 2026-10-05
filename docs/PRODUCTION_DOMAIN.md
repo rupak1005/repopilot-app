@@ -45,6 +45,7 @@ curl -sI https://repopilot.software | head -5
 2. **GitHub OAuth app** → Authorization callback URL:
    `https://repopilot.software/api/auth/github/callback`  
    (exact path must match your app; also keep localhost for local dev).
-3. **API CORS** (Railway / Render) add:
-   `https://repopilot.software,https://www.repopilot.software`
-4. Marketing CTA (`repopilot-pi`) → `https://repopilot.software`.
+3. **API CORS** (Railway / Render) set `CORS_ORIGINS` to:
+   `https://repopilot.software`
+4. **Vercel server environment** set `REPOPILOT_API_URL` to the deployed Fastify origin and set the same `INTERNAL_API_SECRET` on Vercel and the API. The browser uses same-origin `/api/*` BFF routes; it must not receive the Fastify URL.
+5. Marketing CTA (`repopilot-pi`) → `https://repopilot.software`.

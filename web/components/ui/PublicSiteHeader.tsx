@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Code, GithubLogo, List, SignOut, X } from '@phosphor-icons/react';
+import { GithubLogo, List, SignOut, X } from '@phosphor-icons/react';
 import { useEffect, useId, useState } from 'react';
 import { GITHUB_SIGN_IN_URL, isGitHubUser, signOut } from '../../lib/auth';
 import type { PublicUser } from '../../lib/session';
@@ -57,22 +57,7 @@ export function PublicSiteHeader({ active }: PublicSiteHeaderProps) {
       >
         Docs
       </Link>
-      <Link
-        href="/browse"
-        className={`public-header__link${active === 'browse' ? ' public-header__link--active' : ''}`}
-        onClick={() => setMenuOpen(false)}
-      >
-        Browse
-      </Link>
-      <Link href="/privacy" className="public-header__link" onClick={() => setMenuOpen(false)}>
-        Privacy
-      </Link>
-      <Link href="/terms" className="public-header__link" onClick={() => setMenuOpen(false)}>
-        Terms
-      </Link>
-      <Link href="/contact" className="public-header__link" onClick={() => setMenuOpen(false)}>
-        Contact
-      </Link>
+      <Link href="/browse" className="public-header__link" onClick={() => setMenuOpen(false)}>Examples</Link>
       {user?.selectedRepoId ? (
         <Link
           href={`/dashboard/${user.selectedRepoId}`}
@@ -97,7 +82,7 @@ export function PublicSiteHeader({ active }: PublicSiteHeaderProps) {
     <header className="public-header">
       <Link href="/" className="public-header__brand" aria-label="RepoPilot home">
         <span className="public-header__mark" aria-hidden>
-          <Code size={20} weight="light" />
+          <svg viewBox="0 0 32 32" width="20" height="20" fill="none"><path d="M8 7v18M8 16h7M15 16V9h9M15 16v8h9" stroke="currentColor" strokeWidth="2.2" strokeLinecap="square" /><circle cx="8" cy="7" r="2.5" fill="currentColor" /><circle cx="15" cy="16" r="2.5" fill="currentColor" /><circle cx="24" cy="9" r="2.5" fill="currentColor" /><circle cx="24" cy="24" r="2.5" fill="currentColor" /></svg>
         </span>
         <span className="public-header__title">
           Repo<span className="public-header__accent">Pilot</span>

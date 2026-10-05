@@ -3,7 +3,7 @@
   width: 100%;
   min-width: 0;
   margin: 0 auto;
-  padding: var(--space-1) 0;
+  padding: var(--space-4) 0 var(--space-8);
 }
 
 .canvas-inner--narrow {
@@ -19,8 +19,9 @@
 .ui-page-header h1 {
   margin: 0 0 var(--space-2);
   font-size: var(--text-h1);
-  font-weight: 800;
-  letter-spacing: -0.03em;
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
   color: var(--color-text);
 }
 
@@ -30,6 +31,7 @@
   font-size: var(--text-body);
   line-height: 1.55;
   color: var(--color-text-muted);
+  text-wrap: pretty;
 }
 
 .error-banner {
@@ -91,8 +93,8 @@
 
 .ui-input:focus {
   outline: none;
-  background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface));
-  box-shadow: 2px 2px 0 var(--shadow-color), var(--focus-ring);
+  background: var(--color-surface-elevated);
+  box-shadow: var(--focus-ring);
 }
 
 .ui-input:disabled {

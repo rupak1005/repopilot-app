@@ -7,7 +7,7 @@ import {
 } from './services/jobLifecycle';
 import { claimNextQueuedJob, MAX_JOB_ATTEMPTS } from './services/jobQueue';
 import { getDefaultReviewPublisher } from './services/githubCheckPublisher';
-import { runFullRepositoryIndex } from './services/repositoryIndex';
+import { runFullRepositoryIndex, touchIndexJob } from './services/repositoryIndex';
 import type { PrReviewJobPayload, RepoSyncJobPayload } from './services/jobQueue';
 
 function logEvent(event: string, fields: Record<string, unknown>) {
@@ -61,7 +61,13 @@ async function handleRepoSyncJob(jobId: string, payload: RepoSyncJobPayload, att
     repoPath,
     owner: meta.owner,
     name: meta.name,
-    revisionSha: payload.revisionSha
+    revisionSha: payload.revisionSha,
+    onGraphProgress: async (progress) => {
+      await touchIndexJob(jobId, progress);
+    },
+    onStage: async () => {
+      await touchIndexJob(jobId);
+    }
   });
 
   await updateQueuedJobStatus({

@@ -11,6 +11,8 @@ import {
   mcpSearchCodebase,
   mcpSearchHistory,
   mcpTraceDependencies,
+  mcpRepoDigest,
+  mcpReversePrompt,
   requireMcpRepositoryId
 } from '../services/mcpTools';
 
@@ -40,6 +42,47 @@ async function main() {
   const authField = {
     apiKey: z.string().optional().describe('Required when MCP_API_KEY is set on the server')
   };
+
+  server.registerTool(
+    'repo_reverse_prompt',
+    {
+      description: 'Generate a bounded, evidence-labeled build prompt from an indexed repository.',
+      inputSchema: {
+        ...authField,
+        revisionSha: z.string().optional(),
+        mode: z.enum(['quick', 'deep']).optional()
+      }
+    },
+    async ({ apiKey, revisionSha, mode }) => {
+      try {
+        assertMcpAuth(apiKey);
+        return toolJson(await mcpReversePrompt({ repositoryId, revisionSha, mode }));
+      } catch (err) {
+        return toolError(err instanceof Error ? err.message : 'repo_reverse_prompt failed');
+      }
+    }
+  );
+
+  server.registerTool(
+    'repo_digest',
+    {
+      description: 'Export a bounded, revision-aware Markdown repository digest for agent context.',
+      inputSchema: {
+        ...authField,
+        revisionSha: z.string().optional(),
+        maxFileBytes: z.number().int().min(1_000).max(1_000_000).optional(),
+        maxTotalBytes: z.number().int().min(10_000).max(20_000_000).optional()
+      }
+    },
+    async ({ apiKey, revisionSha, maxFileBytes, maxTotalBytes }) => {
+      try {
+        assertMcpAuth(apiKey);
+        return toolJson(await mcpRepoDigest({ repositoryId, revisionSha, maxFileBytes, maxTotalBytes }));
+      } catch (err) {
+        return toolError(err instanceof Error ? err.message : 'repo_digest failed');
+      }
+    }
+  );
 
   server.registerTool(
     'search_codebase',

@@ -21,6 +21,8 @@ export type SyncRepositoryArgs = {
   repositoryName?: string;
   owner?: string;
   concurrency?: number;
+  /** Keep search embeddings off the critical path for interactive indexing. */
+  skipSearchIndex?: boolean;
 };
 
 export type SyncRepositoryResult = {
@@ -168,10 +170,21 @@ export async function syncRepository(
     exportsExtracted
   });
 
-  const searchIndex = await indexRepositorySearch({
-    repositoryId: args.repositoryId,
-    revisionSha
-  });
+  let chunksIndexed = 0;
+  if (!args.skipSearchIndex) {
+    const searchIndex = await indexRepositorySearch({
+      repositoryId: args.repositoryId,
+      revisionSha
+    });
+    chunksIndexed = searchIndex.chunksIndexed;
+  } else {
+    logEvent('search.indexing.deferred', {
+      repositoryId: args.repositoryId,
+      revisionId: revision.id,
+      revisionSha,
+      reason: 'interactive-index-critical-path'
+    });
+  }
 
   return {
     repositoryId: args.repositoryId,
@@ -182,7 +195,6 @@ export async function syncRepository(
     symbolsExtracted,
     importsExtracted,
     exportsExtracted,
-    chunksIndexed: searchIndex.chunksIndexed
+    chunksIndexed
   };
 }
-

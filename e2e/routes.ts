@@ -1,6 +1,6 @@
 /** Every public page route covered by Playwright e2e. */
 export const PUBLIC_PAGES = [
-  { path: '/', heading: /Understand your repository/i },
+  { path: '/', heading: /See how your codebase works/i },
   { path: '/browse', heading: /Browse public repositories/i },
   { path: '/login', heading: /Sign in for private repos/i },
   { path: '/mcp', heading: /MCP for agents|Connect Cursor \/ MCP/i }
@@ -23,5 +23,5 @@ export const DASHBOARD_PAGES = [
 ] as const;
 
 /** Demo chip on landing — must match EXAMPLE_REPOS label + slug. */
-export const DEMO_CHIP_LABEL = 'RepoPilot';
-export const DEMO_REPO_SLUG = 'rupak1005/repopilot';
+export const DEMO_CHIP_LABEL = 'FastAPI';
+export const DEMO_REPO_SLUG = 'fastapi/fastapi';

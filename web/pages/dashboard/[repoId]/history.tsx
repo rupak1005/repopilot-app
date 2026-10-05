@@ -13,7 +13,7 @@ import { isDemoMode } from '../../../lib/demoMode';
 import { DEMO_HISTORY_HITS, DEMO_REVISIONS } from '../../../lib/demoData';
 import { formatIndexedAt, shortSha, type HistoryHit, type RevisionRow } from '../../../lib/history';
 import { architectureHref, impactHref } from '../../../lib/revisionScope';
-import { repoApiPath } from '../../../lib/serverApi';
+import { repoApiPath } from '../../../lib/repoApiPath';
 
 export default function HistoryPage() {
   const router = useRouter();

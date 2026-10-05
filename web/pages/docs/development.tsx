@@ -41,7 +41,7 @@ yarn dev`}</DocsCode>
 
 # Services:
 #   web  → http://localhost:3000
-#   api  → http://localhost:3001
+#   api  → configured Fastify origin
 #   db   → localhost:5432
 #   redis → localhost:6379`}</DocsCode>
       </DocsSection>
@@ -90,7 +90,7 @@ yarn dev`}</DocsCode>
         <DocsTable
           headers={['Variable', 'Purpose']}
           rows={[
-            ['NEXT_PUBLIC_API_URL', 'Fastify API base URL'],
+            ['REPOPILOT_API_URL', 'Private Fastify API origin used by the Next.js BFF'],
             ['NEXT_PUBLIC_APP_URL', 'Public app origin (canonical URLs, OAuth callback)'],
             ['NEXT_PUBLIC_MARKETING_URL', 'Separate marketing site URL'],
             ['NEXT_PUBLIC_DEMO_MODE', 'Show seeded dashboard without indexing'],
@@ -110,7 +110,7 @@ yarn dev`}</DocsCode>
       </DocsSection>
 
       <DocsSection title="Health check">
-        <DocsCode>{`curl http://localhost:3001/health`}</DocsCode>
+        <DocsCode>{`curl https://your-api.example.com/health`}</DocsCode>
       </DocsSection>
     </DocsLayout>
   );

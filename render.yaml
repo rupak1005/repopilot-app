@@ -20,7 +20,7 @@ services:
       - key: REPO_CLONE_ROOT
         value: /tmp/repopilot-repos
       - key: CORS_ORIGINS
-        value: https://repopilot-app.vercel.app,http://localhost:3000
+        value: https://repopilot.software
       - key: DATABASE_URL
         sync: false
       - key: REDIS_URL

@@ -1,6 +1,6 @@
 # RepoPilot — High-Level Design (HLD)
 
-**Version:** 3.0 · **Aligns with:** shipped monorepo (August 2026)
+**Version:** 3.1 · **Aligns with:** shipped monorepo (October 2026)
 
 ---
 
@@ -80,11 +80,12 @@ GitHub → webhook → API → queue → worker → DB → web/MCP consumers.
 ### 4.2 Full index pipeline
 
 ```text
-clone/update on disk
-    → sync (discover TS/JS/Python/Go → parse → persist → embed chunks)
-    → build dependency graph
-    → ingest git history (optional cap)
-    → state: ready
+clone/update on disk (per-repo lock; staged + atomic swap)
+    → sync (discover TS/JS/Python/Go → parse → persist)
+    → build module/symbol dependency graph
+    → core state: ready for architecture and investigation
+         ├── background search chunks + embeddings
+         └── background git history (optional cap)
 ```
 
 Status derivation: job `QUEUED|RUNNING` → `indexing`; files present → `ready`; else `not_indexed` / `failed`.
@@ -148,7 +149,7 @@ Agent calls tools → same service layer as HTTP (search, impact, deps, history,
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| Diagrams | Real import/AST edges | Differentiates from LLM Mermaid generators |
+| Diagrams | Real import/AST edges compiled into semantic groups and an interactive file graph | Readable overview without allowing AI to invent paths |
 | Search | Hybrid lexical + vector | Works with free local embeddings; upgrades with OpenAI |
 | Indexing | Sync → graph → history | Graph usable before full history finishes |
 | Queue | Postgres `QueuedJob` + Redis | Durable jobs; Redis for worker coordination |

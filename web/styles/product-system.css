@@ -1,0 +1,140 @@
+/* RepoPilot product language
+ * Shared workspace treatment: the repository is the surface, evidence is the accent.
+ * Loaded last so dashboard routes inherit the landing page's visual discipline.
+ */
+
+html { scroll-behavior: smooth; }
+
+.app-shell {
+  background:
+    linear-gradient(to right, color-mix(in srgb, var(--color-border) 12%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--color-border) 12%, transparent) 1px, transparent 1px),
+    var(--color-background);
+  background-size: 72px 72px;
+}
+
+.sidebar {
+  width: 232px;
+  padding: 18px 12px;
+  border-right: 1px solid var(--color-border-soft);
+  background: color-mix(in srgb, var(--color-surface) 84%, transparent);
+  backdrop-filter: blur(16px);
+}
+
+.sidebar-brand {
+  gap: 10px;
+  margin-bottom: 28px;
+  padding: 0 8px;
+}
+
+.brand-mark {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 7px;
+  background: var(--color-text);
+  color: var(--color-background);
+  box-shadow: none;
+}
+
+.brand-title { font-size: 15px; font-weight: 700; letter-spacing: -.035em; }
+.brand-version { font-size: 9px; letter-spacing: .08em; text-transform: uppercase; }
+.sidebar-nav { gap: 22px; }
+.sidebar-nav-group { gap: 3px; }
+.sidebar-nav-group__label { padding: 0 10px 7px; color: var(--color-text-subtle); }
+
+.ui-nav-item {
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.ui-nav-item:hover { background: color-mix(in srgb, var(--color-primary-container) 54%, var(--color-surface)); border-color: transparent; }
+.ui-nav-item--active { background: var(--color-primary-container); border-color: color-mix(in srgb, var(--color-primary) 34%, transparent); color: var(--color-text); }
+.ui-nav-item--active .ui-nav-item__icon { color: var(--color-primary-strong); }
+
+.shell-main { background: transparent; }
+
+.topbar {
+  height: 64px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--color-border-soft);
+  background: color-mix(in srgb, var(--color-background) 86%, transparent);
+  backdrop-filter: blur(16px);
+}
+
+.topbar-actions { gap: 10px; }
+.topbar-command { min-height: 34px; padding: 4px 9px; border-color: var(--color-border-soft); border-radius: 6px; background: var(--color-surface); font-size: 12px; box-shadow: none; }
+.topbar-command:hover { border-color: var(--color-primary-strong); background: var(--color-primary-container); }
+.topbar-command kbd { border: 0; background: var(--color-surface-muted); font-size: 10px; }
+.topbar-signin { padding: 7px 10px; border: 1px solid var(--color-text); border-radius: 6px; background: var(--color-text); color: var(--color-background); box-shadow: none; font-size: 12px; }
+.topbar-signin:hover { background: var(--color-primary-strong); border-color: var(--color-primary-strong); transform: translateY(-1px); }
+.topbar-account { gap: 9px; }.topbar-user { font-size: 12px; }.avatar { width: 28px; height: 28px; border: 1px solid var(--color-border); box-shadow: none; }.signout-btn { font-size: 12px; }
+
+.indexing-pill, .topbar-guest { padding: 5px 8px; border: 1px solid var(--color-border-soft); border-radius: 5px; background: var(--color-surface); box-shadow: none; }
+.indexing-pill .label-caps, .topbar-guest { font-size: 9px; letter-spacing: .1em; }
+
+.repo-context-bar {
+  min-height: 38px;
+  padding: 8px 24px;
+  border-bottom: 1px solid var(--color-border-soft);
+  background: color-mix(in srgb, var(--color-surface-muted) 60%, transparent);
+  font-size: 11px;
+}
+.repo-context-bar__repo { color: var(--color-text); }.repo-context-bar__status { color: var(--color-primary-strong); font-family: var(--font-mono); font-size: 10px; }
+
+.canvas {
+  padding: 32px 32px 80px;
+  background: transparent;
+}
+
+.canvas-inner { max-width: 1360px; padding: 4px 0 48px; }
+.page-title-block, .ui-page-header { margin-bottom: 32px; }
+.page-title-block h1, .ui-page-header h1 { font-size: clamp(2rem, 3.4vw, 3.5rem); line-height: .98; letter-spacing: -.07em; font-weight: 600; }
+.page-title-block p, .ui-page-header p { max-width: 62ch; color: var(--color-text-muted); font-size: 14px; }
+
+.ui-page-header h1::after, .page-title-block h1::after { content: ''; display: block; width: 32px; height: 2px; margin-top: 16px; background: var(--color-primary-strong); }
+
+.neo-panel, .neo-card, .neo-utility, .ui-bento-panel, .ui-kpi-tile, .ui-repo-card, .ui-finding-card, .ui-impact-test-plan, .ui-verify-checklist, .ui-topo, .ui-search-hit, .ui-chat-composer, .ui-diagram__inspector {
+  border: 1px solid var(--color-border-soft);
+  border-radius: 8px;
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--shadow-color) 34%, transparent);
+}
+
+.neo-panel, .neo-card, .neo-utility, .ui-bento-panel, .ui-kpi-tile, .ui-repo-card, .ui-finding-card, .ui-impact-test-plan, .ui-verify-checklist, .ui-topo, .ui-search-hit, .ui-chat-composer, .ui-diagram__inspector { background: color-mix(in srgb, var(--color-surface-elevated) 92%, transparent); }
+.neo-panel__inner { padding: 24px; }.neo-utility { padding: 16px; }
+.ui-bento-panel { overflow: hidden; }.ui-bento-panel__header { padding: 14px 18px; border-bottom: 1px solid var(--color-border-soft); background: color-mix(in srgb, var(--color-surface-muted) 64%, transparent); }.ui-bento-panel__title { font-size: 13px; }.ui-bento-panel__body { background: transparent; }
+
+.ui-kpi-grid { gap: 12px; margin-bottom: 24px; }.ui-kpi-tile { padding: 16px 18px; box-shadow: 0 8px 20px color-mix(in srgb, var(--shadow-color) 28%, transparent); }.ui-kpi-tile:hover { transform: translateY(-2px); background: var(--color-surface-elevated); }.ui-kpi-tile__label { margin-bottom: 12px; }.ui-kpi-tile__value { font-family: var(--font-mono); font-size: 26px; }
+
+.ui-data-table { border: 1px solid var(--color-border-soft); background: var(--color-surface-elevated); }.ui-data-table th { padding: 11px 16px; border-bottom: 1px solid var(--color-border-soft); background: var(--color-surface-muted); font-size: 9px; }.ui-data-table td { height: 48px; padding: 0 16px; border-bottom: 1px solid var(--color-border-soft); font-size: 13px; }.ui-data-table tbody tr:hover { background: var(--color-primary-container); }
+
+.ui-input, textarea, select { border-color: var(--color-border-soft); border-radius: 6px; background: var(--color-surface-elevated); }.ui-input:focus, textarea:focus, select:focus { box-shadow: var(--focus-ring); border-color: var(--color-primary-strong); }
+.ui-button { border-radius: 6px; }.ui-button--primary { background: var(--color-text); color: var(--color-background); border-color: var(--color-text); }.ui-button--primary:hover:not(:disabled) { background: var(--color-primary-strong); border-color: var(--color-primary-strong); }.ui-button--secondary { border-color: var(--color-border); background: var(--color-surface-elevated); }.ui-button--ghost { border-color: transparent; }
+
+.ui-repo-picker { padding: 7px 10px; border: 1px solid var(--color-border-soft); border-radius: 6px; background: var(--color-surface-elevated); box-shadow: none; }.ui-repo-picker:hover { transform: none; box-shadow: none; border-color: var(--color-primary-strong); }.ui-repo-picker__glyph { width: 25px; height: 25px; border: 0; border-radius: 5px; background: var(--color-primary-container); color: var(--color-primary-strong); }
+.ui-repo-picker-menu, .topbar-popover__panel { border: 1px solid var(--color-border-soft); border-radius: 8px; background: var(--color-surface-elevated); box-shadow: 0 18px 40px color-mix(in srgb, var(--shadow-color) 50%, transparent); }
+
+.ui-status-badge { padding: 3px 7px; border-radius: 4px; box-shadow: none; font-size: 9px; }.ui-citation-chip, .ui-hotspot-tag { border-radius: 4px; }
+.ui-error-banner__text, .ui-stale-banner, .ui-demo-banner, .ui-offline-banner { border-radius: 6px; box-shadow: none; }
+
+.canvas--diagram { padding-top: 0; }.canvas--diagram .canvas-inner { max-width: none; }.canvas--ask { background: transparent; }
+
+@media (max-width: 900px) {
+  .sidebar { width: 220px; }
+  .canvas { padding: 24px 20px 64px; }
+  .topbar { padding-inline: 18px; }
+}
+
+@media (max-width: 640px) {
+  .canvas { padding: 20px 14px 48px; }
+  .page-title-block h1, .ui-page-header h1 { font-size: clamp(1.9rem, 9vw, 2.6rem); }
+  .repo-context-bar { padding-inline: 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-kpi-tile:hover, .topbar-signin:hover { transform: none; }
+}

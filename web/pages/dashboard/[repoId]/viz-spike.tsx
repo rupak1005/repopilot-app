@@ -39,7 +39,7 @@ import {
   withRevisionSha,
   impactHref
 } from '../../../lib/revisionScope';
-import { repoApiPath } from '../../../lib/serverApi';
+import { repoApiPath } from '../../../lib/repoApiPath';
 import { DEMO_ARCHITECTURE, DEMO_HOTSPOTS, demoFileImpact } from '../../../lib/demoData';
 import type { FileImpactAnalysis, HotspotRow } from '../../../lib/types';
 import { forceGraphFromFileImpact } from '../../../lib/impactBlastGraph';

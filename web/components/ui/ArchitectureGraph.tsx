@@ -16,7 +16,6 @@ import {
   MagnifyingGlassPlus,
   ShareNetwork,
   Square,
-  SquareHalf,
   TreeStructure,
   X
 } from '@phosphor-icons/react';
@@ -56,7 +55,7 @@ import {
 import { useDiagramColors } from '../../lib/diagramTheme';
 import { isDemoMode } from '../../lib/demoMode';
 import { githubModuleUrl, moduleSearchQuery } from '../../lib/modulePaths';
-import { repoApiPath } from '../../lib/serverApi';
+import { repoApiPath } from '../../lib/repoApiPath';
 import { impactHref, withRevisionSha } from '../../lib/revisionScope';
 import { toMermaidFlowchart } from '../../lib/mermaidDiagram';
 import { GraphMinimap } from './GraphMinimap';
@@ -67,25 +66,24 @@ const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), { ssr: false 
 
 type GraphNode = NodeObject & ForceGraphNode;
 type GraphLink = LinkObject<GraphNode> & { uncertain?: boolean };
-type LayoutMode = 'diagram' | 'split' | 'focus';
+type LayoutMode = 'diagram' | 'split';
 type DiagramRenderer = 'interactive' | 'mermaid';
 
 const DEFAULT_LAYER_CHIPS: DiagramLayer[] = ['all', 'api', 'web', 'common'];
 
 const RENDERER_OPTIONS: Array<{ id: DiagramRenderer; label: string; icon: typeof ShareNetwork }> = [
-  { id: 'interactive', label: 'Interactive', icon: ShareNetwork },
-  { id: 'mermaid', label: 'Mermaid', icon: TreeStructure }
+  { id: 'mermaid', label: 'System map', icon: TreeStructure },
+  { id: 'interactive', label: 'File graph', icon: ShareNetwork }
 ];
 
 const LAYOUT_OPTIONS: Array<{ id: LayoutMode; label: string; icon: typeof Square }> = [
-  { id: 'diagram', label: 'Diagram', icon: Square },
-  { id: 'split', label: 'Split', icon: Columns },
-  { id: 'focus', label: 'Focus', icon: SquareHalf }
+  { id: 'diagram', label: 'Canvas', icon: Square },
+  { id: 'split', label: 'Split', icon: Columns }
 ];
 
 const ALGO_OPTIONS: Array<{ id: GraphLayoutAlgo; label: string; icon: typeof ShareNetwork }> = [
   { id: 'dagre', label: 'Flow', icon: ShareNetwork },
-  { id: 'elk', label: 'System', icon: FlowArrow }
+  { id: 'elk', label: 'Layered', icon: FlowArrow }
 ];
 
 type ArchitectureGraphProps = {
@@ -343,7 +341,9 @@ export function ArchitectureGraphView({
   const [neighborsLoading, setNeighborsLoading] = useState(false);
   const [pulseId, setPulseId] = useState<string | null>(null);
   const [rebuilding, setRebuilding] = useState(false);
-  const [renderer, setRenderer] = useState<DiagramRenderer>('interactive');
+  // Lead with the semantic system map; keep the raw evidence graph one click
+  // away for dependency investigation.
+  const [renderer, setRenderer] = useState<DiagramRenderer>('mermaid');
   const [layoutAlgo, setLayoutAlgo] = useState<GraphLayoutAlgo>(initialLayoutAlgo);
   const [layoutData, setLayoutData] = useState<ForceGraphData>({ nodes: [], links: [] });
   const [layoutBusy, setLayoutBusy] = useState(false);
@@ -589,19 +589,14 @@ export function ArchitectureGraphView({
       const isCluster = n.kind === 'cluster' || Boolean(parseClusterId(id));
       const lay = layerOf(n.id);
       const meta = lay === 'other' ? LAYER_META.other : LAYER_META[lay];
-      const w = nodeBoxWidth(n.label) + (isCluster ? 8 : 4);
-      const h = isCluster ? 44 : 38;
+      const w = nodeBoxWidth(n.label) + (isCluster ? 18 : 8);
+      const h = isCluster ? 58 : 46;
       const x = n.x - w / 2;
       const y = n.y - h / 2;
-      const radius = isCluster ? 14 : 11;
+      const radius = isCluster ? 12 : 9;
       const lw = Math.max(1.1, 1.35 / globalScale);
 
       ctx.save();
-      if (!dimmed) {
-        ctx.shadowColor = 'rgba(45, 20, 70, 0.14)';
-        ctx.shadowBlur = 10 / Math.max(globalScale, 0.55);
-        ctx.shadowOffsetY = 2 / Math.max(globalScale, 0.55);
-      }
 
       ctx.beginPath();
       ctx.roundRect(x, y, w, h, radius);
@@ -617,11 +612,12 @@ export function ArchitectureGraphView({
       ctx.fill();
       ctx.shadowColor = 'transparent';
 
-      // Soft layer tint strip (Mermaid-like calm hierarchy without loud borders).
+      // A narrow semantic rail makes package boundaries legible without
+      // turning every node into a saturated colored card.
       if (!dimmed && lay !== 'other') {
         ctx.fillStyle = meta.color;
         ctx.globalAlpha = selected ? 0.9 : 0.7;
-        ctx.fillRect(x + 1.5, y + 4, 4, h - 8);
+        ctx.fillRect(x + 1.5, y + 5, isCluster ? 5 : 3, h - 10);
         ctx.globalAlpha = 1;
       }
 
@@ -648,14 +644,24 @@ export function ArchitectureGraphView({
       }
       ctx.stroke();
 
-      if (globalScale > 0.32) {
-        const fontSize = Math.max(9.5 / globalScale, 3.6);
-        ctx.font = `${isCluster ? 650 : 600} ${fontSize}px var(--font-sans, "General Sans", system-ui)`;
+      if (globalScale > 0.27) {
+        const fontSize = Math.max((isCluster ? 11 : 10.5) / globalScale, 4.6);
+        ctx.font = `${isCluster ? 650 : 560} ${fontSize}px var(--font-sans, "Geist", system-ui)`;
         ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
         ctx.fillStyle = dimmed ? colors.nodeTextDim : colors.nodeText;
-        const label = n.label.length > 24 ? `${n.label.slice(0, 23)}…` : n.label;
-        ctx.fillText(label, n.x + (lay !== 'other' && !dimmed ? 1.5 : 0), n.y);
+        const label = n.label.length > (isCluster ? 26 : 22) ? `${n.label.slice(0, isCluster ? 25 : 21)}…` : n.label;
+        const textX = n.x + (lay !== 'other' && !dimmed ? 2 : 0);
+        if (isCluster) {
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(label, textX, n.y - 2 / globalScale);
+          ctx.font = `500 ${Math.max(8.5 / globalScale, 3.8)}px var(--font-mono, "Geist Mono", monospace)`;
+          ctx.textBaseline = 'top';
+          ctx.fillStyle = dimmed ? colors.nodeTextDim : colors.nodeTextDim;
+          ctx.fillText(`${n.memberCount ?? 0} files`, textX, n.y + 3 / globalScale);
+        } else {
+          ctx.textBaseline = 'middle';
+          ctx.fillText(label, textX, n.y);
+        }
       }
       ctx.restore();
     },
@@ -952,7 +958,7 @@ export function ArchitectureGraphView({
         .map((l) => String(typeof l.target === 'object' ? (l.target as GraphNode).id : l.target))
     : [];
 
-  const showSidePanel = layoutMode === 'split' || layoutMode === 'focus';
+  const showSidePanel = layoutMode === 'split';
   const workspaceClass = `ui-diagram__workspace ui-diagram__workspace--${layoutMode}`;
 
   const graphStage = (
@@ -960,7 +966,7 @@ export function ArchitectureGraphView({
       {loading || layoutBusy ? (
         <div className="ui-diagram__loading">
           <CircleNotch size={28} weight="bold" className="ui-diagram__spinner" aria-hidden />
-          <p>{layoutBusy ? 'Computing System View layout…' : 'Building diagram…'}</p>
+          <p>{layoutBusy ? 'Computing layered layout…' : 'Building diagram…'}</p>
         </div>
       ) : filtered.nodes.length === 0 ? (
         <p className="ui-diagram__empty">
@@ -1011,9 +1017,10 @@ export function ArchitectureGraphView({
           nodePointerAreaPaint={(node, color, ctx) => {
             const n = node as GraphNode;
             if (n.x == null || n.y == null) return;
+            const isCluster = n.kind === 'cluster' || Boolean(parseClusterId(String(n.id)));
             const w = nodeBoxWidth(n.label) + 8;
             ctx.beginPath();
-            ctx.roundRect(n.x - w / 2, n.y - 22, w, 44, 12);
+            ctx.roundRect(n.x - w / 2, n.y - (isCluster ? 29 : 23), w, isCluster ? 58 : 46, 12);
             ctx.fillStyle = color;
             ctx.fill();
           }}
@@ -1136,6 +1143,9 @@ export function ArchitectureGraphView({
             <span>{moduleCycles.length} import cycles</span>
           </>
         ) : null}
+        {stats.edges === 0 && stats.nodes > 1 ? (
+          <span className="ui-diagram__stats-warning">Dependency extraction pending</span>
+        ) : null}
       </div>
     </div>
   );
@@ -1245,22 +1255,24 @@ export function ArchitectureGraphView({
             </select>
           </label>
 
-          <div className="ui-diagram__layout" role="tablist" aria-label="Graph layout algorithm">
-            {ALGO_OPTIONS.map(({ id, label, icon: AlgoIcon }) => (
-              <button
-                key={id}
-                type="button"
-                role="tab"
-                aria-selected={layoutAlgo === id}
-                className={`ui-diagram__layout-btn${layoutAlgo === id ? ' ui-diagram__layout-btn--active' : ''}`}
-                onClick={() => applyLayoutAlgo(id)}
-                title={id === 'elk' ? 'ELK layered System View' : 'Dagre flow layout'}
-              >
-                <AlgoIcon size={16} weight="bold" aria-hidden />
-                {label}
-              </button>
-            ))}
-          </div>
+          {renderer === 'interactive' ? (
+            <div className="ui-diagram__layout" role="tablist" aria-label="File graph layout">
+              {ALGO_OPTIONS.map(({ id, label, icon: AlgoIcon }) => (
+                <button
+                  key={id}
+                  type="button"
+                  role="tab"
+                  aria-selected={layoutAlgo === id}
+                  className={`ui-diagram__layout-btn${layoutAlgo === id ? ' ui-diagram__layout-btn--active' : ''}`}
+                  onClick={() => applyLayoutAlgo(id)}
+                  title={id === 'elk' ? 'Arrange the file graph in orthogonal layers' : 'Arrange the file graph as a left-to-right flow'}
+                >
+                  <AlgoIcon size={16} weight="bold" aria-hidden />
+                  {label}
+                </button>
+              ))}
+            </div>
+          ) : null}
 
           <div className="ui-diagram__layout" role="tablist" aria-label="Diagram renderer">
             {RENDERER_OPTIONS.map(({ id, label, icon: RendererIcon }) => (

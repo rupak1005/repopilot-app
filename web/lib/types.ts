@@ -3,7 +3,8 @@ import type { ImpactTestPlan } from '@repopilot/common';
 export const MARKETING_URL =
   process.env.NEXT_PUBLIC_MARKETING_URL ?? 'https://repopilot-pi.vercel.app';
 
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+/** Browser-visible API surface. Internal Fastify topology is intentionally hidden behind the BFF. */
+export const API_BASE = '/api';
 
 export type PullRequestRow = {
   pullNumber: number;

@@ -6,11 +6,11 @@ export default function DocsApiReferencePage() {
     <DocsLayout
       slug="api-reference"
       title="API reference"
-      lede="Fastify REST API served at NEXT_PUBLIC_API_URL (default http://localhost:3001). Most dashboard routes proxy through Next.js BFF handlers."
+      lede="Fastify API is reached server-to-server through the Next.js BFF. Most dashboard routes use same-origin /api/* handlers."
     >
       <DocsSection title="Base URL">
         <DocsCode>{`# Local
-http://localhost:3001
+https://your-api.example.com
 
 # Health
 GET /health`}</DocsCode>
@@ -67,7 +67,7 @@ GET /health`}</DocsCode>
       </DocsSection>
 
       <DocsSection title="Example: search">
-        <DocsCode>{`curl -X POST http://localhost:3001/api/v1/repositories/$REPO_ID/search \\
+        <DocsCode>{`curl -X POST https://your-api.example.com/api/v1/repositories/$REPO_ID/search \\
   -H 'Content-Type: application/json' \\
   -d '{"query":"authenticate user","topK":5}'`}</DocsCode>
       </DocsSection>

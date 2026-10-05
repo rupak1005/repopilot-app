@@ -1,11 +1,14 @@
 import Link from 'next/link';
 import {
-  Code,
   GithubLogo,
   List,
   MagnifyingGlass,
   X
 } from '@phosphor-icons/react';
+
+function RepoPilotMark() {
+  return <svg viewBox="0 0 32 32" width="19" height="19" fill="none" aria-hidden><path d="M8 7v18M8 16h7M15 16V9h9M15 16v8h9" stroke="currentColor" strokeWidth="2.2" strokeLinecap="square" /><circle cx="8" cy="7" r="2.5" fill="currentColor" /><circle cx="15" cy="16" r="2.5" fill="currentColor" /><circle cx="24" cy="9" r="2.5" fill="currentColor" /><circle cx="24" cy="24" r="2.5" fill="currentColor" /></svg>;
+}
 import { useRouter } from 'next/router';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { MAIN_CONTENT_ID, firstFocusable } from '../lib/a11y';
@@ -160,7 +163,7 @@ export function AppShell({
       <aside className="sidebar">
         <Link href="/" className="sidebar-brand">
           <div className="brand-mark">
-            <Code size={18} weight="light" aria-hidden />
+            <RepoPilotMark />
           </div>
           <div>
             <div className="brand-title">RepoPilot</div>
@@ -279,8 +282,8 @@ export function AppShell({
       >
         <div className="mobile-nav-drawer__header">
           <Link href="/" className="sidebar-brand mobile-nav-drawer__brand">
-            <div className="brand-mark">
-              <Code size={18} weight="light" aria-hidden />
+                <div className="brand-mark">
+                  <RepoPilotMark />
             </div>
             <div>
               <div className="brand-title">RepoPilot</div>

@@ -20,7 +20,7 @@
   color: var(--color-text);
   font: inherit;
   cursor: pointer;
-  box-shadow: var(--shadow-hard-sm);
+  box-shadow: none;
   transition:
     background var(--duration-normal) var(--ease-out-expo),
     border-color var(--duration-normal) var(--ease-out-expo),
@@ -30,24 +30,24 @@
 
 .ui-repo-picker[aria-expanded='true'] {
   border-color: var(--color-accent);
-  box-shadow: var(--shadow-hard-sm), 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent);
+  box-shadow: var(--focus-ring);
 }
 
 .ui-repo-picker:hover {
   background: var(--color-surface-muted);
   border-color: var(--color-border-strong);
-  transform: translate(-1px, -1px);
-  box-shadow: var(--shadow-hard-md);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-hard-sm);
 }
 
 .ui-repo-picker:active {
-  transform: translate(1px, 1px) scale(0.99);
-  box-shadow: var(--shadow-hard-sm);
+  transform: translateY(1px) scale(0.99);
+  box-shadow: none;
 }
 
 .ui-repo-picker:focus-visible {
   outline: none;
-  box-shadow: var(--shadow-hard-sm), var(--focus-ring);
+  box-shadow: var(--focus-ring);
 }
 
 .ui-repo-picker__glyph {

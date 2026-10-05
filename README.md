@@ -51,7 +51,7 @@
 
 ### 1 · Landing — analyze in one step
 
-Drop `owner/repo` or a GitHub URL. RepoPilot clones, parses, builds the graph, embeds search, and ingests history.
+Drop `owner/repo` or a GitHub URL. RepoPilot clones safely, parses the repository, builds the evidence-backed graph first, then prepares search embeddings and history in the background.
 
 <p align="center">
   <img src="docs/showcase/01-landing.png" alt="Landing page with Analyze CTA and example repos" width="880" />
@@ -87,7 +87,7 @@ Copy JSON config. Point Cursor or Claude Desktop at this indexed repo. Agents ca
 
 | Area | Capabilities |
 |------|----------------|
-| **Understand** | Overview · Dependency Graph · Topography · Code Search · Wiki |
+| **Understand** | Overview · Dependency Graph · Topography · Code Search · Wiki · Digest export · Reverse prompt |
 | **Investigate** | Impact Analysis · Ask RepoPilot · History / hotspots |
 | **Change** | Planning · Pull Requests · Findings |
 | **Integrate** | MCP for IDE agents |
@@ -101,7 +101,9 @@ Copy JSON config. Point Cursor or Claude Desktop at this indexed repo. Agents ca
 GitHub repo
     │
     ▼
- Clone → Parse (Tree-sitter) → Graph → Embeddings → History
+ Clone (atomic) → Parse (Tree-sitter) → Graph → Ready to explore
+                                      ├── Search embeddings (background)
+                                      └── Git history (background)
     │
     ▼
  Postgres + pgvector · Redis
@@ -151,7 +153,7 @@ yarn --cwd web dev    # http://localhost:3000
 | Env | Minimum |
 |-----|---------|
 | `api/.env` | `DATABASE_URL`, Redis, `PORT=3001`, `INDEX_INLINE=true` |
-| `web/.env.local` | `NEXT_PUBLIC_API_URL=http://localhost:3001`, `SESSION_SECRET` |
+| `web/.env.local` | `REPOPILOT_API_URL=http://localhost:3001`, `SESSION_SECRET`; `SESSION_COOKIE_SECURE=false` only for HTTP-based local/E2E servers |
 
 Optional free Ask stack:
 

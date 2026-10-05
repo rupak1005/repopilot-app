@@ -8,39 +8,41 @@
   color-scheme: light;
 
   /* ——— Semantic colors (light) ——— */
-  --color-background: hsl(269 100% 95%);
-  --color-surface: hsl(270 100% 98%);
-  --color-surface-muted: hsl(270 100% 92%);
-  --color-surface-accent: hsl(270 100% 90%);
+  --color-background: hsl(40 20% 96%);
+  --color-surface: hsl(42 28% 99%);
+  --color-surface-muted: hsl(40 15% 93%);
+  --color-surface-accent: hsl(40 18% 89%);
+  --color-surface-elevated: hsl(42 30% 100%);
+  --color-surface-inset: hsl(40 14% 91%);
   /* Primary roles: soft = neo fills, strong = ink/actions, container = tinted panels */
-  --color-primary-soft: hsl(270 97% 75%);
-  --color-primary-strong: hsl(270 68% 42%);
-  --color-primary-container: hsl(270 90% 88%);
+  --color-primary-soft: hsl(252 82% 61%);
+  --color-primary-strong: hsl(252 72% 44%);
+  --color-primary-container: hsl(252 78% 93%);
   --color-primary: var(--color-primary-soft);
-  --color-primary-hover: hsl(270 97% 80%);
-  --color-secondary: hsl(270 40% 96%);
-  --color-text: hsl(0 0% 8%);
-  --color-text-muted: hsl(0 0% 28%);
-  --color-text-subtle: hsl(0 0% 45%);
-  --color-border: hsl(0 0% 12%);
-  --color-border-strong: hsl(0 0% 0%);
-  --color-border-soft: hsl(270 20% 82%);
-  --color-focus: hsl(270 90% 55%);
+  --color-primary-hover: hsl(252 82% 56%);
+  --color-secondary: hsl(40 18% 94%);
+  --color-text: hsl(222 18% 12%);
+  --color-text-muted: hsl(222 10% 37%);
+  --color-text-subtle: hsl(222 8% 53%);
+  --color-border: hsl(222 10% 72%);
+  --color-border-strong: hsl(222 18% 24%);
+  --color-border-soft: hsl(40 10% 83%);
+  --color-focus: hsl(252 82% 55%);
   --color-link: var(--color-primary-strong);
-  --color-link-hover: hsl(270 68% 32%);
+  --color-link-hover: hsl(252 72% 34%);
   --color-accent: var(--color-link);
   --color-on-primary: hsl(0 0% 8%);
   --color-on-danger: hsl(0 0% 100%);
   --color-success: hsl(142 55% 38%);
   --color-warning: hsl(38 92% 42%);
   --color-danger: hsl(0 72% 48%);
-  --color-info: hsl(270 70% 50%);
+  --color-info: hsl(214 72% 48%);
 
-  --shadow-color: hsl(0 0% 0%);
-  --shadow-hard-lg: 8px 8px 0 var(--shadow-color);
-  --shadow-hard-md: 4px 4px 0 var(--shadow-color);
-  --shadow-hard-sm: 3px 3px 0 var(--shadow-color);
-  --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-color: hsl(222 20% 18% / 0.12);
+  --shadow-hard-lg: 0 18px 42px hsl(222 24% 18% / 0.12);
+  --shadow-hard-md: 0 8px 22px hsl(222 24% 18% / 0.10);
+  --shadow-hard-sm: 0 3px 10px hsl(222 24% 18% / 0.08);
+  --shadow-soft: 0 8px 24px hsl(222 24% 18% / 0.10);
 
   /* ——— Legacy aliases (existing components) ——— */
   --bg-base: var(--color-background);
@@ -82,10 +84,10 @@
   --secondary: var(--color-link);
 
   /* ——— Typography ——— */
-  /* Option C: Cabinet Grotesk (brand) + General Sans (UI) + JetBrains Mono */
-  --font-display: 'Cabinet Grotesk', system-ui, sans-serif;
-  --font-sans: 'General Sans', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  /* Geist keeps the interface quiet and technical; mono carries evidence. */
+  --font-display: 'Geist', system-ui, sans-serif;
+  --font-sans: 'Geist', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', 'JetBrains Mono', ui-monospace, monospace;
   /* Responsive type (~48→32 display, 32→24 heading, 16→15 body) */
   --text-display: clamp(2rem, 4vw + 1rem, 3rem);
   --text-h1: clamp(1.5rem, 2vw + 1rem, 2rem);
@@ -101,29 +103,31 @@
   --space-3: 12px;
   --space-4: 16px;
   /* Prefer 4/8/12/16/24…; --space-5 kept as alias of --space-6 for legacy call sites */
-  --space-5: var(--space-6);
+  --space-5: 20px;
   --space-6: 24px;
   --space-8: 32px;
   --space-10: 40px;
   --space-12: 48px;
   --space-16: 64px;
+  --space-20: 80px;
 
   /* ——— Borders ——— */
-  --border-heavy: 3px solid var(--color-border-strong);
-  --border-medium: 2px solid var(--color-border);
+  --border-heavy: 2px solid var(--color-border-strong);
+  --border-medium: 1px solid var(--color-border);
   --border-soft-width: 1px solid var(--color-border-soft);
+  --border-light: 1px solid var(--color-border-soft);
 
   /* ——— Radii ——— */
   --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 10px;
-  --radius-xl: 12px;
+  --radius-md: 9px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
   --radius: var(--radius-sm);
 
   /* ——— Layout ——— */
-  --sidebar-width: 280px;
-  --header-height: 64px;
-  --container-max: 1280px;
+  --sidebar-width: 248px;
+  --header-height: 60px;
+  --container-max: 1320px;
 
   /* ——— Motion ——— */
   --ease-out-expo: cubic-bezier(0.23, 1, 0.32, 1);
@@ -139,41 +143,43 @@
   --z-toast: 60;
 
   /* Architecture canvas (Layer C) — soft Mermaid-like interactive graph */
-  --diagram-canvas-bg: hsl(270 40% 95%);
-  --diagram-canvas-dot: hsl(270 18% 82%);
-  --diagram-node-fill: hsl(270 70% 95%);
-  --diagram-node-fill-dim: hsl(270 25% 90% / 0.7);
-  --diagram-node-fill-selected: hsl(270 85% 88%);
-  --diagram-node-text: hsl(270 25% 14%);
-  --diagram-node-text-dim: hsl(270 10% 48%);
-  --diagram-node-border: hsl(270 28% 72%);
-  --diagram-link-active: hsl(270 8% 48% / 0.55);
-  --diagram-link-dim: hsl(270 10% 68% / 0.32);
-  --diagram-accent: hsl(270 75% 48%);
+  --diagram-canvas-bg: hsl(40 20% 96%);
+  --diagram-canvas-dot: hsl(222 10% 78%);
+  --diagram-node-fill: hsl(42 28% 99%);
+  --diagram-node-fill-dim: hsl(40 15% 93% / 0.72);
+  --diagram-node-fill-selected: hsl(252 78% 93%);
+  --diagram-node-text: hsl(222 18% 12%);
+  --diagram-node-text-dim: hsl(222 8% 48%);
+  --diagram-node-border: hsl(222 10% 72%);
+  --diagram-link-active: hsl(222 12% 38% / 0.55);
+  --diagram-link-dim: hsl(222 10% 62% / 0.32);
+  --diagram-accent: hsl(252 72% 44%);
   --diagram-hotspot: hsl(25 90% 48%);
-  --diagram-border-dim: hsl(270 12% 72% / 0.5);
+  --diagram-border-dim: hsl(222 10% 72% / 0.5);
 }
 
 [data-theme='dark'] {
   color-scheme: dark;
 
-  --color-background: hsl(260 28% 7%);
-  --color-surface: hsl(260 24% 11%);
-  --color-surface-muted: hsl(260 22% 14%);
-  --color-surface-accent: hsl(260 26% 18%);
-  --color-primary-soft: hsl(270 70% 68%);
-  --color-primary-strong: hsl(270 85% 78%);
-  --color-primary-container: hsl(270 40% 22%);
+  --color-background: hsl(222 18% 8%);
+  --color-surface: hsl(222 16% 11%);
+  --color-surface-muted: hsl(222 15% 14%);
+  --color-surface-accent: hsl(222 16% 18%);
+  --color-surface-elevated: hsl(222 15% 16%);
+  --color-surface-inset: hsl(222 18% 6%);
+  --color-primary-soft: hsl(252 83% 72%);
+  --color-primary-strong: hsl(252 88% 82%);
+  --color-primary-container: hsl(252 35% 23%);
   --color-primary: var(--color-primary-soft);
   --color-primary-hover: hsl(270 70% 74%);
-  --color-secondary: hsl(260 20% 16%);
-  --color-text: hsl(270 30% 94%);
-  --color-text-muted: hsl(270 15% 72%);
-  --color-text-subtle: hsl(270 10% 55%);
-  --color-border: hsl(270 15% 28%);
-  --color-border-strong: hsl(270 20% 88%);
-  --color-border-soft: hsl(260 18% 20%);
-  --color-focus: hsl(270 80% 72%);
+  --color-secondary: hsl(222 14% 16%);
+  --color-text: hsl(40 20% 95%);
+  --color-text-muted: hsl(40 10% 72%);
+  --color-text-subtle: hsl(40 8% 54%);
+  --color-border: hsl(222 12% 31%);
+  --color-border-strong: hsl(40 18% 88%);
+  --color-border-soft: hsl(222 12% 22%);
+  --color-focus: hsl(252 83% 72%);
   --color-link: var(--color-primary-strong);
   --color-link-hover: hsl(270 90% 88%);
   --color-accent: var(--color-link);
@@ -182,35 +188,35 @@
   --color-success: hsl(142 50% 52%);
   --color-warning: hsl(38 90% 58%);
   --color-danger: hsl(0 75% 62%);
-  --color-info: hsl(270 70% 72%);
+  --color-info: hsl(214 82% 70%);
 
   --shadow-color: hsl(0 0% 0%);
-  --shadow-hard-lg: 8px 8px 0 hsl(0 0% 0% / 0.85);
-  --shadow-hard-md: 4px 4px 0 hsl(0 0% 0% / 0.85);
-  --shadow-hard-sm: 3px 3px 0 hsl(0 0% 0% / 0.85);
-  --shadow-soft: 0 12px 32px hsl(0 0% 0% / 0.45);
+  --shadow-hard-lg: 0 18px 48px hsl(0 0% 0% / 0.32);
+  --shadow-hard-md: 0 10px 28px hsl(0 0% 0% / 0.28);
+  --shadow-hard-sm: 0 4px 14px hsl(0 0% 0% / 0.22);
+  --shadow-soft: 0 12px 32px hsl(0 0% 0% / 0.28);
 
   --accent-glow: hsl(270 70% 68% / 0.25);
 
-  --diagram-canvas-bg: hsl(260 28% 7%);
-  --diagram-canvas-dot: hsl(260 15% 22%);
-  --diagram-node-fill: hsl(270 28% 18%);
-  --diagram-node-fill-dim: hsl(260 20% 10% / 0.65);
-  --diagram-node-fill-selected: hsl(270 50% 28%);
-  --diagram-node-text: hsl(270 30% 94%);
-  --diagram-node-text-dim: hsl(270 10% 55%);
-  --diagram-node-border: hsl(270 30% 42%);
-  --diagram-link-active: hsl(270 15% 62% / 0.5);
-  --diagram-link-dim: hsl(260 12% 28% / 0.55);
-  --diagram-accent: hsl(270 80% 72%);
+  --diagram-canvas-bg: hsl(222 18% 8%);
+  --diagram-canvas-dot: hsl(222 12% 25%);
+  --diagram-node-fill: hsl(222 16% 14%);
+  --diagram-node-fill-dim: hsl(222 16% 10% / 0.7);
+  --diagram-node-fill-selected: hsl(252 35% 23%);
+  --diagram-node-text: hsl(40 20% 95%);
+  --diagram-node-text-dim: hsl(40 8% 58%);
+  --diagram-node-border: hsl(222 12% 31%);
+  --diagram-link-active: hsl(40 12% 74% / 0.5);
+  --diagram-link-dim: hsl(222 10% 34% / 0.58);
+  --diagram-accent: hsl(252 83% 72%);
   --diagram-hotspot: hsl(25 95% 58%);
   --diagram-border-dim: hsl(260 12% 32% / 0.5);
 }
 
 @media (max-width: 640px) {
   :root {
-    --shadow-hard-lg: 5px 5px 0 var(--shadow-color);
-    --shadow-hard-md: 3px 3px 0 var(--shadow-color);
+    --shadow-hard-lg: 0 14px 32px hsl(222 24% 18% / 0.12);
+    --shadow-hard-md: 0 7px 18px hsl(222 24% 18% / 0.1);
   }
 }
 

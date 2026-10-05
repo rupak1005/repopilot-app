@@ -12,6 +12,8 @@ export type NavKey =
   | 'history'
   | 'planning'
   | 'wiki'
+  | 'digest'
+  | 'reverse'
   | 'findings'
   | 'settings'
   | 'mcp';
@@ -105,6 +107,22 @@ const HELP_BY_NAV: Record<NavKey, HelpTip> = {
     docLabel: 'Getting started',
     secondaryHref: '/docs',
     secondaryLabel: 'Product docs'
+  },
+  digest: {
+    title: 'A prompt-ready repository digest',
+    body: 'Export the indexed revision as bounded Markdown with file boundaries, tree structure, and token estimates.',
+    docHref: '/docs/getting-started',
+    docLabel: 'Digest workflow',
+    secondaryHref: '/docs/api-reference',
+    secondaryLabel: 'Digest API'
+  },
+  reverse: {
+    title: 'Build prompts grounded in evidence',
+    body: 'Reverse uses indexed repository evidence and labels observations, inferences, and unknowns separately.',
+    docHref: '/docs/getting-started',
+    docLabel: 'Reverse workflow',
+    secondaryHref: '/docs/architecture',
+    secondaryLabel: 'Evidence model'
   },
   findings: {
     title: 'All review findings in one place',

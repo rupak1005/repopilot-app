@@ -36,6 +36,8 @@ import {
 } from './services/repositoryAnalytics';
 import { listRepositoryWikiPages, getRepositoryWikiPage } from './services/repositoryWiki';
 import { getRepositoryOwnership } from './services/repositoryOwnership';
+import { buildRepositoryDigest } from './services/repositoryDigest';
+import { buildRepositoryReversePrompt } from './services/repositoryReverse';
 import { ingestRepositoryHistory } from './services/historyIngest';
 import {
   findSimilarChanges,
@@ -147,6 +149,15 @@ async function bootstrap() {
 
   if (!process.env.REDIS_URL && (!process.env.REDIS_HOST || !process.env.REDIS_PORT)) {
     throw new Error('Set REDIS_URL or both REDIS_HOST and REDIS_PORT');
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    if (!process.env.INTERNAL_API_SECRET?.trim()) {
+      throw new Error('INTERNAL_API_SECRET is required when NODE_ENV=production');
+    }
+    if (!process.env.CORS_ORIGINS?.trim() || process.env.CORS_ORIGINS.trim() === '*') {
+      throw new Error('CORS_ORIGINS must explicitly list allowed web origins in production');
+    }
   }
 
   // Connectivity checks (so `docker compose up` can validate infrastructure quickly).
@@ -952,6 +963,37 @@ async function bootstrap() {
       repositoryId: params.repoId,
       revisionSha: query.revisionSha
     });
+  });
+
+  server.get('/api/v1/repositories/:repoId/digest', async (request, reply) => {
+    const { repoId } = request.params as { repoId: string };
+    const query = request.query as { revisionSha?: string; maxFileBytes?: string; maxTotalBytes?: string };
+    const digest = await buildRepositoryDigest({
+      repositoryId: repoId,
+      revisionSha: query.revisionSha,
+      maxFileBytes: Number(query.maxFileBytes) || undefined,
+      maxTotalBytes: Number(query.maxTotalBytes) || undefined
+    });
+    if (!digest) {
+      reply.code(404);
+      return { error: 'No indexed repository revision found' };
+    }
+    return digest;
+  });
+
+  server.get('/api/v1/repositories/:repoId/reverse', async (request, reply) => {
+    const { repoId } = request.params as { repoId: string };
+    const query = request.query as { revisionSha?: string; mode?: 'quick' | 'deep' };
+    const reverse = await buildRepositoryReversePrompt({
+      repositoryId: repoId,
+      revisionSha: query.revisionSha,
+      mode: query.mode
+    });
+    if (!reverse) {
+      reply.code(404);
+      return { error: 'No indexed repository revision found' };
+    }
+    return reverse;
   });
 
   server.get('/api/v1/repositories/:repoId/symbols/:name/history', async (request) => {

@@ -5,6 +5,20 @@ const NODE_H = 44;
 
 const LARGE_GRAPH_LAYOUT_THRESHOLD = 180;
 
+function layoutSparse(data: ForceGraphData): ForceGraphData {
+  const ordered = [...data.nodes].sort((a, b) => {
+    const kind = Number(b.kind === 'cluster') - Number(a.kind === 'cluster');
+    return kind || a.id.localeCompare(b.id);
+  });
+  const columns = Math.max(1, Math.ceil(Math.sqrt(ordered.length * 1.35)));
+  const nodes = ordered.map((node, index) => {
+    const x = 150 + (index % columns) * 220;
+    const y = 100 + Math.floor(index / columns) * 104;
+    return { ...node, x, y, fx: x, fy: y };
+  });
+  return { nodes, links: data.links.map((link) => ({ ...link })) };
+}
+
 function layoutLargeGraph(data: ForceGraphData): ForceGraphData {
   const columns = Math.max(1, Math.ceil(Math.sqrt(data.nodes.length)));
   const nodes = data.nodes.map((node, index) => {
@@ -25,6 +39,14 @@ export function layoutWithDagre(data: ForceGraphData): ForceGraphData {
   // views; smaller graphs retain the higher-fidelity dependency layout.
   if (data.nodes.length > LARGE_GRAPH_LAYOUT_THRESHOLD) {
     return layoutLargeGraph(data);
+  }
+
+  // A repository can have useful indexed files before dependency extraction
+  // finishes. Dagre puts a sparse graph into one tall rank, which makes the
+  // canvas look empty and makes every label unreadable. Use a stable overview
+  // grid until there is enough edge evidence to justify a flow layout.
+  if (data.nodes.length >= 8 && data.links.length < Math.max(2, data.nodes.length * 0.1)) {
+    return layoutSparse(data);
   }
 
   const g = new dagre.graphlib.Graph();

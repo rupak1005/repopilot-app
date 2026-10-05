@@ -33,7 +33,7 @@ import {
   withRevisionSha
 } from '../../../lib/revisionScope';
 import { isViz3dSpikeEnabled } from '../../../lib/visualizationModel';
-import { repoApiPath } from '../../../lib/serverApi';
+import { repoApiPath } from '../../../lib/repoApiPath';
 import type { FileImpactAnalysis, PullImpactAnalysis, SymbolImpactAnalysis } from '../../../lib/types';
 
 type ImpactMode = 'file' | 'pull' | 'symbol';

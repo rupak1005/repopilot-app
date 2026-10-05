@@ -22,7 +22,7 @@ import {
   type RepoFinding
 } from '../../../lib/findings';
 import type { FindingSeverityFilter } from '../../../lib/prFindings';
-import { repoApiPath } from '../../../lib/serverApi';
+import { repoApiPath } from '../../../lib/repoApiPath';
 
 export default function FindingsPage() {
   const router = useRouter();

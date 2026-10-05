@@ -11,7 +11,7 @@ import { PageLoading } from '../../../components/ui/Skeleton';
 import { shouldShowIndexHint, usePendingIndexJobRepoId, useRepoData, useRepoIndexStatus } from '../../../lib/dashboard';
 import { isDemoMode } from '../../../lib/demoMode';
 import { DEMO_HOTSPOTS } from '../../../lib/demoData';
-import { repoApiPath } from '../../../lib/serverApi';
+import { repoApiPath } from '../../../lib/repoApiPath';
 import { viz3dHref } from '../../../lib/revisionScope';
 import { isViz3dSpikeEnabled } from '../../../lib/visualizationModel';
 import {

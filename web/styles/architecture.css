@@ -310,14 +310,14 @@
 .ui-diagram__stage {
   position: relative;
   flex: 1;
-  min-height: min(560px, calc(100vh - 280px));
+  min-height: min(680px, calc(100vh - 250px));
   border-radius: var(--radius-xl);
-  border: var(--border-heavy);
+  border: var(--border-medium);
   background-color: var(--diagram-canvas-bg);
   background-image: radial-gradient(var(--diagram-canvas-dot) 1.1px, transparent 1.1px);
-  background-size: 18px 18px;
+  background-size: 24px 24px;
   overflow: hidden;
-  box-shadow: var(--shadow-hard-md);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--diagram-accent) 8%, transparent);
 }
 
 .ui-diagram-minimap {
@@ -410,6 +410,45 @@
 .ui-diagram__mermaid svg g.node text {
   pointer-events: all;
 }
+
+/* The system map is a calm architecture board: subsystem containers carry
+   the hierarchy, while file nodes remain evidence-linked and clickable. */
+.ui-diagram__mermaid svg .cluster rect {
+  fill: color-mix(in srgb, var(--diagram-canvas-bg) 72%, var(--diagram-accent) 8%) !important;
+  stroke: color-mix(in srgb, var(--diagram-accent) 28%, var(--color-border)) !important;
+  stroke-width: 1.2px !important;
+  rx: 10px;
+  ry: 10px;
+}
+
+.ui-diagram__mermaid svg .cluster-label text,
+.ui-diagram__mermaid svg .cluster-label span {
+  fill: var(--diagram-node-text) !important;
+  color: var(--diagram-node-text) !important;
+  font-family: var(--font-sans, Geist, system-ui) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.01em;
+}
+
+.ui-diagram__mermaid svg .edgeLabel rect {
+  fill: var(--diagram-canvas-bg) !important;
+  opacity: 0.94;
+}
+
+.ui-diagram__mermaid svg .edgeLabel text,
+.ui-diagram__mermaid svg .edgeLabel span {
+  fill: var(--diagram-node-text-dim) !important;
+  color: var(--diagram-node-text-dim) !important;
+  font-family: var(--font-mono, "Geist Mono", monospace) !important;
+  font-size: 10px !important;
+}
+
+.ui-diagram__mermaid svg .flowchart-link {
+  stroke: color-mix(in srgb, var(--diagram-accent) 48%, var(--color-border)) !important;
+  stroke-width: 1.25px !important;
+}
+
 .ui-diagram__mermaid-node--selected rect,
 .ui-diagram__mermaid-node--selected polygon,
 .ui-diagram__mermaid-node--selected path {
@@ -448,10 +487,14 @@
   border: var(--border-soft-width);
   background: color-mix(in srgb, var(--color-surface) 90%, transparent);
   backdrop-filter: blur(10px);
-  box-shadow: var(--shadow-soft);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--color-text) 10%, transparent);
   font-family: var(--font-mono);
   font-size: var(--text-micro);
   color: var(--color-text-subtle);
+}
+
+.ui-diagram__stats-warning {
+  color: var(--color-warning);
 }
 
 .ui-diagram__loading,
@@ -467,6 +510,22 @@
   font-size: var(--text-body);
   text-align: center;
   padding: var(--space-4);
+}
+
+.ui-diagram__loading-title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--text-h2);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.ui-diagram__loading-copy {
+  max-width: 34rem;
+  margin: 0;
+  color: var(--color-text-muted);
+  line-height: 1.55;
+  text-wrap: pretty;
 }
 
 .ui-diagram__empty-reset {
@@ -520,8 +579,8 @@
   height: 100%;
   min-height: 280px;
   overflow: auto;
-  border: var(--border-heavy);
-  background: var(--color-surface-muted);
+  border: var(--border-medium);
+  background: var(--color-surface-elevated);
 }
 
 .ui-diagram__inspector-close {
@@ -730,6 +789,10 @@
     right: 8px;
     bottom: 8px;
     max-width: calc(100% - 16px);
+  }
+
+  .ui-diagram__stage {
+    min-height: min(620px, calc(100dvh - 230px));
   }
 
   .ui-diagram__workspace--split,

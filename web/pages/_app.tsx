@@ -41,12 +41,14 @@ import '../styles/history.css';
 import '../styles/findings.css';
 import '../styles/wiki.css';
 import '../styles/planning.css';
+import '../styles/digest.css';
 import '../styles/engineering-loop.css';
 import '../styles/differentiators.css';
 import '../styles/index-progress-float.css';
 import '../styles/docs.css';
 import '../styles/globals.css';
 import '../styles/focus-audit.css';
+import '../styles/product-system.css';
 
 // Dashboard graphs, shell navigation, and repository data are not needed by
 // public pages. Keep them in a route-level chunk so / and /browse can become

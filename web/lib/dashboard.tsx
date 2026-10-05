@@ -8,7 +8,7 @@ import type {
   PullRequestRow,
   RepositoryAnalytics
 } from './types';
-import { repoApiPath } from './serverApi';
+import { repoApiPath } from './repoApiPath';
 import { DemoBanner } from '../components/ui/DemoBanner';
 import { PublicGuestBanner } from '../components/ui/PublicGuestBanner';
 import { PageLoading } from '../components/ui/Skeleton';
@@ -76,6 +76,8 @@ const DASHBOARD_TITLES: Record<NavKey, string> = {
   history: 'History',
   planning: 'Planning',
   wiki: 'Wiki',
+  digest: 'Digest',
+  reverse: 'Reverse prompt',
   findings: 'Findings',
   settings: 'Settings',
   mcp: 'MCP'
@@ -156,7 +158,7 @@ export function useRepoData(repoId: string | null) {
         ]);
 
         if (!pullResponse.ok || !analyticsResponse.ok || !hotspotResponse.ok) {
-          throw new Error('Could not reach the API — is it running on port 3001?');
+          throw new Error('Could not load repository data. Check the index status and try again.');
         }
 
         if (!cancelled) {
