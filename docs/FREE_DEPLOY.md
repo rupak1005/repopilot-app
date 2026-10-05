@@ -153,7 +153,7 @@ yarn --cwd api prisma generate && yarn --cwd api build && yarn --cwd api worker
 4. **Environment variables:**
 
 ```env
-NEXT_PUBLIC_API_URL=https://YOUR-API.up.railway.app
+REPOPILOT_API_URL=https://YOUR-API.up.railway.app
 NEXT_PUBLIC_APP_URL=https://repopilot.software
 NEXT_PUBLIC_MARKETING_URL=https://repopilot-pi.vercel.app
 NEXT_PUBLIC_DEMO_MODE=false

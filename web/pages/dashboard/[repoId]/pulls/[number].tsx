@@ -29,7 +29,7 @@ import {
   filterFindingsBySeverity,
   type FindingSeverityFilter
 } from '../../../../lib/prFindings';
-import { repoApiPath } from '../../../../lib/serverApi';
+import { repoApiPath } from '../../../../lib/repoApiPath';
 import type {
   PullImpactSummary,
   PullRequestDetail,

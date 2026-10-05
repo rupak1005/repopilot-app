@@ -12,7 +12,7 @@ import { SearchHitRow } from '../../../components/ui/SearchHitRow';
 import { DEMO_HISTORY_HITS, demoDelay, demoSearchResults } from '../../../lib/demoData';
 import { isDemoMode } from '../../../lib/demoMode';
 import { formatIndexedAt, shortSha, type HistoryHit } from '../../../lib/history';
-import { repoApiPath } from '../../../lib/serverApi';
+import { repoApiPath } from '../../../lib/repoApiPath';
 import { type SearchHit } from '../../../lib/types';
 import {
   UNIVERSAL_SEARCH_SCOPES,

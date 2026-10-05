@@ -1,9 +1,30 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
-  repoApiPath,
+  getApiOrigin,
   repositoryProxyForwardQuery,
   repositoryProxySubpath
 } from './serverApi';
+import { repoApiPath } from './repoApiPath';
+
+describe('getApiOrigin', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('requires an explicit non-local origin in production', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('REPOPILOT_API_URL', '');
+    vi.stubEnv('API_URL', '');
+    vi.stubEnv('NEXT_PUBLIC_API_URL', 'http://localhost:3001');
+    expect(() => getApiOrigin()).toThrow(/not configured/);
+  });
+
+  it('accepts the private production API origin', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('REPOPILOT_API_URL', 'https://api.example.com/');
+    expect(getApiOrigin()).toBe('https://api.example.com');
+  });
+});
 
 describe('repositoryProxySubpath', () => {
   it('reads catch-all segments from the pathname', () => {

@@ -1,8 +1,43 @@
 import { deriveRepositoryId } from '@repopilot/common';
 import type { SessionData } from './session';
 
-export const API_ORIGIN = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 export const API_REQUEST_TIMEOUT_MS = 20_000;
+
+/**
+ * Resolve the private server-to-server API origin.
+ *
+ * The browser always talks to the Next.js BFF. In production the BFF must be
+ * configured explicitly; falling back to localhost makes a deployed request
+ * point back at the Vercel runtime and produces a misleading connection error.
+ */
+export function getApiOrigin(): string {
+  const configured = process.env.REPOPILOT_API_URL?.trim() || process.env.API_URL?.trim();
+  const legacy = process.env.NEXT_PUBLIC_API_URL?.trim();
+  const origin = configured || (process.env.NODE_ENV === 'production' ? '' : legacy);
+
+  if (!origin) {
+    throw new Error(
+      'RepoPilot API is not configured. Set REPOPILOT_API_URL on the web deployment.'
+    );
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(origin);
+  } catch {
+    throw new Error('REPOPILOT_API_URL must be an absolute http(s) URL.');
+  }
+
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    throw new Error('REPOPILOT_API_URL must use http or https.');
+  }
+
+  if (process.env.NODE_ENV === 'production' && /^(localhost|127\.0\.0\.1|0\.0\.0\.0)$/i.test(parsed.hostname)) {
+    throw new Error('REPOPILOT_API_URL cannot point to localhost in production.');
+  }
+
+  return parsed.origin;
+}
 
 export function internalApiHeaders(extra?: HeadersInit): HeadersInit {
   const headers: Record<string, string> = {
@@ -31,7 +66,7 @@ export async function proxyApiRequest(
   apiPath: string,
   init?: RequestInit
 ): Promise<Response> {
-  const url = `${API_ORIGIN}${apiPath.startsWith('/') ? apiPath : `/${apiPath}`}`;
+  const url = `${getApiOrigin()}${apiPath.startsWith('/') ? apiPath : `/${apiPath}`}`;
   const headers = internalApiHeaders(init?.headers);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), API_REQUEST_TIMEOUT_MS);
@@ -40,11 +75,6 @@ export async function proxyApiRequest(
   } finally {
     clearTimeout(timeout);
   }
-}
-
-export function repoApiPath(repoId: string, subpath: string): string {
-  const clean = subpath.replace(/^\//, '');
-  return `/api/repositories/${repoId}/${clean}`;
 }
 
 /**

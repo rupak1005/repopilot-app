@@ -46,7 +46,8 @@ export const NAV_GROUPS: NavGroupDef[] = [
       { key: 'architecture', href: '/architecture', label: 'Dependency Graph', icon: Graph },
       { key: 'hotspots', href: '/hotspots', label: 'Topography', icon: Flame },
       { key: 'search', href: '/search', label: 'Code Search', icon: MagnifyingGlass },
-      { key: 'wiki', href: '/wiki', label: 'Wiki', icon: Notebook }
+      { key: 'wiki', href: '/wiki', label: 'Wiki', icon: Notebook },
+      { key: 'digest', href: '/digest', label: 'Digest', icon: Notebook }
     ]
   },
   {
@@ -55,7 +56,8 @@ export const NAV_GROUPS: NavGroupDef[] = [
     items: [
       { key: 'impact', href: '/impact', label: 'Impact Analysis', icon: Crosshair },
       { key: 'ask', href: '/ask', label: 'Ask RepoPilot', icon: Lightning },
-      { key: 'history', href: '/history', label: 'History', icon: ClockCounterClockwise }
+      { key: 'history', href: '/history', label: 'History', icon: ClockCounterClockwise },
+      { key: 'reverse', href: '/reverse', label: 'Reverse prompt', icon: Path }
     ]
   },
   {
@@ -139,6 +141,18 @@ export function dashboardCommands(repoId: string): CommandDef[] {
       label: 'Open wiki',
       path: `${base}/wiki`,
       keywords: ['docs', 'adr', 'notes', 'knowledge']
+    },
+    {
+      id: 'digest',
+      label: 'Export repository digest',
+      path: `${base}/digest`,
+      keywords: ['ingest', 'markdown', 'tokens', 'context']
+    },
+    {
+      id: 'reverse',
+      label: 'Generate reverse build prompt',
+      path: `${base}/reverse`,
+      keywords: ['reverse', 'prompt', 'rebuild', 'generate']
     },
     {
       id: 'pulls',

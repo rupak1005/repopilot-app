@@ -17,7 +17,7 @@ import {
 } from '../../../lib/planning';
 import { parseEngineeringLoopPull } from '../../../lib/engineeringLoop';
 import { architectureHref, impactHref } from '../../../lib/revisionScope';
-import { repoApiPath } from '../../../lib/serverApi';
+import { repoApiPath } from '../../../lib/repoApiPath';
 import type { HotspotRow } from '../../../lib/types';
 
 export default function PlanningPage() {

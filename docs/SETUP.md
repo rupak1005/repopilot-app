@@ -27,7 +27,7 @@ Minimum local values:
 | File | Keys |
 |------|------|
 | `api/.env` | `DATABASE_URL`, Redis (`REDIS_HOST`/`REDIS_PORT` or `REDIS_URL`), `PORT=3001`, `INDEX_INLINE=true` |
-| `web/.env.local` | `NEXT_PUBLIC_API_URL=http://localhost:3001`, `SESSION_SECRET` (any long random string) |
+| `web/.env.local` | `REPOPILOT_API_URL=http://localhost:3001`, `SESSION_SECRET` (any long random string) |
 
 For Ask / PR review, set a chat provider (see [AI_PROVIDERS.md](./AI_PROVIDERS.md)). Recommended free stack:
 

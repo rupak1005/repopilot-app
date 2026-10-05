@@ -54,6 +54,8 @@ Base: Fastify on `PORT` (default 3001). JSON bodies parsed as `{ rawBody, json }
 | GET | `/api/v1/repositories/:repoId/dependencies` | Symbol or file traversal |
 | GET | `/api/v1/repositories/:repoId/graph` | Context graph views |
 | GET | `/api/v1/repositories/:repoId/architecture` | Architecture graph payload |
+| GET | `/api/v1/repositories/:repoId/digest` | Bounded, revision-aware Markdown/JSON repository digest |
+| GET | `/api/v1/repositories/:repoId/reverse` | Evidence-labeled quick/deep build prompt |
 | GET | `/api/v1/repositories/:repoId/impact` | File impact |
 | GET | `/api/v1/repositories/:repoId/hotspots` | Module hotspots |
 | GET | `/api/v1/repositories/:repoId/co-change` | Co-change pairs |
@@ -170,6 +172,8 @@ Architecture page reloads graph when status transitions `indexing → ready`.
 | `search_history` | History search |
 | `ask_repository` | Same as Ask pipeline |
 | `get_context_pack` | Bundled context for agents |
+| `repo_digest` | Bounded Markdown/JSON repository digest |
+| `repo_reverse_prompt` | Evidence-labeled repository build prompt |
 
 Binding: `MCP_REPO_SLUG` or `MCP_REPOSITORY_ID`. Optional `MCP_API_KEY`.
 

@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { API_ORIGIN, assertRepoSession, internalApiHeaders } from '../../../../../lib/serverApi';
+import { assertRepoSession, getApiOrigin, internalApiHeaders } from '../../../../../lib/serverApi';
 import { getSession } from '../../../../../lib/session';
 
 export const config = {
@@ -30,7 +30,7 @@ export default async function handler(
     return;
   }
 
-  const upstream = await fetch(`${API_ORIGIN}/api/v1/repositories/${repoId}/index/stream`, {
+  const upstream = await fetch(`${getApiOrigin()}/api/v1/repositories/${repoId}/index/stream`, {
     headers: internalApiHeaders({ Accept: 'text/event-stream' })
   });
 

@@ -31,6 +31,8 @@ export function resolveDashboardChrome(pathname: string): DashboardChrome | null
   if (pathname === '/dashboard/[repoId]/history') return { activeNav: 'history' };
   if (pathname === '/dashboard/[repoId]/planning') return { activeNav: 'planning' };
   if (pathname === '/dashboard/[repoId]/wiki') return { activeNav: 'wiki' };
+  if (pathname === '/dashboard/[repoId]/digest') return { activeNav: 'digest' };
+  if (pathname === '/dashboard/[repoId]/reverse') return { activeNav: 'reverse' };
   if (pathname === '/dashboard/[repoId]/findings') return { activeNav: 'findings' };
   if (pathname === '/dashboard/[repoId]/settings') return { activeNav: 'settings' };
   if (pathname === '/dashboard/[repoId]/mcp') return { activeNav: 'mcp' };

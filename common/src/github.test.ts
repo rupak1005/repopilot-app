@@ -18,10 +18,6 @@ describe('parseGithubRepoUrl', () => {
       name: 'linux'
     });
     expect(parseGithubRepoUrl('torvalds/linux')).toEqual({ owner: 'torvalds', name: 'linux' });
-    expect(parseGithubRepoUrl('https://gitpilot.com/fastapi/fastapi')).toEqual({
-      owner: 'fastapi',
-      name: 'fastapi'
-    });
     expect(parseGithubRepoUrl('https://www.github.com/acme/widget.git')).toEqual({
       owner: 'acme',
       name: 'widget'
@@ -32,7 +28,9 @@ describe('parseGithubRepoUrl', () => {
     });
     expect(parseGithubRepoUrl('https://github.com/acme/widget/tree/main/src')).toEqual({
       owner: 'acme',
-      name: 'widget'
+      name: 'widget',
+      ref: 'main',
+      path: 'src'
     });
   });
 
@@ -42,6 +40,7 @@ describe('parseGithubRepoUrl', () => {
     expect(parseGithubRepoUrl('https://github.com/orgs/acme')).toBeNull();
     expect(parseGithubRepoUrl('https://github.com/organizations/acme/repos')).toBeNull();
     expect(parseGithubRepoUrl('https://gitlab.com/acme/widget')).toBeNull();
+    expect(parseGithubRepoUrl('https://gitpilot.com/acme/widget')).toBeNull();
     expect(parseGithubRepoUrl('https://github.com/only-owner')).toBeNull();
     expect(parseGithubRepoUrl('not a url at all !!!')).toBeNull();
   });

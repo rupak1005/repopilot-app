@@ -12,6 +12,8 @@ const ALLOWED_PREFIXES = [
   'analytics',
   'hotspots',
   'architecture',
+  'digest',
+  'reverse',
   'graph',
   'impact',
   'reviews',

@@ -20,7 +20,7 @@ import {
 import { sanitizeAskAnswer } from '../../../lib/askAnswer';
 import { demoAskResponse, demoDelay } from '../../../lib/demoData';
 import { isDemoMode } from '../../../lib/demoMode';
-import { repoApiPath } from '../../../lib/serverApi';
+import { repoApiPath } from '../../../lib/repoApiPath';
 import { useDashboardContext, useNeedsIndexHint } from '../../../lib/dashboard';
 import { type AskResponse } from '../../../lib/types';
 import { ChatCircleDots } from '@phosphor-icons/react';

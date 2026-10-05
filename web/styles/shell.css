@@ -1,4 +1,4 @@
-/* App shell — layout + neo-brutalist chrome */
+/* App shell — layout + workspace chrome */
 
 .skip-link {
   position: absolute;
@@ -926,4 +926,33 @@ a.topbar-activity__item:hover {
   padding: var(--space-2) var(--space-4);
   border-top: var(--border-light);
   color: var(--color-text-subtle);
+}
+
+/* Refined workspace chrome: quiet surfaces, explicit hierarchy. */
+.sidebar {
+  background: var(--color-surface);
+  border-right: var(--border-light);
+  padding: var(--space-4) var(--space-3);
+}
+.sidebar-brand { margin-bottom: var(--space-8); padding-inline: var(--space-2); }
+.brand-mark { border: 1px solid var(--color-border); box-shadow: none; }
+.brand-title { font-weight: 650; }
+.sidebar-nav { gap: var(--space-5); }
+.sidebar-nav-group { gap: 2px; }
+.sidebar-nav-group__label { padding-inline: var(--space-3); }
+.shell-main { background: var(--color-background); }
+.topbar {
+  background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+  border-bottom: var(--border-light);
+  backdrop-filter: blur(12px);
+}
+.topbar-command { min-height: 36px; border: var(--border-light); background: var(--color-surface-muted); font-weight: 500; }
+.topbar-command:hover { border-color: var(--color-primary); background: var(--color-surface); }
+.topbar-command kbd { border: var(--border-light); background: var(--color-surface); }
+.repo-context-bar { min-height: 38px; background: var(--color-background); border-bottom: var(--border-light); }
+.indexing-pill, .topbar-signin { border: var(--border-light); box-shadow: none; }
+.topbar-signin:hover { transform: translateY(-1px); box-shadow: var(--shadow-hard-sm); }
+
+@media (max-width: 900px) {
+  .topbar { padding-inline: var(--space-3); }
 }

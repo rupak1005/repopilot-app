@@ -7,10 +7,10 @@
   height: 40px;
   padding: 0 var(--space-3);
   border-radius: var(--radius-md);
-  border: 2px solid transparent;
+  border: 1px solid transparent;
   color: var(--color-text-muted);
   font-size: var(--text-ui);
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.01em;
   text-decoration: none;
   transition:
@@ -35,8 +35,8 @@
 .ui-nav-item--active {
   color: var(--color-text);
   background: var(--color-primary-container);
-  border-color: var(--color-border-strong);
-  box-shadow: var(--shadow-hard-sm);
+  border-color: color-mix(in srgb, var(--color-primary) 38%, var(--color-border-soft));
+  box-shadow: none;
 }
 
 .ui-nav-item--active:hover {

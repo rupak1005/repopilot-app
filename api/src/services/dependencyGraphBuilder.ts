@@ -42,6 +42,7 @@ type FileWithRecords = {
     endLine: number;
   }>;
   exports: Array<{ name: string }>;
+  imports: Array<{ module: string; specifiers: string[] }>;
 };
 
 type SymbolEdge = {
@@ -418,6 +419,7 @@ async function replaceDependenciesForFile(args: {
   file: FileWithRecords;
   symbolEdges: SymbolEdge[];
   moduleEdges: ModuleEdge[];
+  replaceModuleEdges?: boolean;
 }) {
   const prisma = getPrisma();
 
@@ -434,14 +436,16 @@ async function replaceDependenciesForFile(args: {
       args.file.id
     );
 
-    await tx.$executeRawUnsafe(
-      `
-        DELETE FROM "ModuleDependency"
-        WHERE "revisionId" = $1 AND "fromModule" = $2
-      `,
-      args.revisionId,
-      args.file.path
-    );
+    if (args.replaceModuleEdges !== false) {
+      await tx.$executeRawUnsafe(
+        `
+          DELETE FROM "ModuleDependency"
+          WHERE "revisionId" = $1 AND "fromModule" = $2
+        `,
+        args.revisionId,
+        args.file.path
+      );
+    }
 
     if (args.symbolEdges.length > 0) {
       const symbolValues: string[] = [];
@@ -478,7 +482,7 @@ async function replaceDependenciesForFile(args: {
       );
     }
 
-    if (args.moduleEdges.length > 0) {
+    if (args.replaceModuleEdges !== false && args.moduleEdges.length > 0) {
       const moduleValues: string[] = [];
       const moduleParams: unknown[] = [];
       let moduleParam = 1;
@@ -514,6 +518,82 @@ async function replaceDependenciesForFile(args: {
       );
     }
   }, prismaInteractiveTxOptions);
+}
+
+async function seedModuleEdges(args: {
+  repositoryId: string;
+  revisionId: string;
+  files: FileWithRecords[];
+  knownFiles: Set<string>;
+  pathAliases: ReturnType<typeof collectPathAliasesFromFiles>;
+  packageExports: ReturnType<typeof collectPackageExportsFromFiles>;
+}) {
+  const edges = new Map<string, ModuleEdge>();
+  for (const file of args.files) {
+    for (const binding of file.imports ?? []) {
+      const resolvedModule =
+        resolveModuleSpecifier(
+          file.path,
+          binding.module,
+          args.knownFiles,
+          args.pathAliases,
+          args.packageExports
+        ) ?? binding.module;
+      const key = `${file.path}:${resolvedModule}`;
+      edges.set(key, {
+        fromModule: file.path,
+        toModule: resolvedModule,
+        sourceFile: file.path,
+        confidence: defaultImportConfidence(args.knownFiles.has(resolvedModule)),
+        detector: 'tree-sitter-import-index',
+        kind: 'imports'
+      });
+    }
+  }
+
+  const prisma = getPrisma();
+  await prisma.$executeRawUnsafe(
+    `DELETE FROM "ModuleDependency" WHERE "revisionId" = $1`,
+    args.revisionId
+  );
+
+  const values = Array.from(edges.values());
+  // Keep each statement below PostgreSQL's parameter limit while making the
+  // architecture graph available in one bounded database pass.
+  for (let start = 0; start < values.length; start += 500) {
+    const batch = values.slice(start, start + 500);
+    const params: unknown[] = [];
+    const rows = batch.map((edge, index) => {
+      const offset = index * 10;
+      params.push(
+        args.repositoryId,
+        args.revisionId,
+        edge.fromModule,
+        edge.toModule,
+        edge.kind,
+        edge.confidence,
+        edge.sourceFile,
+        edge.sourceLine ?? null,
+        edge.targetLine ?? null,
+        edge.detector
+      );
+      return `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8}, $${offset + 9}, $${offset + 10})`;
+    });
+    if (rows.length === 0) continue;
+    await prisma.$executeRawUnsafe(
+      `
+        INSERT INTO "ModuleDependency" (
+          "repositoryId", "revisionId", "fromModule", "toModule",
+          "kind", "confidence", "sourceFile", "sourceLine", "targetLine", "detector"
+        )
+        VALUES ${rows.join(', ')}
+        ON CONFLICT ("revisionId", "fromModule", "toModule") DO NOTHING
+      `,
+      ...params
+    );
+  }
+
+  return values.length;
 }
 
 function countCycles(adjacency: Map<string, Set<string>>): number {
@@ -577,6 +657,8 @@ function countCycles(adjacency: Map<string, Set<string>>): number {
 export async function buildDependencyGraph(args: {
   repositoryId: string;
   revisionSha?: string;
+  /** Called periodically after a file has been persisted. */
+  onProgress?: (progress: { processed: number; total: number }) => Promise<void>;
 }): Promise<BuildDependencyGraphResult> {
   const revision = await resolveRepositoryRevision({
     repositoryId: args.repositoryId,
@@ -599,7 +681,8 @@ export async function buildDependencyGraph(args: {
     },
     include: {
       symbols: true,
-      exports: true
+      exports: true,
+      imports: true
     },
     orderBy: { path: 'asc' }
   });
@@ -615,6 +698,20 @@ export async function buildDependencyGraph(args: {
   const knownFiles = new Set(files.map((file) => file.path));
   const pathAliases = collectPathAliasesFromFiles(files);
   const packageExports = collectPackageExportsFromFiles(files);
+
+  const seededModuleEdges = await seedModuleEdges({
+    repositoryId: args.repositoryId,
+    revisionId: revision.id,
+    files,
+    knownFiles,
+    pathAliases,
+    packageExports
+  });
+  logEvent('graph.module_edges.seeded', {
+    repositoryId: args.repositoryId,
+    revisionId: revision.id,
+    moduleEdgesAdded: seededModuleEdges
+  });
 
   let symbolEdgesAdded = 0;
   let moduleEdgesAdded = 0;
@@ -713,12 +810,23 @@ export async function buildDependencyGraph(args: {
       revisionId: revision.id,
       file,
       symbolEdges: Array.from(symbolEdges.values()),
-      moduleEdges: Array.from(moduleEdges.values())
+      moduleEdges: Array.from(moduleEdges.values()),
+      // Module imports were already persisted in one bounded batch above.
+      // Avoid deleting and reinserting the same rows during the slower
+      // symbol-resolution pass.
+      replaceModuleEdges: false
     });
 
     symbolEdgesAdded += symbolEdges.size;
     moduleEdgesAdded += moduleEdges.size;
     filesProcessed += 1;
+
+    // A large repository can spend minutes in this stage. Emit a bounded
+    // heartbeat instead of making the queue job look abandoned while the
+    // parser and per-file transaction are still doing real work.
+    if (args.onProgress && (filesProcessed === files.length || filesProcessed % 10 === 0)) {
+      await args.onProgress({ processed: filesProcessed, total: files.length });
+    }
 
     logEvent('graph.fileProcessed', {
       repositoryId: args.repositoryId,

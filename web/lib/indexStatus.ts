@@ -11,7 +11,10 @@ export type RepositoryIndexStatus = {
   fileCount: number;
   symbolCount: number;
   moduleDependencyCount?: number;
-  job: { lastError: string | null } | null;
+  job: {
+    lastError: string | null;
+    graphProgress?: { processed: number; total: number } | null;
+  } | null;
 };
 
 /** Client-side mirror of API freshness (tolerates older payloads without stale). */
@@ -219,6 +222,10 @@ export function indexStatusLabel(
   switch (status.state) {
     case 'indexing': {
       const pct = displayPercent ?? indexProgressPercent(status);
+      const progress = status.job?.graphProgress;
+      if (status.stage === 'graph' && progress && progress.total > 0) {
+        return `Building graph ${progress.processed}/${progress.total}`;
+      }
       return pct !== null ? `Indexing ${pct}%` : 'Indexing…';
     }
     case 'ready':

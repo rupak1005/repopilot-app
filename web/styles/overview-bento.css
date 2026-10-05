@@ -18,7 +18,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: var(--shadow-hard-sm);
+  box-shadow: none;
 }
 
 .ui-bento-panel__header {

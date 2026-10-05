@@ -16,7 +16,7 @@ import {
   parseRevisionQuery,
   withRevisionSha
 } from '../../../lib/revisionScope';
-import { repoApiPath } from '../../../lib/serverApi';
+import { repoApiPath } from '../../../lib/repoApiPath';
 import {
   WIKI_KIND_FILTERS,
   countWikiPagesByKind,

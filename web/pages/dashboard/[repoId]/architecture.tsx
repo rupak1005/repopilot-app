@@ -35,11 +35,11 @@ import {
   withRevisionSha
 } from '../../../lib/revisionScope';
 import { isViz3dSpikeEnabled } from '../../../lib/visualizationModel';
-import { repoApiPath } from '../../../lib/serverApi';
+import { repoApiPath } from '../../../lib/repoApiPath';
 import type { GraphLayoutAlgo } from '../../../lib/elkLayout';
 
 const DEMO_EXPLANATION =
-  'RepoPilot maps your codebase into a system diagram: the API layer handles sync, search, and reviews; the web dashboard consumes those endpoints; shared IDs live in common. Orange borders mark churn hotspots from git history.';
+  'RepoPilot compiles actual files and import edges into a readable system map. Open File graph when you need the complete module-level topology.';
 
 export default function ArchitecturePage() {
   const router = useRouter();
@@ -170,7 +170,23 @@ export default function ArchitecturePage() {
   const indexStatus = useRepoIndexStatus(repoId);
   const pendingIndexJobRepoId = usePendingIndexJobRepoId();
   const indexInProgress = isRepoIndexInProgress(repoId, indexStatus, pendingIndexJobRepoId);
+  // The import graph is intentionally available before the slower symbol and
+  // history stages finish. Refresh only while indexing so the canvas reveals
+  // real edges without creating a permanent polling loop for ready repos.
+  useEffect(() => {
+    if (!repoId || isDemoMode() || !indexInProgress) return;
+    const timer = window.setInterval(() => setReloadToken((n) => n + 1), 5000);
+    return () => window.clearInterval(timer);
+  }, [repoId, indexInProgress]);
   const empty = graph && graph.nodes.length === 0;
+  // Do not present a half-indexed file list as an architecture diagram. A
+  // stale graph with no dependency evidence is actively misleading; the
+  // index progress surface is the useful state until the graph stage finishes.
+  const graphReadyForDisplay = Boolean(
+    graph &&
+      graph.nodes.length > 0 &&
+      (!indexInProgress || Boolean(forceData?.links.length) || isDemoMode())
+  );
   const slug = repoFullName || repoId || '…';
 
   useEffect(() => {
@@ -343,8 +359,8 @@ export default function ArchitecturePage() {
             <p className="ui-diagram-hero__eyebrow label-caps">Repository → diagram</p>
             <h1>See how your codebase fits together</h1>
             <p className="ui-diagram-hero__sub">
-              Interactive module map from real dependency edges — not AI-generated Mermaid. Click
-              through to GitHub, search, or impact analysis.
+              Evidence-backed system map from real dependency edges. Click through to GitHub,
+              search, or impact analysis.
             </p>
             {repoId && isViz3dSpikeEnabled() ? (
               <p className="ui-diagram-hero__3d">
@@ -404,15 +420,18 @@ export default function ArchitecturePage() {
           <IndexHint repoFullName={repoFullName || undefined} />
         ) : null}
 
-        {indexInProgress && !forceData ? (
+        {indexInProgress && !graphReadyForDisplay ? (
           <div className="ui-diagram__stage ui-diagram__stage--solo">
             <div className="ui-diagram__loading">
-              <p>Indexing repository… the dependency diagram will appear when the graph is ready.</p>
+              <p className="ui-diagram__loading-title">Building the repository map</p>
+              <p className="ui-diagram__loading-copy">
+                Files are indexed first. The architecture view will appear when dependency evidence is ready.
+              </p>
             </div>
           </div>
         ) : null}
 
-        {graph && graph.nodes.length > 0 ? (
+        {graphReadyForDisplay ? (
           <ArchitectureGraphView
             data={forceData ?? { nodes: [], links: [] }}
             viewMeta={architectureView?.meta}

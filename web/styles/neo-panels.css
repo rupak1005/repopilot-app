@@ -1,10 +1,10 @@
-/* Layer A/B panel tiers — neo-brutalist hierarchy */
+/* Shared panel tiers for the repository workspace. */
 
 .neo-panel {
-  background: var(--color-surface-muted);
-  border: var(--border-heavy);
+  background: var(--color-surface-elevated);
+  border: var(--border-medium);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-hard-lg);
+  box-shadow: none;
 }
 
 .neo-panel__inner {
@@ -15,7 +15,7 @@
   background: var(--color-surface);
   border: var(--border-medium);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-hard-sm);
+  box-shadow: none;
 }
 
 .neo-utility {
