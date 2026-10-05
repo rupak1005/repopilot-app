@@ -51,7 +51,7 @@
 
 ### 1 · Landing — analyze in one step
 
-Drop `owner/repo` or a GitHub URL. RepoPilot clones, parses, builds the graph, embeds search, and ingests history.
+Drop `owner/repo` or a GitHub URL. RepoPilot clones safely, parses the repository, builds the evidence-backed graph first, then prepares search embeddings and history in the background.
 
 <p align="center">
   <img src="docs/showcase/01-landing.png" alt="Landing page with Analyze CTA and example repos" width="880" />
@@ -101,7 +101,9 @@ Copy JSON config. Point Cursor or Claude Desktop at this indexed repo. Agents ca
 GitHub repo
     │
     ▼
- Clone → Parse (Tree-sitter) → Graph → Embeddings → History
+ Clone (atomic) → Parse (Tree-sitter) → Graph → Ready to explore
+                                      ├── Search embeddings (background)
+                                      └── Git history (background)
     │
     ▼
  Postgres + pgvector · Redis

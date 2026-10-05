@@ -1,6 +1,6 @@
 # RepoPilot — Low-Level Design (LLD)
 
-**Version:** 3.0 · **Audience:** engineers changing `api/` / `web/` · **Date:** August 2026
+**Version:** 3.1 · **Audience:** engineers changing `api/` / `web/` · **Date:** October 2026
 
 ---
 
@@ -99,12 +99,12 @@ IDs: repository UUID often derived as SHA-256-based UUID from `owner/repo` (`der
 |--------|------|----------------|
 | Orchestrator | `services/repositoryIndex.ts` | Start public/auth index; job begin/finish; status/stage; full pipeline |
 | Clone | `services/githubClone.ts` | Clone/update under `REPO_CLONE_ROOT` |
-| Sync | `services/repositorySync.ts` | Discover → parse → persist → search index |
+| Sync | `services/repositorySync.ts` | Discover → parse → persist; search can be deferred |
 | Discover | `repo/fileDiscovery.ts` | `*.{ts,tsx,js,jsx,py,go}` |
 | Parse | `repo/treeSitterParser.ts` | Symbols / imports / exports (TS/JS, Python, Go) |
 | Resolve | `repo/moduleResolve.ts` | Relative JS, dotted Python, Go import paths |
 | Persist | `repo/persistence.ts` | Bulk upsert into Prisma |
-| Graph | `services/dependencyGraphBuilder.ts` | Module + symbol edges |
+| Graph | `services/dependencyGraphBuilder.ts` | Batch-seeded module edges + symbol edges |
 | Graph query | `services/dependencyGraphQueries.ts` | Traversals for impact/deps |
 | Search | `services/searchIndex.ts` | Chunk + embed + hybrid query |
 | Embeddings | `services/embeddingProvider.ts` | openai / ollama / local |
@@ -113,7 +113,9 @@ IDs: repository UUID often derived as SHA-256-based UUID from `owner/repo` (`der
 | Impact | `services/impactAnalysis.ts` | File blast radius |
 | Context | `services/contextGraph.ts` | Neighbor / expand views |
 
-**Pipeline function:** `runFullRepositoryIndex` = sync → `buildDependencyGraph` → optional `ingestRepositoryHistory`.
+**Pipeline function:** `runFullRepositoryIndex` = sync (without embeddings on the critical path) → `buildDependencyGraph` → background search indexing → optional background history ingest.
+
+`githubClone.ts` protects acquisition with a per-repository lock, clones into a unique staging path, and atomically swaps only a complete checkout into `REPO_CLONE_ROOT`.
 
 **Background public open:** `beginIndexJob` then `void runFullRepositoryIndexWithJob` so SSE reports `indexing` immediately.
 
