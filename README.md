@@ -153,7 +153,7 @@ yarn --cwd web dev    # http://localhost:3000
 | Env | Minimum |
 |-----|---------|
 | `api/.env` | `DATABASE_URL`, Redis, `PORT=3001`, `INDEX_INLINE=true` |
-| `web/.env.local` | `REPOPILOT_API_URL=http://localhost:3001`, `SESSION_SECRET` |
+| `web/.env.local` | `REPOPILOT_API_URL=http://localhost:3001`, `SESSION_SECRET`; `SESSION_COOKIE_SECURE=false` only for HTTP-based local/E2E servers |
 
 Optional free Ask stack:
 

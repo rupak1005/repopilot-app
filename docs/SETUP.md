@@ -94,6 +94,7 @@ E2E expects a production web build with demo mode:
 
 ```bash
 SESSION_SECRET=e2e-test-session-secret-32chars-minimum \
+SESSION_COOKIE_SECURE=false \
 NEXT_PUBLIC_DEMO_MODE=true \
 yarn build
 
